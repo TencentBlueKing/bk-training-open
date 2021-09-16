@@ -1,3 +1,4 @@
+[toc]
 
 # 一、快速开始
 
@@ -5,7 +6,7 @@
 
 ![image-20210904185418586](static/images/image-20210904185137806.png)
 
-​		项目主仓库将开源项目代码 fork 到个人仓库，完成后就可以在个人项目下查看该开源项目代码了
+项目主仓库将开源项目代码 fork 到个人仓库，完成后就可以在个人项目下查看该开源项目代码了
 
 ![image-20210916100114301](static/images/image-20210916100114301.png)
 
@@ -81,9 +82,44 @@ git pull blueking-train
 
    ![image-20210905115040095](static/images/image-20210905115040095.png)
 
-   # 二、开发须知
+# 二、预期功能
 
-   ## 1. 开发模式----基于PR的开发模式
+## 1. 每日小结
+
+   1. 根据用户所在组获取日报模板，如果没有日报模板，则使用提供的两个默认日报模板（模板1：今日总结 明日计划 感想 ；模板2： 今日总结 明日计划）
+   2. 用户点击保存日报进行日报保存
+      <1> 如果日期为当前日期，点击保存日报，日报保存到数据库，日报状态变为已保存
+      <2> 如果日期为之前的日期，点击保存日报，用户可选择仅保存或者保存并且发送邮件通知
+
+   ![img](static/images/tapd_10101831_base64_1630589780_86.png)
+
+## 2. 我的组
+
+   1. 新建组,点击弹窗
+      ![img](static/images/tapd_10101831_base64_1630635315_92.png)
+   2. 编辑基本信息，修改组的管理员和名称
+   3. 创建日报模板，使用输入框，多个内容以“,”分隔,
+      例如创建模板---今日总结 明日计划 感想 ，则在输入框输入(今日总结,明日计划,感想）
+      ![img](static/images/tapd_10101831_base64_1630635922_50.png)
+   4. 添加成员
+      ![img](static/images/tapd_10101831_base64_1630633558_64.png)
+
+## 3. 每日小结查看
+
+   1. 显示用户所在的组，点击对应组展开对应的成员列表
+   2. 点击组旁边的日期按钮，切换到日报维度为日期，点击对应日期，显示某一天组内所有成员的工作总结
+
+   ![img](static/images/tapd_10101831_base64_1630639068_25.png)
+
+## 4. 定时任务
+
+   1. 邮件模板编写
+   2. 每天早上10点向组内成员发邮件推送前一天的工作总结和今日计划
+   3. 每天晚上8点邮件提醒用户进行今天的总结
+
+# 三、开发须知
+
+## 1. 开发模式----基于PR的开发模式
 
    ![flow](static/images/flow.png)
 
@@ -92,12 +128,12 @@ git pull blueking-train
       ```
       git pull blueking-train
       ```
-   
+
    2. 然后基于自己要开发的分支新建分支进行开发
       ![image-20210916100632358](static/images/image-20210916100632358.png)
-   
+
    3. 开发完成后,提交代码到自己的个人仓库
-   
+
       ```
       git add .
       git commit -m 提交信息
@@ -107,9 +143,9 @@ git pull blueking-train
    4. 打开自己的github,提PR(Pull requests)
       ![image-20210916101813739](static/images/image-20210916101813739.png)
       ![image-20210916101056595](static/images/image-20210916101056595.png)
-   
+
    5. 提交pr之后，主仓库负责人进行提交代码的review，通过则合入开发分支
-   
+
    6. 没有通过，开发者则根据review的修改意见修改完善代码
 
 ## 2. 开发规范
@@ -166,10 +202,7 @@ git pull blueking-train
     git commit -m bugfix:xxxxxxxxxxxxx
     ```
 
-
-
-
-# 三、学习资料
+# 四、学习资料
 
 1. 在线课程[【蓝鲸开课】2020秋季蓝鲸基础开发实战课程-学习视频教程-腾讯课堂 (qq.com)](https://ke.qq.com/course/3030664?taid=10315536490446472)
 
@@ -182,6 +215,4 @@ git pull blueking-train
 5. 前端组件库[蓝鲸 MagicBox-Vue 组件库 (tencent.com)](https://magicbox.bk.tencent.com/static_api/v3/components_vue/2.0/example/index.html#/)
 
 6. vue语法[介绍 — Vue.js (vuejs.org)](https://cn.vuejs.org/v2/guide/)
-
-   
 
