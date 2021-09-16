@@ -7,7 +7,7 @@
 
 ​		项目主仓库将开源项目代码 fork 到个人仓库，完成后就可以在个人项目下查看该开源项目代码了
 
-![image-20210904220003517](static/images/image-20210904190202364.png)
+![image-20210916100114301](static/images/image-20210916100114301.png)
 
 
 
@@ -18,10 +18,10 @@
 
 ```
 # 克隆自己git仓库代码到本地
-https://github.com/wheel-w/QTAF.git
+git clone https://github.com/wheel-w/bk-training-open.git
 # 添加自己fork的主仓库源
-git remote add tencent-QTAF https://github.com/Tencent/QTAF.git
-git pull tencent-QTAF
+git remote add blueking-train https://github.com/TencentBlueKing/bk-training-open.git
+git pull blueking-train
 ```
 
 ## 3. 本地运行项目
@@ -35,7 +35,7 @@ git pull tencent-QTAF
 2. 本地创建数据库
 
    ```
-   CREATE DATABASE `xxx` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+   CREATE DATABASE `bk-training-open` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
    ```
 
 3. 将`config/dev.py`复制到项目根目录下，并且重命名为`local_settings.py`，然后在`local_settings.py`添加数据库配置
@@ -63,7 +63,7 @@ git pull tencent-QTAF
    python manage.py runserver dev.paas-edu.bktencent.com:8000
    ```
 
-5. 浏览器打开http://dev.paas-edu.bktencent.com:8000，测试get请求和post请求是否发送成功
+5. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
    ![image-20210905115040095](static/images/image-20210905115040095.png)
 
 6. 本地运行bkui，检测跨域配置
@@ -77,7 +77,7 @@ git pull tencent-QTAF
    npm run dev
    ```
 
-   浏览器访问[index (bktencent.com)](http://dev.paas-edu.bktencent.com:8080/)，点击发送get,post请求
+   浏览器访问[index (bktencent.com)](http://dev.paas-edu.bktencent.com:8080/) 点击发送get,post请求
 
    ![image-20210905115040095](static/images/image-20210905115040095.png)
 
@@ -89,23 +89,27 @@ git pull tencent-QTAF
 
    1. 开发前，首先git pull 项目主仓库下拉最新代码
 
+      ```
+      git pull blueking-train
+      ```
+   
    2. 然后基于自己要开发的分支新建分支进行开发
-      ![image-20210905121806960](static/images/image-20210905121806960.png)
-
+      ![image-20210916100632358](static/images/image-20210916100632358.png)
+   
    3. 开发完成后,提交代码到自己的个人仓库
-
+   
       ```
       git add .
       git commit -m 提交信息
       git push origin
       ```
 
-   4. 打开自己的github,提PR
-      ![image-20210905131629509](static/images/image-20210905131629509.png)
-      ![image-20210905131826100](static/images/image-20210905131826100.png)
-
+   4. 打开自己的github,提PR(Pull requests)
+      ![image-20210916101813739](static/images/image-20210916101813739.png)
+      ![image-20210916101056595](static/images/image-20210916101056595.png)
+   
    5. 提交pr之后，主仓库负责人进行提交代码的review，通过则合入开发分支
-
+   
    6. 没有通过，开发者则根据review的修改意见修改完善代码
 
 ## 2. 开发规范
@@ -143,9 +147,13 @@ git pull tencent-QTAF
     ```
 
   - commit分类-----每次代码提交必须有备注说明，注明本次提交做了哪些修改
+
     `bugfix` - 线上功能 bug
+    
     `sprintfix` - 未上线代码修改 （功能模块未上线部分 bug）
+    
     `minor` - 不重要的修改（换行，拼写错误等）
+    
     `feature` - 新功能说明
 
     ```git
