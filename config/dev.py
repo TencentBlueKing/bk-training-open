@@ -30,6 +30,7 @@ RUN_MODE = "DEVELOP"
 STATIC_URL = "/static/"
 # 前端静态url
 BK_STATIC_URL = STATIC_URL + "dist/"
+test
 
 # APP静态资源目录url
 # REMOTE_STATIC_URL = '%sremote/' % STATIC_URL
