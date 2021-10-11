@@ -76,7 +76,7 @@ git pull blueking-train
    ```shell
    pip install -r requirements.txt
    python manage.py migrate
-   python manage.py runserver dev.paas-edu.bktencent.com:8000
+   python3 manage.py runserver dev.paas-edu.bktencent.com:8000
    ```
 
 5. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功

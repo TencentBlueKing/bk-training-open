@@ -3,8 +3,8 @@
  * @author wwx
  */
 
-import http from '@/api'
-import queryString from 'query-string'
+import http from '@/api';
+import queryString from 'query-string';
 
 export default {
     namespaced: true,
@@ -23,8 +23,8 @@ export default {
          */
         enterExample1 (context, params, config = {}) {
             // mock 的地址，示例先使用 mock 地址
-            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=enterExample1&${queryString.stringify(params)}`
-            return http.get(mockUrl, params, config)
+            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=enterExample1&${queryString.stringify(params)}`;
+            return http.get(mockUrl, params, config);
         },
 
         /**
@@ -37,8 +37,8 @@ export default {
          */
         enterExample2 (context, params, config = {}) {
             // mock 的地址，示例先使用 mock 地址
-            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=enterExample2&${queryString.stringify(params)}`
-            return http.post(mockUrl, params, config)
+            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=enterExample2&${queryString.stringify(params)}`;
+            return http.post(mockUrl, params, config);
         },
 
         /**
@@ -51,8 +51,8 @@ export default {
          */
         btn1 (context, params, config = {}) {
             // mock 的地址，示例先使用 mock 地址
-            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=btn1&${queryString.stringify(params)}`
-            return http.get(mockUrl, {}, config)
+            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=btn1&${queryString.stringify(params)}`;
+            return http.get(mockUrl, {}, config);
         },
 
         /**
@@ -65,8 +65,8 @@ export default {
          */
         btn2 (context, params, config = {}) {
             // mock 的地址，示例先使用 mock 地址
-            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=btn2&${queryString.stringify(params)}`
-            return http.post(mockUrl, params, config)
+            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=btn2&${queryString.stringify(params)}`;
+            return http.post(mockUrl, params, config);
         },
 
         /**
@@ -79,8 +79,8 @@ export default {
          */
         del (context, params, config) {
             // mock 的地址，示例先使用 mock 地址
-            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=del&${queryString.stringify(params)}`
-            return http.delete(mockUrl, { data: params }, config)
+            const mockUrl = `?${AJAX_MOCK_PARAM}=index&invoke=del&${queryString.stringify(params)}`;
+            return http.delete(mockUrl, { data: params }, config);
         }
     }
-}
+};

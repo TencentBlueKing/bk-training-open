@@ -6,7 +6,7 @@
                 <bk-button type="default" @click="getUser">getUser</bk-button>
             </div>
             <div class="item">
-                <p>{{userInfo}}</p>
+                <p>{{ userInfo }}</p>
             </div>
         </div>
         <div class="inner">
@@ -15,7 +15,7 @@
                 <bk-button type="default" @click="sendGet">get</bk-button>
             </div>
             <div class="item">
-                <p>{{getMsg}}</p>
+                <p>{{ getMsg }}</p>
             </div>
         </div>
         <div class="inner">
@@ -24,7 +24,7 @@
                 <bk-button type="default" @click="sendPost">post</bk-button>
             </div>
             <div class="item">
-                <p>{{postMsg}}</p>
+                <p>{{ postMsg }}</p>
             </div>
         </div>
     </div>
@@ -32,58 +32,58 @@
 
 <script>
     export default {
-        components: {
-        },
+        components: {},
         data () {
             return {
                 getMsg: '',
                 postMsg: '',
                 userInfo: null
-            }
+            };
         },
-        created () {
-        },
+        created () {},
         methods: {
             /**
              * 获取页面数据
              *
              * @return {Promise} promise 对象
              */
-            fetchPageData () {
-
-            },
+            fetchPageData () {},
 
             /**
              * getUser
              */
             async getUser () {
                 try {
-                    const data = await this.$store.dispatch('userInfo', {}, { fromCache: true })
-                    this.userInfo = Object.assign({}, data)
+                    const data = await this.$store.dispatch(
+                        'userInfo',
+                        {},
+                        { fromCache: true }
+                    );
+                    this.userInfo = Object.assign({}, data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             },
             /**
              * sendGet
              */
             sendGet () {
-                this.$http.get('/send_get_or_post_test/').then(res => {
-                    this.getMsg = res.message
-                })
+                this.$http.get('/send_get_or_post_test/').then((res) => {
+                    this.getMsg = res.message;
+                });
             },
             /**
              * sendPost
              */
             sendPost () {
-                this.$http.post('/send_get_or_post_test/').then(res => {
-                    this.postMsg = res.message
-                })
+                this.$http.post('/send_get_or_post_test/').then((res) => {
+                    this.postMsg = res.message;
+                });
             }
         }
-    }
+    };
 </script>
 
 <style scoped>
-    @import './index.css';
+@import "./index.css";
 </style>

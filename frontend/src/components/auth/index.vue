@@ -15,33 +15,33 @@
                 iframeWidth: 500,
                 iframeHeight: 500,
                 isShow: false
-            }
+            };
         },
         methods: {
             hideLoginModal () {
-                this.isShow = false
+                this.isShow = false;
             },
             showLoginModal (data) {
-                const url = data.login_url
+                const url = data.login_url;
                 if (!url) {
-                    console.warn('The response don\'t return login_url')
-                    return
+                    console.warn('The response don\'t return login_url');
+                    return;
                 }
-                this.iframeSrc = url
-                const iframeWidth = data.width
+                this.iframeSrc = url;
+                const iframeWidth = data.width;
                 if (iframeWidth) {
-                    this.iframeWidth = iframeWidth
+                    this.iframeWidth = iframeWidth;
                 }
-                const iframeHeight = data.height
+                const iframeHeight = data.height;
                 if (iframeHeight) {
-                    this.iframeHeight = iframeHeight
+                    this.iframeHeight = iframeHeight;
                 }
                 setTimeout(() => {
-                    this.isShow = true
-                }, 1000)
+                    this.isShow = true;
+                }, 1000);
             }
         }
-    }
+    };
 </script>
 
 <style scoped>

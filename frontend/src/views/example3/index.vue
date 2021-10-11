@@ -60,7 +60,7 @@
                 btn2Msg: '',
                 delMsg: '',
                 userInfo: null
-            }
+            };
         },
         created () {
         },
@@ -77,15 +77,15 @@
                 // await this.$store.dispatch(`example/enterExample2`, {time: +new Date()})
 
                 // 并行写法
-                const promises = []
-                promises.push(this.$store.dispatch('example/enterExample1', { delay: 1000 }))
-                promises.push(this.$store.dispatch('example/enterExample2', { delay: 1000 }))
+                const promises = [];
+                promises.push(this.$store.dispatch('example/enterExample1', { delay: 1000 }));
+                promises.push(this.$store.dispatch('example/enterExample2', { delay: 1000 }));
                 return Promise.all(promises).then(res => {
-                    this.enterMsg1 = res[0].data.msg
-                    this.enterMsg2 = res[1].data.msg
+                    this.enterMsg1 = res[0].data.msg;
+                    this.enterMsg2 = res[1].data.msg;
                 }).catch(err => {
-                    console.error('err', err)
-                })
+                    console.error('err', err);
+                });
             },
 
             /**
@@ -93,10 +93,10 @@
              */
             async btn1 () {
                 try {
-                    const res = await this.$store.dispatch('example/btn1', { btn: 'btn1', delay: 2000 })
-                    this.btn1Msg = res.data.msg
+                    const res = await this.$store.dispatch('example/btn1', { btn: 'btn1', delay: 2000 });
+                    this.btn1Msg = res.data.msg;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             },
 
@@ -105,10 +105,10 @@
              */
             async btn2 () {
                 try {
-                    const res = await this.$store.dispatch('example/btn2', { btn: 'btn2', delay: 2000 }, { cancelPrevious: false })
-                    this.btn2Msg = res.data.msg
+                    const res = await this.$store.dispatch('example/btn2', { btn: 'btn2', delay: 2000 }, { cancelPrevious: false });
+                    this.btn2Msg = res.data.msg;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             },
 
@@ -117,10 +117,10 @@
              */
             async del () {
                 try {
-                    const res = await this.$store.dispatch('example/del', { time: +new Date() })
-                    this.delMsg = res.data.msg
+                    const res = await this.$store.dispatch('example/del', { time: +new Date() });
+                    this.delMsg = res.data.msg;
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             },
 
@@ -129,14 +129,14 @@
              */
             async getUser () {
                 try {
-                    const data = await this.$store.dispatch('userInfo')
-                    this.userInfo = Object.assign({}, data)
+                    const data = await this.$store.dispatch('userInfo');
+                    this.userInfo = Object.assign({}, data);
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                 }
             }
         }
-    }
+    };
 </script>
 
 <style scoped>

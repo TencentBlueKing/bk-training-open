@@ -18,9 +18,9 @@
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters } from 'vuex';
 
-    import { bus } from '@/common/bus'
+    import { bus } from '@/common/bus';
 
     export default {
         name: 'app',
@@ -28,7 +28,7 @@
             return {
                 routerKey: +new Date(),
                 systemCls: 'mac'
-            }
+            };
         },
         computed: {
             ...mapGetters(['mainContentLoading'])
@@ -36,22 +36,22 @@
         watch: {
         },
         created () {
-            const platform = window.navigator.platform.toLowerCase()
+            const platform = window.navigator.platform.toLowerCase();
             if (platform.indexOf('win') === 0) {
-                this.systemCls = 'win'
+                this.systemCls = 'win';
             }
         },
         mounted () {
-            const self = this
+            const self = this;
             bus.$on('show-login-modal', data => {
-                self.$refs.bkAuth.showLoginModal(data)
-            })
+                self.$refs.bkAuth.showLoginModal(data);
+            });
             bus.$on('close-login-modal', () => {
-                self.$refs.bkAuth.hideLoginModal()
+                self.$refs.bkAuth.hideLoginModal();
                 setTimeout(() => {
-                    window.location.reload()
-                }, 0)
-            })
+                    window.location.reload();
+                }, 0);
+            });
         },
         methods: {
             /**
@@ -62,10 +62,10 @@
             goPage (idx) {
                 this.$router.push({
                     name: idx
-                })
+                });
             }
         }
-    }
+    };
 </script>
 
 <style lang="postcss">

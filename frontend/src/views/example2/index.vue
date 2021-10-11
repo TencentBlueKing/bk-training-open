@@ -21,13 +21,13 @@
         data () {
             return {
                 initDateTime: new Date()
-            }
+            };
         },
         created () {
         },
         methods: {
         }
-    }
+    };
 </script>
 
 <style scoped>

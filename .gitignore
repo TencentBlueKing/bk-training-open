@@ -1,0 +1,5 @@
+node_modules/
+frontend/webpack_cache
+frontend/.eslintrc.js
+frontend/.eslintrc.json
+requirements.txt

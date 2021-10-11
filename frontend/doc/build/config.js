@@ -21,6 +21,6 @@ export default {
         cssSourceMap: false,
         autoOpenBrowser: true,
         localDocUrl: 'http://localhost',
-        localDocPort: '8081'
+        localDocPort: '8080'
     }
 }

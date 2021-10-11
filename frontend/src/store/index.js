@@ -3,14 +3,14 @@
  * @author wwx
  */
 
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from 'vue';
+import Vuex from 'vuex';
 
-import example from './modules/example'
-import http from '@/api'
-import { unifyObjectStyle } from '@/common/util'
+import example from './modules/example';
+import http from '@/api';
+import { unifyObjectStyle } from '@/common/util';
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
 const store = new Vuex.Store({
     // 模块
@@ -37,7 +37,7 @@ const store = new Vuex.Store({
          * @param {boolean} loading 是否显示 loading
          */
         setMainContentLoading (state, loading) {
-            state.mainContentLoading = loading
+            state.mainContentLoading = loading;
         },
 
         /**
@@ -47,7 +47,7 @@ const store = new Vuex.Store({
          * @param {Object} user user 对象
          */
         updateUser (state, user) {
-            state.user = Object.assign({}, user)
+            state.user = Object.assign({}, user);
         }
     },
     actions: {
@@ -64,17 +64,17 @@ const store = new Vuex.Store({
             // 例如本例子里，ajax 地址为 USER_INFO_URL，mock 地址为 USER_INFO_URL?AJAX_MOCK_PARAM=index&invoke=getUserInfo
 
             // 后端提供的地址
-            const url = USER_INFO_URL
+            const url = USER_INFO_URL;
             // mock 的地址，示例先使用 mock 地址
             // const mockUrl = USER_INFO_URL + (USER_INFO_URL.indexOf('?') === -1 ? '?' : '&') + AJAX_MOCK_PARAM + '=index&invoke=getUserInfo'
             return http.get(url, {}, config).then(response => {
-                const userData = response.data || {}
-                context.commit('updateUser', userData)
-                return userData
-            })
+                const userData = response.data || {};
+                context.commit('updateUser', userData);
+                return userData;
+            });
         }
     }
-})
+});
 
 /**
  * hack vuex dispatch, add third parameter `config` to the dispatch method
@@ -86,24 +86,24 @@ const store = new Vuex.Store({
  * @return {Promise} 执行请求的 promise
  */
 store.dispatch = function (_type, _payload, config = {}) {
-    const { type, payload } = unifyObjectStyle(_type, _payload)
+    const { type, payload } = unifyObjectStyle(_type, _payload);
 
-    const action = { type, payload, config }
-    const entry = store._actions[type]
+    const action = { type, payload, config };
+    const entry = store._actions[type];
     if (!entry) {
         if (NODE_ENV !== 'production') {
-            console.error(`[vuex] unknown action type: ${type}`)
+            console.error(`[vuex] unknown action type: ${type}`);
         }
-        return
+        return;
     }
 
     store._actionSubscribers.forEach(sub => {
-        return sub(action, store.state)
-    })
+        return sub(action, store.state);
+    });
 
     return entry.length > 1
         ? Promise.all(entry.map(handler => handler(payload, config)))
-        : entry[0](payload, config)
-}
+        : entry[0](payload, config);
+};
 
-export default store
+export default store;
