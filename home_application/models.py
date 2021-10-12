@@ -26,10 +26,10 @@ class TimeBasic(models.Model):
 
 # 组
 class Group(TimeBasic):
-    name = models.CharField(max_length=128, unique=True, null=False, verbose_name="组名字")
+    name = models.CharField(max_length=128, unique=True, verbose_name="组名字")
     # 多个管理员用户名拼接成的字符串
-    admin = models.CharField(max_length=255, null=False, verbose_name="管理员们")
-    create_by = models.CharField(max_length=128, null=False, verbose_name="创建人")
+    admin = models.CharField(max_length=255, verbose_name="管理员们")
+    create_by = models.CharField(max_length=128, verbose_name="创建人")
 
     def __str__(self):
         return self.name
@@ -44,13 +44,20 @@ class GroupNotifier(models.Model):
         return "组id是：" + str(self.group_id) + " 日报通知人id：" + str(self.daily_notifier_id)
 
 
+class GenderType:
+    MALE = 0
+    FEMALE = 1
+
+
 # 用户表
 class User(TimeBasic):
-    username = models.CharField(max_length=128, unique=True, null=False, verbose_name="用户账号")
-    name = models.CharField(max_length=128, null=False, verbose_name="用户姓名")
-    gender = models.IntegerField(null=True, verbose_name="性别")
-    phone = models.IntegerField(null=True, verbose_name="电话号码")
-    email = models.EmailField(null=False, verbose_name="邮箱")
+    username = models.CharField(max_length=128, unique=True, verbose_name="用户账号")
+    name = models.CharField(max_length=128, verbose_name="用户姓名")
+    gender = models.IntegerField(
+        choices=[(GenderType.MALE, "男"), (GenderType.FEMALE, "女")], null=True, blank=True, verbose_name="性别"
+    )
+    phone = models.IntegerField(null=True, blank=True, verbose_name="电话号码")
+    email = models.EmailField(verbose_name="邮箱")
 
     def __str__(self):
         return self.username
@@ -77,9 +84,9 @@ class TemplateGroup(models.Model):
 # 日报模板表
 class DailyReportTemplate(models.Model):
     # 改成128
-    name = models.CharField(max_length=128, null=False, verbose_name="日报模板名字")
-    content = models.CharField(max_length=255, null=False, verbose_name="日报模板内容")
-    create_by = models.CharField(max_length=128, null=False, verbose_name="创建人")
+    name = models.CharField(max_length=128, verbose_name="日报模板名字")
+    content = models.CharField(max_length=255, verbose_name="日报模板内容")
+    create_by = models.CharField(max_length=128, verbose_name="创建人")
 
     def __str__(self):
         return self.name
@@ -87,9 +94,9 @@ class DailyReportTemplate(models.Model):
 
 # 日报表
 class Daily(TimeBasic):
-    content = models.TextField(null=False, verbose_name="日报内容")
-    create_by = models.CharField(max_length=128, null=False, verbose_name="创建人")
-    date = models.DateTimeField(null=False, verbose_name="日报日期")
+    content = models.TextField(verbose_name="日报内容")
+    create_by = models.CharField(max_length=128, verbose_name="创建人")
+    date = models.DateTimeField(verbose_name="日报日期")
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
