@@ -16,19 +16,18 @@
                             :key="item.id"
                             theme="light navigation-message"
                             :arrow="false"
-                            offset="0, -5"
-                            placement="bottom"
-                            :tippy-options="{ hideOnClick: false, flipBehavior: ['bottom'] }"
                         >
                             <li
                                 v-show="item.show"
                                 class="header-nav-item"
                                 :class="{ 'item-active': index === header.active }"
                             >
-                                {{ item.name }}
+                                <router-link :to="item.url">   {{ item.name }}</router-link>
                             </li>
+
                             <template slot="content">
                                 <ul class="monitor-navigation-nav">
+
                                     <li
                                         class="nav-item"
                                         v-for="headerNavItem in curHeaderNav.navList"
@@ -70,6 +69,7 @@
                         v-model="header.bizId"
                         :clearable="false"
                         searchable
+                        
                     >
                         <bk-option
                             v-for="option in header.selectList"
@@ -79,58 +79,6 @@
                         >
                         </bk-option>
                     </bk-select>
-                    <bk-popover
-                        theme="light navigation-message"
-                        :arrow="false"
-                        offset="-150, 5"
-                        trigger="mouseenter"
-                        :tippy-options="{ hideOnClick: false }"
-                    >
-                        <div
-                            class="header-mind"
-                            :class="{ 'is-left': curNav.nav === 'left-right' }"
-                        >
-                            <svg
-                                style="
-                  width: 1em;
-                  height: 1em;
-                  vertical-align: middle;
-                  fill: currentColor;
-                  overflow: hidden;
-                "
-                                viewBox="0 0 64 64"
-                                version="1.1"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M32,56c-1.3,0-2.6-0.6-3.4-1.6h-4.5c0.5,1.5,1.4,2.7,2.6,3.7c3.1,2.5,7.5,2.5,10.6,0c1.2-1,2.1-2.3,2.6-3.7h-4.5C34.6,55.4,33.3,56,32,56z"
-                                ></path>
-                                <path
-                                    d="M53.8,49.1L50,41.5V28c0-8.4-5.8-15.7-14-17.6V8c0-2.2-1.8-4-4-4s-4,1.8-4,4v2.4c-8.2,1.9-14,9.2-14,17.6v13.5l-3.8,7.6c-0.3,0.6-0.3,1.3,0.1,1.9c0.4,0.6,1,1,1.7,1h40c0.7,0,1.3-0.4,1.7-1C54,50.4,54.1,49.7,53.8,49.1z"
-                                ></path>
-                            </svg>
-                            <span
-                                class="header-mind-mark"
-                                :class="{ 'is-left': curNav.nav === 'left-right' }"
-                            ></span>
-                        </div>
-                        <template slot="content">
-                            <div class="monitor-navigation-message">
-                                <h5 class="message-title">消息中心</h5>
-                                <ul class="message-list">
-                                    <li
-                                        class="message-list-item"
-                                        v-for="(item, index) in message.list"
-                                        :key="index"
-                                    >
-                                        <span class="item-message">{{ item.message }}</span>
-                                        <span class="item-date">{{ item.date }}</span>
-                                    </li>
-                                </ul>
-                                <div class="message-footer">进入消息中心</div>
-                            </div>
-                        </template>
-                    </bk-popover>
                     <div
                         class="header-help"
                         :class="{ 'is-left': curNav.nav === 'left-right' }"
@@ -153,32 +101,6 @@
                             ></path>
                         </svg>
                     </div>
-                    <bk-popover
-                        theme="light navigation-message"
-                        :arrow="false"
-                        offset="-20, 10"
-                        placement="bottom-start"
-                        :tippy-options="{ hideOnClick: false }"
-                    >
-                        <div
-                            class="header-user"
-                            :class="{ 'is-left': curNav.nav === 'left-right' }"
-                        >
-                            Liang
-                            <i class="bk-icon icon-down-shape"></i>
-                        </div>
-                        <template slot="content">
-                            <ul class="monitor-navigation-admin">
-                                <li
-                                    class="nav-item"
-                                    v-for="userItem in user.list"
-                                    :key="userItem"
-                                >
-                                    {{ userItem }}
-                                </li>
-                            </ul>
-                        </template>
-                    </bk-popover>
                 </div>
             </template>
             <template slot="menu">
@@ -199,7 +121,7 @@
                         :url="item.url"
                         :id="item.name"
                     >
-                        <span>{{ item.name }}</span>
+                        <router-link :to="item.url">{{ item.name }}</router-link>
                         <div slot="child">
                             <bk-navigation-menu-item
                                 :key="child.name"
@@ -264,15 +186,14 @@
                             name: '首页',
                             icon: 'icon-tree-application-shape',
                             url: '/overview/',
-                            open: true,
+                            open: false,
                             children: [
                                 {
                                     name: '首页一',
+                                    url: '1',
                                     active: true
-                                },
-                                {
-                                    name: '首页二'
                                 }
+  
                             ]
                         },
                         {
@@ -292,11 +213,6 @@
                             icon: 'icon-tree-module-shape',
                             url: '/component/',
                             disabled: true
-                        },
-                        {
-                            name: '测试页三',
-                            icon: 'icon-tree-process-shape',
-                            url: '/uptime_check/summary/'
                         }
                     ],
                     id: '首页一',
@@ -307,13 +223,21 @@
                 header: {
                     list: [
                         {
-                            name: '作业平台',
+                            name: '首页',
                             id: 1,
+                            url: 'example1',
                             show: true
                         },
                         {
-                            name: '配置平台',
+                            name: '我的培训',
                             id: 2,
+                            url: 'example2',
+                            show: true
+                        },
+                        {
+                            name: '我的管理',
+                            id: 2,
+                            url: 'example2',
                             show: true
                         }
                     ],
@@ -363,7 +287,7 @@
     };
 </script>
 
-<style>
+<style scoped>
 /* 以下样式是为了适应例子父级的宽高而设置 */
 .bk-navigation {
   width: 100%;
@@ -372,6 +296,12 @@
 }
 .bk-navigation .bk-navigation-wrapper {
   height: calc(100vh - 252px) !important;
+}
+.bk-select >>> .bk-select-name{
+  display:none;
+}
+.bk-navigation >>>.bk-icon{
+  display:none;
 }
 /* 以上样式是为了适应例子父级的宽高而设置 */
 
