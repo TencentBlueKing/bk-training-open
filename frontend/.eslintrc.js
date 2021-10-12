@@ -26,6 +26,7 @@ module.exports = {
 	},
 	// add your custom rules hered
 	rules: {
+		'no-tabs': 0,
 		// https://eslint.org/docs/rules/brace-style
 		'brace-style': [
 			'error',
