@@ -22,7 +22,7 @@
                                 class="header-nav-item"
                                 :class="{ 'item-active': index === header.active }"
                             >
-                                <router-link :to="item.url">   {{ item.name }}</router-link>
+                                <router-link :to="item.url" style="color:white;">   {{ item.name }}</router-link>
                             </li>
                         </bk-popover>
                     </ol>
@@ -96,29 +96,26 @@
                 header: {
                     list: [
                         {
-                            name: '首页',
+                            name: '日报查看',
                             id: 1,
-                            url: 'example1',
+                            url: 'Home',
                             show: true
                         },
                         {
-                            name: '我的培训',
+                            name: '我的组',
                             id: 2,
-                            url: 'example2',
+                            url: 'myGroup',
                             show: true
                         },
                         {
-                            name: '我的管理',
+                            name: '我的日报',
                             id: 3,
-                            url: 'example3',
+                            url: 'myDaily',
                             show: true
                         }
                     ],
                     active: 2,
                     bizId: 1
-                },
-                user: {
-                    list: ['项目管理', '权限中心', '退出']
                 }
             };
         },
