@@ -34,6 +34,14 @@ class Group(TimeBasic):
     def __str__(self):
         return self.name
 
+    def admin_include(self, username: str) -> bool:
+        """
+        判断管理员列表是否包含指定用户
+        :param username: 用户名
+        :return: 是→True；不是→False
+        """
+        return username in self.admin
+
 
 # 组中的日报通知人
 class GroupNotifier(models.Model):
