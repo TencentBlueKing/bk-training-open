@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 import time
 
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render
 
@@ -57,53 +58,38 @@ def send_get_or_post_test(request):
 
 def add_group(request):
     """添加组"""
-    req = json.loads(request.body.decode("UTF-8"))
+    req = json.loads(request.body)
     try:
         name = req.get("name")
         admin = req.get("admin")
         Group.objects.create(name=name, admin=admin, create_by=request.user.username)
-    except Exception as err:
-        result = False
-        message = str(err)
-        return JsonResponse({"result": result, "code": 1, "message": message})
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     else:
-        result = True
-        return JsonResponse({"result": result, "code": 0, "data": []})
+        return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": []})
 
 
 def update_group(request):
     """编辑组信息"""
-    req = json.loads(request.body.decode("UTF-8"))
+    req = json.loads(request.body)
     try:
         id = req.get("id")
         name = req.get("name")
         admin = req.get("admin")
-        update_time = datetime.now()
-        Group.objects.filter(id=id).update(name=name, admin=admin, update_time=update_time)
-    except Exception as err:
-        result = False
-        message = str(err)
-        return JsonResponse({"result": result, "code": 1, "message": message})
+        Group.objects.filter(id=id).update(name=name, admin=admin, update_time=datetime.now())
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
     else:
-        result = True
-        return JsonResponse({"result": result, "code": 0, "data": []})
+        return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
 
 
 def get_all_bk_users(request):
     """从蓝鲸平台，拉取所有用户列表"""
-    try:
-        client = get_client_by_request(request=request)
-        response = client.usermanage.list_users()
-    except Exception as err:
-        # 请求接口失败
-        result = False
-        message = str(err)
-        return JsonResponse({"result": result, "code": 1, "message": message})
+    client = get_client_by_request(request=request)
+    response = client.usermanage.list_users(fields="id,username,display_name,email,telephone")
+    result = response.get("result")
+    if result is False:
+        # 请求接口成功，但获取内容失败，返回错误信息
+        return response
     else:
-        code = response.get("code")
-        if code != 0:
-            # 请求接口成功，但获取内容失败
-            return response
-        else:
-            result = True
-            return JsonResponse({"result": result, "code": 0, "data": response.get("data")})
+        return JsonResponse({"result": True, "code": 0, "data": response.get("data"), "message": "获取蓝鲸用户列表成功"})
