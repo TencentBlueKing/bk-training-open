@@ -23,6 +23,7 @@ from kombu.utils import json
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.models import Group
+from home_application.utils import check_param
 
 
 def home(request):
@@ -59,9 +60,13 @@ def send_get_or_post_test(request):
 def add_group(request):
     """添加组"""
     req = json.loads(request.body)
+    params = {"name": "组名", "admin": "管理员"}
+    check_params_result = check_param(params, req)
+    if check_params_result:
+        return JsonResponse({"result": False, "code": 1, "message": f"添加失败，缺少{check_params_result}"})
+    name = req.get("name")
+    admin = req.get("admin")
     try:
-        name = req.get("name")
-        admin = req.get("admin")
         Group.objects.create(name=name, admin=admin, create_by=request.user.username)
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
@@ -72,10 +77,14 @@ def add_group(request):
 def update_group(request):
     """编辑组信息"""
     req = json.loads(request.body)
+    params = {"id": "组id", "name": "组名", "admin": "管理员"}
+    check_params_result = check_param(params, req)
+    if check_params_result:
+        return JsonResponse({"result": False, "code": 1, "message": f"添加失败，缺少{check_params_result}"})
+    id = req.get("id")
+    name = req.get("name")
+    admin = req.get("admin")
     try:
-        id = req.get("id")
-        name = req.get("name")
-        admin = req.get("admin")
         Group.objects.filter(id=id).update(name=name, admin=admin, update_time=datetime.now())
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
@@ -88,8 +97,8 @@ def get_all_bk_users(request):
     client = get_client_by_request(request=request)
     response = client.usermanage.list_users(fields="id,username,display_name,email,telephone")
     result = response.get("result")
-    if result is False:
+    if result:
+        return JsonResponse({"result": True, "code": 0, "data": response.get("data"), "message": "获取蓝鲸用户列表成功"})
+    else:
         # 请求接口成功，但获取内容失败，返回错误信息
         return response
-    else:
-        return JsonResponse({"result": True, "code": 0, "data": response.get("data"), "message": "获取蓝鲸用户列表成功"})
