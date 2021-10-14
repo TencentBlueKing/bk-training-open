@@ -61,9 +61,9 @@ def add_group(request):
     """添加组"""
     req = json.loads(request.body)
     params = {"name": "组名", "admin": "管理员"}
-    check_params_result = check_param(params, req)
-    if check_params_result:
-        return JsonResponse({"result": False, "code": 1, "message": f"添加失败，缺少{check_params_result}"})
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
     name = req.get("name")
     admin = req.get("admin")
     try:
@@ -78,9 +78,9 @@ def update_group(request):
     """编辑组信息"""
     req = json.loads(request.body)
     params = {"id": "组id", "name": "组名", "admin": "管理员"}
-    check_params_result = check_param(params, req)
-    if check_params_result:
-        return JsonResponse({"result": False, "code": 1, "message": f"添加失败，缺少{check_params_result}"})
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
     id = req.get("id")
     name = req.get("name")
     admin = req.get("admin")
