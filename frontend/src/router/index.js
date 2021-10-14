@@ -5,19 +5,19 @@
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-
+   
 import store from '@/store'
 import http from '@/api'
 import preload from '@/common/preload'
-
+   
 Vue.use(VueRouter)
-
-const MainEntry = () => import(/* webpackChunkName: 'entry' */'@/views')
-const Example1 = () => import(/* webpackChunkName: 'example1' */'@/views/example1')
-const Example2 = () => import(/* webpackChunkName: 'example2' */'@/views/example2')
-const Example3 = () => import(/* webpackChunkName: 'example3' */'@/views/example3')
-const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/404')
-
+   
+const MainEntry = () => import(/* webpackChunkName: 'entry' */ '@/views')
+const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/Home')
+const myDaily = () => import(/* webpackChunkName: 'example2' */ '@/views/myGroup')
+const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/myDaily')
+const NotFound = () => import(/* webpackChunkName: 'none' */ '@/views/404')
+   
 const routes = [
     {
         path: window.PROJECT_CONFIG.SITE_URL,
@@ -26,20 +26,20 @@ const routes = [
         alias: '',
         children: [
             {
-                path: 'example1',
+                path: 'Home',
+                name: 'Home',
                 alias: '',
-                name: 'example1',
-                component: Example1
+                component: Home
             },
             {
-                path: 'example2',
-                name: 'example2',
-                component: Example2
+                path: 'myGroup',
+                name: 'myGroup',
+                component: myGroup
             },
             {
-                path: 'example3',
-                name: 'example3',
-                component: Example3
+                path: 'myDaily',
+                name: 'myDaily',
+                component: myDaily
             }
         ]
     },
@@ -50,40 +50,40 @@ const routes = [
         component: NotFound
     }
 ]
-
+   
 const router = new VueRouter({
     mode: 'history',
     routes: routes
 })
-
+   
 const cancelRequest = async () => {
     const allRequest = http.queue.get()
-    const requestQueue = allRequest.filter(request => request.cancelWhenRouteChange)
-    await http.cancel(requestQueue.map(request => request.requestId))
+    const requestQueue = allRequest.filter((request) => request.cancelWhenRouteChange)
+    await http.cancel(requestQueue.map((request) => request.requestId))
 }
-
+   
 let preloading = true
 let canceling = true
 let pageMethodExecuting = true
-
+   
 router.beforeEach(async (to, from, next) => {
     canceling = true
     await cancelRequest()
     canceling = false
     next()
 })
-
+   
 router.afterEach(async (to, from) => {
     store.commit('setMainContentLoading', true)
-
+   
     preloading = true
     await preload()
     preloading = false
-
+   
     const pageDataMethods = []
     const routerList = to.matched
-    routerList.forEach(r => {
-        Object.values(r.instances).forEach(vm => {
+    routerList.forEach((r) => {
+        Object.values(r.instances).forEach((vm) => {
             if (typeof vm.fetchPageData === 'function') {
                 pageDataMethods.push(vm.fetchPageData())
             }
@@ -92,14 +92,14 @@ router.afterEach(async (to, from) => {
             }
         })
     })
-
+   
     pageMethodExecuting = true
     await Promise.all(pageDataMethods)
     pageMethodExecuting = false
-
+   
     if (!preloading && !canceling && !pageMethodExecuting) {
         store.commit('setMainContentLoading', false)
     }
 })
-
+   
 export default router
