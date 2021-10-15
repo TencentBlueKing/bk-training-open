@@ -17,7 +17,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
-from home_application.models import DailyReportTemplate, TemplateGroup
+from home_application.models import DailyReportTemplate
 from home_application.utils.decorator import is_group_admin
 
 
@@ -74,10 +74,9 @@ def report_template(request, group_id):
         # 数据合法，创建新的日报模板
         if template_content is None:
             template_content = ""
-        new_template = DailyReportTemplate.objects.create(
-            name=template_name, content=template_content, create_by=username
-        )  # noqa
-        TemplateGroup.objects.create(group_id=group_id, template_id=new_template.id)
+        DailyReportTemplate.objects.create(
+            name=template_name, content=template_content, create_by=username, group_id=group_id
+        )
         return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
     elif request.method == "PATCH":
         template_id = req.get("template_id")
@@ -90,8 +89,7 @@ def report_template(request, group_id):
             template_update_data["name"] = template_name
         # 验证模板是否存在
         try:
-            TemplateGroup.objects.get(group_id=group_id, template_id=template_id)
-            DailyReportTemplate.objects.filter(id=template_id).update(**template_update_data)
+            DailyReportTemplate.objects.filter(id=template_id, group_id=group_id).update(**template_update_data)
             return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
-        except (DailyReportTemplate.DoesNotExist, TemplateGroup.DoesNotExist):
+        except DailyReportTemplate.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
