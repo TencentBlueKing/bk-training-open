@@ -216,6 +216,44 @@ git pull blueking-train
     git add .
     git commit -m bugfix:xxxxxxxxxxxxx
     ```
+  
+- 装饰器使用说明
+
+  - 限制请求方法
+
+    限制请求方法请直接使用Django自带的装饰器，有`require_http_methods`, `require_GET`, `require_POST`三种，导入方式如下：
+
+    ```python
+    from django.views.decorators.http import require_http_methods, require_GET, require_POST
+    ```
+
+    `require_GET`限制只能用GET方法，`require_POST`限制只能用POST方法，而`require_http_methods`则以数组作为参数限制指定的几种方法，用法示例如下：
+
+    ```python
+    @require_http_methods(["POST", "PATCH"])
+    ```
+
+  - 需要管理员权限
+
+    自定义了需要鉴别管理员权限的装饰器[is_group_admin](./home_application/utils/decorator.py)，为了避免`request.body`无法重复读取的问题，使用时需要将组id放在URL中
+
+    `urls.py`中的写法参考如下：
+
+    ```python
+    path("report_template/<int:group_id>/", views.report_template),
+    ```
+
+    `views.py`中的使用方法如下：
+
+    ```python
+    from home_application.utils.decorator import is_group_admin
+    
+    @is_group_admin
+    def report_template(request, group_id):
+        # 相关操作
+    ```
+
+    
 
 # 四、学习资料
 

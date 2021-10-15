@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
@@ -20,6 +21,5 @@ urlpatterns = (
     url(r"^dev-guide/$", views.dev_guide),
     url(r"^contact/$", views.contact),
     url(r"^send_get_or_post_test/$", views.send_get_or_post_test),
-    url(r"^create_report_template/$", views.create_report_template),
-    url(r"^update_report_template/$", views.update_report_template),
+    path("report_template/<int:group_id>/", views.report_template),
 )

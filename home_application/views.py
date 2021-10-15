@@ -13,11 +13,12 @@ specific language governing permissions and limitations under the License.
 import json
 import time
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
 
-from home_application.models import DailyReportTemplate, Group, TemplateGroup
+from home_application.models import DailyReportTemplate, TemplateGroup
+from home_application.utils.decorator import is_group_admin
 
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
@@ -53,90 +54,44 @@ def send_get_or_post_test(request):
         return JsonResponse({"data": [], "message": f"Post请求发送成功{time.time()}"})
 
 
-def create_report_template(request):
+@require_http_methods(["POST", "PATCH"])
+@is_group_admin
+def report_template(request, group_id):
     """
-    创建日报模板
+    创建或者更新日报模板
     """
-    # 存储返回结果
-    result = {"result": False, "code": 400, "message": "", "data": []}
-
-    if request.method != "POST":
-        result["message"] = "请使用POST方法请求"
-        return JsonResponse(status=result["code"], data=result)
-
     username = request.user.username
-    template_name = request.POST.get("name", None)
-    template_content = request.POST.get("content", "")
-    group_id = request.POST.get("group_id", None)
-
-    # 模板名字不可为空，但是模板内容支持为空
-    if not (template_name and group_id):
-        result["message"] = "缺少请求参数"
-        return JsonResponse(status=result["code"], data=result)
-
-    # 验证组是否存在以及是否拥有管理员权限
-    try:
-        temp_group = Group.objects.get(id=group_id)
-    except ObjectDoesNotExist:
-        result["message"] = "未找到对应的组"
-        return JsonResponse(status=result["code"], data=result)
-    if not temp_group.admin_include(username=username):
-        result["code"] = 403
-        result["message"] = "没有对应组的管理权限"
-        return JsonResponse(status=result["code"], data=result)
-
-    # 数据合法，创建新的日报模板
-    new_template = DailyReportTemplate.objects.create(name=template_name, content=template_content, create_by=username)
-    TemplateGroup.objects.create(group_id=group_id, template_id=new_template.id)
-
-    result["result"] = True
-    result["code"] = 200
-    result["message"] = "创建日报模板成功"
-    return JsonResponse(result)
-
-
-def update_report_template(request):
-    """
-    更新日报模板
-    """
-    # 存储返回结果
-    result = {"result": False, "code": 400, "message": "", "data": []}
-
-    if request.method != "PUT":
-        result["message"] = "请使用PUT方法请求"
-        return JsonResponse(status=result["code"], data=result)
 
     req = json.loads(request.body.decode())
-    username = request.user.username
-    group_id = req.get("group_id", None)
-    template_id = req.get("template_id", None)
-    new_name = req.get("name", None)
-    new_content = req.get("content", None)
+    template_name = req.get("name")
+    template_content = req.get("content")
 
-    # 若模板名字非空则创建，允许模板内容为空
-    if not (group_id and template_id):
-        result["message"] = "缺少请求参数"
-        return JsonResponse(status=result["code"], data=result)
+    # 模板名字不可为空，但是模板内容支持为空
+    if not template_name:
+        return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
 
-    # 验证组和模板是否存在以及是否拥有管理员权限
-    try:
-        temp_group = Group.objects.get(id=group_id)
-        temp_template = DailyReportTemplate.objects.get(id=template_id)
-    except ObjectDoesNotExist:
-        result["message"] = "未找到对应的组或者日报模板"
-        return JsonResponse(status=result["code"], data=result)
-    if not temp_group.admin_include(username=username):
-        result["code"] = 403
-        result["message"] = "没有对应组的管理权限"
-        return JsonResponse(status=result["code"], data=result)
+    if request.method == "POST":
+        # 数据合法，创建新的日报模板
+        if template_content is None:
+            template_content = ""
+        new_template = DailyReportTemplate.objects.create(
+            name=template_name, content=template_content, create_by=username
+        )  # noqa
+        TemplateGroup.objects.create(group_id=group_id, template_id=new_template.id)
+        return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
+    elif request.method == "PATCH":
+        template_id = req.get("template_id")
 
-    # 修改模板内容
-    if new_content is not None:
-        temp_template.content = new_content
-    if new_name:
-        temp_template.name = new_name
-    temp_template.save()
-    result["result"] = True
-    result["code"] = 200
-    result["message"] = "修改日报模板成功"
-    return JsonResponse(result)
+        # 构造更新数据
+        template_update_date = {}
+        if template_content is not None:
+            template_update_date["content"] = template_content
+        if template_name:
+            template_update_date["name"] = template_name
+        # 验证模板是否存在
+        try:
+            TemplateGroup.objects.get(group_id=group_id, template_id=template_id)
+            DailyReportTemplate.objects.filter(id=template_id).update(**template_update_date)
+            return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
+        except (DailyReportTemplate.DoesNotExist, TemplateGroup.DoesNotExist):
+            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})

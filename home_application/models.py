@@ -34,14 +34,6 @@ class Group(TimeBasic):
     def __str__(self):
         return self.name
 
-    def admin_include(self, username: str) -> bool:
-        """
-        判断管理员列表是否包含指定用户
-        :param username: 用户名
-        :return: 是→True；不是→False
-        """
-        return username in self.admin
-
 
 # 组中的日报通知人
 class GroupNotifier(models.Model):
@@ -91,7 +83,6 @@ class TemplateGroup(models.Model):
 
 # 日报模板表
 class DailyReportTemplate(models.Model):
-    # 改成128
     name = models.CharField(max_length=128, verbose_name="日报模板名字")
     content = models.CharField(max_length=255, verbose_name="日报模板内容")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
