@@ -62,7 +62,7 @@ def report_template(request, group_id):
     """
     username = request.user.username
 
-    req = json.loads(request.body.decode())
+    req = json.loads(request.body)
     template_name = req.get("name")
     template_content = req.get("content")
 
@@ -83,15 +83,15 @@ def report_template(request, group_id):
         template_id = req.get("template_id")
 
         # 构造更新数据
-        template_update_date = {}
+        template_update_data = {}
         if template_content is not None:
-            template_update_date["content"] = template_content
+            template_update_data["content"] = template_content
         if template_name:
-            template_update_date["name"] = template_name
+            template_update_data["name"] = template_name
         # 验证模板是否存在
         try:
             TemplateGroup.objects.get(group_id=group_id, template_id=template_id)
-            DailyReportTemplate.objects.filter(id=template_id).update(**template_update_date)
+            DailyReportTemplate.objects.filter(id=template_id).update(**template_update_data)
             return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
         except (DailyReportTemplate.DoesNotExist, TemplateGroup.DoesNotExist):
             return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
