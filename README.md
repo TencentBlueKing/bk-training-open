@@ -233,26 +233,29 @@ git pull blueking-train
     @require_http_methods(["POST", "PATCH"])
     ```
 
-  - 需要管理员权限
+  - 需要限制用户在组内，或者需要限制用户拥有组的管理员权限
 
-    自定义了需要鉴别管理员权限的装饰器[is_group_admin](./home_application/utils/decorator.py)，为了避免`request.body`无法重复读取的问题，使用时需要将组id放在URL中
+    自定义了鉴别是否为指定组成员的装饰器[is_group_member](./home_application/utils/decorator.py)
 
+    - 为了避免`request.body`无法重复读取的问题，使用时需要将组id放在URL中
+    - 其中装饰器的参数`admin_needed`用来限制需要管理员才能访问的方法，默认为None，表示该请求下所有方法都不需要管理员权限，当指定方法需要管理员权限时需要将对应的方法以`list`的形式传进去
+    
     `urls.py`中的写法参考如下：
-
+    
     ```python
     path("report_template/<int:group_id>/", views.report_template),
     ```
-
-    `views.py`中的使用方法如下：
-
+    
+    `views.py`中的使用方法参考如下：
+    
     ```python
     from home_application.utils.decorator import is_group_admin
     
-    @is_group_admin
+    @is_group_member(admin_needed=["POST", "PATCH", "DELETE"])
     def report_template(request, group_id):
         # 相关操作
     ```
-
+    
     
 
 # 四、学习资料
