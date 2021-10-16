@@ -22,4 +22,7 @@ urlpatterns = (
     url(r"^contact/$", views.contact),
     url(r"^send_get_or_post_test/$", views.send_get_or_post_test),
     path("report_template/<int:group_id>/", views.report_template),
+    url(r"^add_group/$", views.add_group),
+    url(r"^update_group/$", views.update_group),
+    url(r"^get_all_bk_users/$", views.get_all_bk_users),
 )
