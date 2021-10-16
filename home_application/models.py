@@ -72,21 +72,12 @@ class GroupUser(models.Model):
         return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
 
 
-# 组-模板关联表
-class TemplateGroup(models.Model):
-    group_id = models.IntegerField(verbose_name="组id")
-    template_id = models.IntegerField(verbose_name="模板id")
-
-    def __str__(self):
-        return "组id：" + str(self.group_id) + " 日报模板id：" + str(self.template_id)
-
-
 # 日报模板表
 class DailyReportTemplate(models.Model):
-    # 改成128
     name = models.CharField(max_length=128, verbose_name="日报模板名字")
     content = models.CharField(max_length=255, verbose_name="日报模板内容")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
+    group_id = models.IntegerField(verbose_name="组id")
 
     def __str__(self):
         return self.name

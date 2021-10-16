@@ -10,11 +10,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
 import time
 
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
+
+from home_application.models import DailyReportTemplate
+from home_application.utils.decorator import is_group_admin
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
 # 装饰器引入 from blueapps.account.decorators import login_exempt
@@ -56,6 +61,47 @@ def send_get_or_post_test(request):
     if request.method == "POST":
         return JsonResponse({"data": [], "message": f"Post请求发送成功{time.time()}"})
 
+
+
+@require_http_methods(["POST", "PATCH"])
+@is_group_admin
+def report_template(request, group_id):
+    """
+    创建或者更新日报模板
+    """
+    username = request.user.username
+
+    req = json.loads(request.body)
+    template_name = req.get("name")
+    template_content = req.get("content")
+
+    # 模板名字不可为空，但是模板内容支持为空
+    if not template_name:
+        return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
+
+    if request.method == "POST":
+        # 数据合法，创建新的日报模板
+        if template_content is None:
+            template_content = ""
+        DailyReportTemplate.objects.create(
+            name=template_name, content=template_content, create_by=username, group_id=group_id
+        )
+        return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
+    elif request.method == "PATCH":
+        template_id = req.get("template_id")
+
+        # 构造更新数据
+        template_update_data = {}
+        if template_content is not None:
+            template_update_data["content"] = template_content
+        if template_name:
+            template_update_data["name"] = template_name
+        # 验证模板是否存在
+        try:
+            DailyReportTemplate.objects.filter(id=template_id, group_id=group_id).update(**template_update_data)
+            return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
+        except DailyReportTemplate.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
 
 def add_group(request):
     """添加组"""
@@ -102,3 +148,4 @@ def get_all_bk_users(request):
     else:
         # 请求接口成功，但获取内容失败，返回错误信息
         return response
+
