@@ -17,12 +17,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = (
-    url(r"^$", views.home),
-    url(r"^dev-guide/$", views.dev_guide),
-    url(r"^contact/$", views.contact),
-    url(r"^send_get_or_post_test/$", views.send_get_or_post_test),
     path("report_template/<int:group_id>/", views.report_template),
     url(r"^add_group/$", views.add_group),
     url(r"^update_group/$", views.update_group),
     url(r"^get_all_bk_users/$", views.get_all_bk_users),
+    path("add_user/<int:group_id>/", views.add_user),
+    url(r"^update_user/$", views.update_user),
+    url(r"^get_groups_by_user/$", views.get_groups_by_user),
 )
