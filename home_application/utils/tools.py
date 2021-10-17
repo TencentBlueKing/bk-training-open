@@ -13,3 +13,15 @@ def group2json(group):
         "name": group.name,
         "admin": group.admin,
     }
+
+
+def user2json(user):
+    """将User转化为json str的格式"""
+    return {
+        "id": user.id,
+        "username": user.username,
+        "name": user.name,
+        "phone": user.phone,
+        "email": user.email,
+    }
+

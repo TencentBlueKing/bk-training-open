@@ -22,7 +22,7 @@ from django.views.decorators.http import require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.models import DailyReportTemplate, Group, User, GroupUser
-from home_application.utils.tools import check_param, group2json
+from home_application.utils.tools import check_param, group2json, user2json
 from home_application.utils.decorator import is_group_member
 
 
@@ -190,12 +190,12 @@ def update_user(request):
         return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
 
 
-def get_groups_by_user(request):
+def get_user_groups(request):
     """查询用户组列表"""
     try:
         user_id = User.objects.get(username=request.user.username).id
-    except User.DoesNotExist:   # 游客用户，没有组列表
-        return JsonResponse({"result": True, "code": 0, "message": "", "data":[]})
+    except User.DoesNotExist:
+        return JsonResponse({"result": True, "code": 0, "message": "", "data": []})
     group_ids = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
     groups = Group.objects.in_bulk(list(group_ids))
     group_list = []
@@ -204,3 +204,15 @@ def get_groups_by_user(request):
         group = json.loads(group_json)  # 将JSON formatted str格式转化为字典
         group_list.append(group)
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": group_list})
+
+
+def get_group_users(request, group_id):
+    """查询组的成员列表"""
+    user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    users = User.objects.in_bulk(list(user_ids))
+    user_list = []
+    for user_id in users:
+        user_json = json.dumps(users.get(user_id), default=user2json, ensure_ascii=False)
+        user = json.loads(user_json)
+        user_list.append(user)
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user_list})
