@@ -16,19 +16,16 @@ import time
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.http import require_http_methods
-
-from home_application.models import DailyReportTemplate
-from home_application.utils.decorator import is_group_admin
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
 # 装饰器引入 from blueapps.account.decorators import login_exempt
 from django.utils.datetime_safe import datetime
-from kombu.utils import json
+from django.views.decorators.http import require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
-from home_application.models import Group
-from home_application.utils import check_param
+from home_application.models import DailyReportTemplate, Group
+from home_application.utils.check_param import check_param
+from home_application.utils.decorator import is_group_member
 
 
 def home(request):
@@ -62,33 +59,43 @@ def send_get_or_post_test(request):
         return JsonResponse({"data": [], "message": f"Post请求发送成功{time.time()}"})
 
 
-
-@require_http_methods(["POST", "PATCH"])
-@is_group_admin
+@require_http_methods(["GET", "POST", "PATCH", "DELETE"])
+@is_group_member(admin_needed=["POST", "PATCH", "DELETE"])
 def report_template(request, group_id):
     """
-    创建或者更新日报模板
+    日报模板的增删改查功能
     """
-    username = request.user.username
+    # 获取模板
+    if request.method == "GET":
+        templates = list(DailyReportTemplate.objects.filter(group_id=group_id).values())
+        return JsonResponse({"result": True, "code": 0, "message": "", "data": templates})
 
     req = json.loads(request.body)
-    template_name = req.get("name")
-    template_content = req.get("content")
 
-    # 模板名字不可为空，但是模板内容支持为空
-    if not template_name:
-        return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
-
+    # 创建模板
     if request.method == "POST":
+        template_name = req.get("name")
+        template_content = req.get("content")
+        # 模板名字不可为空，但是模板内容支持为空
+        if not template_name:
+            return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
+
         # 数据合法，创建新的日报模板
         if template_content is None:
             template_content = ""
         DailyReportTemplate.objects.create(
-            name=template_name, content=template_content, create_by=username, group_id=group_id
+            name=template_name, content=template_content, create_by=request.user.username, group_id=group_id
         )
         return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
-    elif request.method == "PATCH":
+
+    # 修改模板
+    if request.method == "PATCH":
+        template_name = req.get("name")
+        template_content = req.get("content")
         template_id = req.get("template_id")
+        # 模板名字不可为空，但是模板内容支持为空
+        if not template_name:
+            return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
 
         # 构造更新数据
         template_update_data = {}
@@ -102,6 +109,17 @@ def report_template(request, group_id):
             return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
         except DailyReportTemplate.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
+
+    # 删除模板
+    if request.method == "DELETE":
+        template_id = req.get("template_id")
+        # 尝试删除模板，找不到则返回异常
+        try:
+            DailyReportTemplate.objects.get(id=template_id, group_id=group_id).delete()
+            return JsonResponse({"result": True, "code": 0, "message": "模板删除成功", "data": []})
+        except DailyReportTemplate.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
+
 
 def add_group(request):
     """添加组"""
@@ -148,4 +166,3 @@ def get_all_bk_users(request):
     else:
         # 请求接口成功，但获取内容失败，返回错误信息
         return response
-
