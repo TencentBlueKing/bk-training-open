@@ -11,11 +11,9 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-import time
 
 from django.db import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import render
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
 # 装饰器引入 from blueapps.account.decorators import login_exempt
@@ -23,40 +21,9 @@ from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
-from home_application.models import DailyReportTemplate, Group
-from home_application.utils.check_param import check_param
+from home_application.models import DailyReportTemplate, Group, User, GroupUser
+from home_application.utils.tools import check_param
 from home_application.utils.decorator import is_group_member
-
-
-def home(request):
-    """
-    首页
-    """
-    return render(request, "index.html")
-
-
-def dev_guide(request):
-    """
-    开发指引
-    """
-    return render(request, "home_application/dev_guide.html")
-
-
-def contact(request):
-    """
-    联系页
-    """
-    return render(request, "home_application/contact.html")
-
-
-def send_get_or_post_test(request):
-    """
-    测试前端发送的get请求和post请求是否正常
-    """
-    if request.method == "GET":
-        return JsonResponse({"data": [], "message": f"Get请求发送成功{time.time()}"})
-    if request.method == "POST":
-        return JsonResponse({"data": [], "message": f"Post请求发送成功{time.time()}"})
 
 
 @require_http_methods(["GET", "POST", "PATCH", "DELETE"])
@@ -166,3 +133,106 @@ def get_all_bk_users(request):
     else:
         # 请求接口成功，但获取内容失败，返回错误信息
         return response
+
+
+@require_http_methods(["POST"])
+@is_group_member(admin_needed=["POST"])
+def add_user(request, group_id):
+    """添加用户信息"""
+    req = json.loads(request.body)
+    params = {"id": "用户id", "username": "用户名"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    id = req.get("id")
+    username = req.get("username")
+    name = req.get("name")
+    phone = req.get("phone")
+    email = req.get("email")
+    # 判断用户是否存在
+    try:
+        User.objects.get(id=id)   # 用户已存在
+    except User.DoesNotExist:
+        try:
+            # 用户不存在，创建用户
+            User.objects.create(id=id, username=username, name=name, phone=phone, email=email)
+        except IntegrityError:
+            return JsonResponse({"result": False, "code": 1, "message": "创建用户失败，用户名重复"})
+    # 添加组-用户表
+    try:
+        GroupUser.objects.create(group_id=group_id, user_id=id)
+    except IntegrityError:
+        return JsonResponse({"result": True, "code": 0, "message": "用户已在组中", "data": []})
+    return JsonResponse({"result": True, "code": 0, "message": "添加用户成功", "data": []})
+
+
+def get_user(request):
+    """获取当前用户信息"""
+    user = User.objects.filter(username=request.user.username)\
+        .values("id", "username", "name", "phone", "email").first()
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user})
+
+
+def update_user(request):
+    """更改用户信息"""
+    req = json.loads(request.body)
+    params = {"id": "用户id", "username": "用户名"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    id = req.get("id")
+    username = req.get("username")
+    name = req.get("name")
+    phone = req.get("phone")
+    email = req.get("email")
+    try:
+        User.objects.filter(id=id).update(username=username,
+                                          name=name,
+                                          phone=phone,
+                                          email=email,
+                                          update_time=datetime.now())
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 1, "message": "更新失败，用户名已存在"})
+    else:
+        return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
+
+
+def get_user_groups(request):
+    """查询用户组列表"""
+    user_id = request.user.id
+    group_ids = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
+    groups = Group.objects.in_bulk(list(group_ids))
+    group_list = []
+    for group in groups.values():
+        group_list.append({"id": group.id, "name": group.name, "admin": group.admin})
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": group_list})
+
+
+def get_group_users(request, group_id):
+    """查询组的成员列表"""
+    user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    users = User.objects.in_bulk(list(user_ids))
+    user_list = []
+    for user in users.values():
+        user_list.append({"id": user.id,
+                          "username": user.username,
+                          "name": user.name,
+                          "phone": user.phone,
+                          "email": user.email})
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user_list})
+
+
+def exit_group(request):
+    """组内移除用户（可能不是当前用户），用户退出组"""
+    req = json.loads(request.body)
+    params = {"group_id": "组id", "username": "用户名"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    group_id = req.get("group_id")
+    user_id = User.objects.get(username=req.get("username")).id
+    try:
+        GroupUser.objects.get(group_id=group_id, user_id=user_id).delete()
+    except GroupUser.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "该用户不在组中"})
+    return JsonResponse({"result": True, "code": 0, "message": "移除成功", "data": []})
