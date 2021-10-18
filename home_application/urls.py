@@ -23,6 +23,8 @@ urlpatterns = (
     url(r"^get_all_bk_users/$", views.get_all_bk_users),
     path("add_user/<int:group_id>/", views.add_user),
     url(r"^update_user/$", views.update_user),
+    url(r"^get_user/$", views.get_user),
     url(r"^get_user_groups/$", views.get_user_groups),
     path("get_group_users/<int:group_id>/", views.get_group_users),
+    url(r"^exit_group/$", views.exit_group),
 )

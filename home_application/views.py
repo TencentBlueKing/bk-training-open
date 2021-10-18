@@ -22,7 +22,7 @@ from django.views.decorators.http import require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.models import DailyReportTemplate, Group, User, GroupUser
-from home_application.utils.tools import check_param, group2json, user2json
+from home_application.utils.tools import check_param
 from home_application.utils.decorator import is_group_member
 
 
@@ -166,6 +166,13 @@ def add_user(request, group_id):
     return JsonResponse({"result": True, "code": 0, "message": "添加用户成功", "data": []})
 
 
+def get_user(request):
+    """获取当前用户信息"""
+    user = User.objects.filter(username=request.user.username)\
+        .values("id", "username", "name", "phone", "email").first()
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user})
+
+
 def update_user(request):
     """更改用户信息"""
     req = json.loads(request.body)
@@ -192,17 +199,12 @@ def update_user(request):
 
 def get_user_groups(request):
     """查询用户组列表"""
-    try:
-        user_id = User.objects.get(username=request.user.username).id
-    except User.DoesNotExist:
-        return JsonResponse({"result": True, "code": 0, "message": "", "data": []})
+    user_id = request.user.id
     group_ids = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
     groups = Group.objects.in_bulk(list(group_ids))
     group_list = []
-    for group_id in groups:
-        group_json = json.dumps(groups.get(group_id), default=group2json, ensure_ascii=False)
-        group = json.loads(group_json)  # 将JSON formatted str格式转化为字典
-        group_list.append(group)
+    for group in groups.values():
+        group_list.append({"id": group.id, "name": group.name, "admin": group.admin})
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": group_list})
 
 
@@ -211,8 +213,26 @@ def get_group_users(request, group_id):
     user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     users = User.objects.in_bulk(list(user_ids))
     user_list = []
-    for user_id in users:
-        user_json = json.dumps(users.get(user_id), default=user2json, ensure_ascii=False)
-        user = json.loads(user_json)
-        user_list.append(user)
+    for user in users.values():
+        user_list.append({"id": user.id,
+                          "username": user.username,
+                          "name": user.name,
+                          "phone": user.phone,
+                          "email": user.email})
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user_list})
+
+
+def exit_group(request):
+    """组内移除用户（可能不是当前用户），用户退出组"""
+    req = json.loads(request.body)
+    params = {"group_id": "组id", "username": "用户名"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    group_id = req.get("group_id")
+    user_id = User.objects.get(username=req.get("username")).id
+    try:
+        GroupUser.objects.get(group_id=group_id, user_id=user_id).delete()
+    except GroupUser.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "该用户不在组中"})
+    return JsonResponse({"result": True, "code": 0, "message": "移除成功", "data": []})
