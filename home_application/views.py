@@ -108,8 +108,16 @@ def add_group(request):
     admin_names = ""  # 管理员username连接字符串
     admin_list = []  # 管理员用户实体，用于添加用户
     for admin in admins:
-        admin_names = admin_names + admin.get("username") + ";"
-        admin_list.append(User(id=admin.get("id"), username=admin.get("username")))
+        admin_names = f"{admin_names}{admin.get('username')};"
+        admin_list.append(
+            User(
+                id=admin.get("id"),
+                username=admin.get("username"),
+                name=admin.get("name"),
+                phone=admin.get("phone"),
+                email=admin.get("email"),
+            )
+        )
     try:
         group = Group.objects.create(name=name, admin=admin_names, create_by=request.user.username)
     except IntegrityError:
@@ -204,9 +212,7 @@ def update_user(request):
     phone = req.get("phone")
     email = req.get("email")
     try:
-        User.objects.filter(username=request.user.username).update(
-            name=name, phone=phone, email=email, update_time=datetime.now()
-        )
+        User.objects.filter(id=request.user.id).update(name=name, phone=phone, email=email, update_time=datetime.now())
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，用户名已存在"})
     else:
