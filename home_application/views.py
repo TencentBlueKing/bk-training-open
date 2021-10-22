@@ -104,12 +104,35 @@ def add_group(request):
     if not check_result:
         return JsonResponse({"result": False, "code": 1, "message": message})
     name = req.get("name")
-    admin = req.get("admin")
+    admins = req.get("admin")
+    admin_names = ""  # 管理员username连接字符串
+    admin_list = []  # 管理员用户实体，用于添加用户
+    for admin in admins:
+        admin_names = f"{admin_names}{admin.get('username')};"
+        admin_list.append(
+            User(
+                id=admin.get("id"),
+                username=admin.get("username"),
+                name=admin.get("name"),
+                phone=admin.get("phone"),
+                email=admin.get("email"),
+            )
+        )
     try:
-        Group.objects.create(name=name, admin=admin, create_by=request.user.username)
+        group = Group.objects.create(name=name, admin=admin_names, create_by=request.user.username)
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     else:
+        # 批量添加管理员信息
+        try:
+            User.objects.bulk_create(admin_list)
+        except IntegrityError:
+            pass  # 管理员已注册
+        # 批量添加管理员-组信息
+        group_user_list = []
+        for admin in admins:
+            group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
+        GroupUser.objects.bulk_create(group_user_list)
         return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": []})
 
 
@@ -185,19 +208,11 @@ def get_user(request):
 def update_user(request):
     """更改用户信息"""
     req = json.loads(request.body)
-    params = {"id": "用户id", "username": "用户名"}
-    check_result, message = check_param(params, req)
-    if not check_result:
-        return JsonResponse({"result": False, "code": 1, "message": message})
-    id = req.get("id")
-    username = req.get("username")
     name = req.get("name")
     phone = req.get("phone")
     email = req.get("email")
     try:
-        User.objects.filter(id=id).update(
-            username=username, name=name, phone=phone, email=email, update_time=datetime.now()
-        )
+        User.objects.filter(id=request.user.id).update(name=name, phone=phone, email=email, update_time=datetime.now())
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，用户名已存在"})
     else:
