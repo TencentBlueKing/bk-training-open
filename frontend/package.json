@@ -12,7 +12,8 @@
     "clean-dll": "rimraf static/lib*",
     "build": "better-npm-run build",
     "build:analyzer": "better-npm-run build:analyzer",
-    "dll": "better-npm-run dll"
+    "dll": "better-npm-run dll",
+    "lint": "eslint --fix --ext .js,.jsx ."
   },
   "keywords": [],
   "license": "ISC",
@@ -53,8 +54,9 @@
     }
   },
   "dependencies": {
-    "bk-magic-vue": "latest",
+    "ansi-html-community": "0.0.8",
     "axios": "~0.18.0",
+    "bk-magic-vue": "latest",
     "cookie": "~0.4.0",
     "jsonp": "~0.2.1",
     "query-string": "~6.5.0",

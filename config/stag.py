@@ -45,10 +45,10 @@ DATABASES.update(
     {
         "default": {
             "ENGINE": "django.db.backends.mysql",
-            "NAME": "training-stag",  # 数据库名
-            "USER": "db_root",  # 数据库用户
-            "PASSWORD": "training-stag",  # 数据库密码
-            "HOST": "10.0.2.4",  # 数据库主机
+            "NAME": os.getenv("BKAPP_MYSQL_DBNAME"),  # 数据库名
+            "USER": os.getenv("BKAPP_MYSQL_USER"),  # 数据库用户
+            "PASSWORD": os.getenv("BKAPP_MYSQL_PASSWORD"),  # 数据库密码
+            "HOST": os.getenv("BKAPP_MYSQL_HOST"),  # 数据库主机
             "PORT": "3306",  # 数据库端口
         },
     }
