@@ -96,6 +96,13 @@ def report_template(request, group_id):
             return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
 
 
+@is_group_member()
+def get_group_info(request, group_id):
+    return JsonResponse(
+        {"result": True, "code": 0, "message": "获取组信息成功", "data": Group.objects.get(id=group_id).to_json()}
+    )
+
+
 def add_group(request):
     """添加组"""
     req = json.loads(request.body)
