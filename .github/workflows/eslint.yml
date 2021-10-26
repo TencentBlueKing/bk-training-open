@@ -17,7 +17,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-              cd frontend/desktop/
+              cd frontend/
               npm install
       - name: Run Eslint
         run: |
