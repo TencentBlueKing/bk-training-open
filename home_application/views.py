@@ -262,58 +262,44 @@ def exit_group(request):
     return JsonResponse({"result": True, "code": 0, "message": "移除成功", "data": []})
 
 
-@require_http_methods(["POST", "PUT", "GET"])
+@require_http_methods(["POST", "GET"])
 def daily_report(request):
     """日报模块的增删改查"""
     # 获取今天的日报，没有就返回空-------------------------------------------------------------------------------
     if request.method == "GET":
         try:
-            today_report = Daily.objects.get(create_by=request.user.username, date=datetime.now().date())
+            today_report = Daily.objects.get(create_by=request.user.username, date=datetime.today())
             return JsonResponse({"result": True, "code": 0, "message": "获取今天日报成功", "data": today_report.to_json()})
         except Daily.DoesNotExist:
-            return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": []})
+            return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": {}})
 
     # 参数校验-----------------------------------------------------------------------------------------
     req = json.loads(request.body)
     report_content = req.get("content")
+    report_date = req.get("date")
     if not isinstance(report_content, dict):
         return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
+    try:
+        report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+    if report_date > datetime.today():
+        return JsonResponse({"result": False, "code": -1, "message": "日期不合法", "data": []})
 
-    # 添加日报-----------------------------------------------------------------------------------------
+    # 添加或修改日报--------------------------------------------------------------------------------------
     if request.method == "POST":
-        report_date = req.get("date")
         try:
-            report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
-        except ValueError:
-            return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
-        if report_date > datetime.today():
-            return JsonResponse({"result": False, "code": -1, "message": "日期不合法", "data": []})
-
-        try:
-            if_exist_report = Daily.objects.get(create_by=request.user.username, date=report_date, send_status=False)
-            return JsonResponse(
-                {"result": False, "code": -1, "message": "对应日期的日报已存在，请直接修改", "data": if_exist_report.to_json()}
+            # 修改日报
+            target_report = Daily.objects.get(create_by=request.user.username, date=report_date)
+            # 日报如果已经发送管理员审核的话就直接返回不可修改
+            if target_report.send_status:
+                return JsonResponse({"result": False, "code": -1, "message": "日报已经发送管理员查看，不可修改", "data": []})
+            target_report.content = report_content
+            target_report.save()
+            return JsonResponse({"result": True, "code": 0, "message": "修改日报成功", "data": []})
+        except Daily.DoesNotExist:
+            # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
+            Daily.objects.create(
+                content=report_content, create_by=request.user.username, date=report_date, send_status=False
             )
-        except Daily.DoesNotExist:
-            # 出异常表示找不到，说明还没有写日报，可以添加新的日报
-            pass
-        Daily.objects.create(
-            content=report_content, create_by=request.user.username, date=report_date, send_status=False
-        )
-        return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})
-
-    # 修改日报-----------------------------------------------------------------------------------------
-    if request.method == "PUT":
-        report_id = req.get("id")
-        if not report_id:
-            return JsonResponse({"result": False, "code": -1, "message": "请检查日报id", "data": []})
-        try:
-            target_report = Daily.objects.get(id=report_id, create_by=request.user.username)
-        except Daily.DoesNotExist:
-            return JsonResponse({"result": False, "code": -1, "message": "对应的日报不存在", "data": []})
-        # 日报如果已经发送管理员审核的话就直接返回不可修改
-        if target_report.send_status:
-            return JsonResponse({"result": False, "code": -1, "message": "日报已经发送管理员查看，不可修改", "data": []})
-        target_report.content = report_content
-        target_report.save()
-        return JsonResponse({"result": True, "code": 0, "message": "修改日报成功", "data": []})
+            return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})
