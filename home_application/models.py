@@ -17,8 +17,8 @@ from django.db import models
 # Create your models here.
 # 创建时间和更新时间基类
 class TimeBasic(models.Model):
-    create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    update_time = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    create_time = models.DateTimeField(auto_now_add=True, verbose_name=u"创建时间")
+    update_time = models.DateTimeField(auto_now=True, verbose_name=u"更新时间")
 
     class Meta:
         abstract = True
@@ -26,10 +26,10 @@ class TimeBasic(models.Model):
 
 # 组
 class Group(TimeBasic):
-    name = models.CharField(max_length=128, unique=True, verbose_name="组名字")
+    name = models.CharField(max_length=128, unique=True, verbose_name=u"组名字")
     # 多个管理员用户名拼接成的字符串
-    admin = models.CharField(max_length=255, verbose_name="管理员们")
-    create_by = models.CharField(max_length=128, verbose_name="创建人")
+    admin = models.CharField(max_length=255, verbose_name=u"管理员们")
+    create_by = models.CharField(max_length=128, verbose_name=u"创建人")
 
     def __str__(self):
         return self.name
@@ -40,11 +40,11 @@ class Group(TimeBasic):
 
 # 组中的日报通知人
 class GroupNotifier(models.Model):
-    group_id = models.IntegerField(verbose_name="组id")
-    daily_notifier_id = models.IntegerField(verbose_name="日报通知人")
+    group_id = models.IntegerField(verbose_name=u"组id")
+    daily_notifier_id = models.IntegerField(verbose_name=u"日报通知人")
 
     def __str__(self):
-        return "组id是：" + str(self.group_id) + " 日报通知人id：" + str(self.daily_notifier_id)
+        return u"组id是：" + str(self.group_id) + u" 日报通知人id：" + str(self.daily_notifier_id)
 
     class Meta:
         unique_together = ("group_id", "daily_notifier_id")
@@ -52,10 +52,10 @@ class GroupNotifier(models.Model):
 
 # 用户表
 class User(TimeBasic):
-    username = models.CharField(max_length=128, unique=True, verbose_name="用户账号")
-    name = models.CharField(max_length=128, null=True, blank=True, verbose_name="用户姓名")
-    phone = models.CharField(max_length=30, null=True, blank=True, verbose_name="电话号码")
-    email = models.EmailField(null=True, blank=True, verbose_name="邮箱")
+    username = models.CharField(max_length=128, unique=True, verbose_name=u"用户账号")
+    name = models.CharField(max_length=128, null=True, blank=True, verbose_name=u"用户姓名")
+    phone = models.CharField(max_length=30, null=True, blank=True, verbose_name=u"电话号码")
+    email = models.EmailField(null=True, blank=True, verbose_name=u"邮箱")
 
     def __str__(self):
         return self.username
@@ -63,11 +63,11 @@ class User(TimeBasic):
 
 # 组-用户关联表
 class GroupUser(models.Model):
-    group_id = models.IntegerField(verbose_name="组id")
-    user_id = models.IntegerField(verbose_name="用户id")
+    group_id = models.IntegerField(verbose_name=u"组id")
+    user_id = models.IntegerField(verbose_name=u"用户id")
 
     def __str__(self):
-        return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
+        return u"组id：" + str(self.group_id) + u" 用户id：" + str(self.user_id)
 
     class Meta:
         unique_together = ("group_id", "user_id")
@@ -75,10 +75,10 @@ class GroupUser(models.Model):
 
 # 日报模板表
 class DailyReportTemplate(models.Model):
-    name = models.CharField(max_length=128, verbose_name="日报模板名字")
-    content = models.CharField(max_length=255, verbose_name="日报模板内容")
-    create_by = models.CharField(max_length=128, verbose_name="创建人")
-    group_id = models.IntegerField(verbose_name="组id")
+    name = models.CharField(max_length=128, verbose_name=u"日报模板名字")
+    content = models.CharField(max_length=255, verbose_name=u"日报模板内容")
+    create_by = models.CharField(max_length=128, verbose_name=u"创建人")
+    group_id = models.IntegerField(verbose_name=u"组id")
 
     def __str__(self):
         return self.name
@@ -86,13 +86,13 @@ class DailyReportTemplate(models.Model):
 
 # 日报表
 class Daily(TimeBasic):
-    content = models.TextField(verbose_name="日报内容")
-    create_by = models.CharField(max_length=128, verbose_name="创建人")
-    date = models.DateField(verbose_name="日报日期")
-    # TODO 日报状态发送和没发送，日报状态已发送就不能修改
+    content = models.TextField(verbose_name=u"日报内容")
+    create_by = models.CharField(max_length=128, verbose_name=u"创建人")
+    date = models.DateField(verbose_name=u"日报日期")
+    send_status = models.BooleanField(verbose_name=u"发送状态")
 
     def __str__(self):
-        return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
+        return u"创建人：" + self.create_by + u" 日报时间：" + str(self.date)
 
     def to_json(self):
         return {"id": self.id, "content": self.content, "date": str(self.date)}
