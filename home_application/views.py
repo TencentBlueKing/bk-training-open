@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 
+from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.http import JsonResponse
 
@@ -19,7 +20,7 @@ from django.http import JsonResponse
 # 装饰器引入 from blueapps.account.decorators import login_exempt
 from django.shortcuts import render
 from django.utils.datetime_safe import datetime
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
@@ -332,3 +333,53 @@ def daily_report(request):
                 content=report_content, create_by=request.user.username, date=report_date, send_status=False
             )
             return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})
+
+
+@require_GET
+@is_group_member()
+def report_filter(request, group_id):
+    # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
+    member_id = request.GET.get("member_id")
+    if member_id:
+        # 如果有该参数则说明是根据成员id获取日报，
+        # 没有则直接跳到下边根据组和日期获取所有成员对应日期的日报
+        try:
+            # 安全校验，查看目标对象是否为同组成员
+            GroupUser.objects.get(group_id=group_id, user_id=member_id)
+            member_name = User.objects.get(id=member_id).username
+            # 参数校验
+            pagesize = int(request.GET.get("pagesize", 5))
+            target_page_number = int(request.GET.get("page_number", 1))
+        except GroupUser.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "与目标用户非同组成员，查询被拒绝", "data": []})
+        except User.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "目标用户不存在", "data": []})
+        except ValueError:
+            return JsonResponse({"result": False, "code": -1, "message": "页码或者页大小无效", "data": []})
+
+        # 分页查询当前成员的日报，按照日期降序
+        member_report = Daily.objects.filter(create_by=member_name).order_by("-date")
+        member_report_pages = Paginator(member_report, pagesize)
+        total_pages_number = member_report_pages.num_pages
+        if target_page_number > total_pages_number or target_page_number <= 0:
+            return JsonResponse({"result": False, "code": -1, "message": "页码超出总页数", "data": []})
+        # 查询完毕返回数据
+        res_data = {
+            "page_num": total_pages_number,
+            "reports": list(member_report_pages.page(target_page_number).object_list.values())
+        }
+        return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
+
+    # 根据日期获取组内所有成员的日报------------------------------------------------------------------------------
+    report_date = request.GET.get("date")
+    try:
+        report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+    # 查询组内所有人
+    # 首选获取组内成员的id，然后再去查询成员对应的username
+    member_in_group = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    member_in_group = User.objects.filter(id__in=member_in_group).values_list("username", flat=True)
+    # 查询所有人的日报
+    member_report = list(Daily.objects.filter(date=report_date, create_by__in=member_in_group).values())
+    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": member_report})
