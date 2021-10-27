@@ -89,7 +89,7 @@ class Daily(TimeBasic):
     content = models.TextField(verbose_name="日报内容")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     date = models.DateField(verbose_name="日报日期")
-    # TODO 日报状态发送和没发送，日报状态已发送就不能修改
+    send_status = models.BooleanField(verbose_name="发送状态")
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)

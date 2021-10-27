@@ -22,7 +22,7 @@ from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
-from home_application.models import DailyReportTemplate, Group, GroupUser, User
+from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 from home_application.utils.tools import check_param
 
@@ -34,8 +34,8 @@ def home(request):
     return render(request, "index.html")
 
 
-@require_http_methods(["GET", "POST", "PATCH", "DELETE"])
-@is_group_member(admin_needed=["POST", "PATCH", "DELETE"])
+@require_http_methods(["GET", "POST", "PUT", "DELETE"])
+@is_group_member(admin_needed=["POST", "PUT", "DELETE"])
 def report_template(request, group_id):
     """
     日报模板的增删改查功能
@@ -64,7 +64,7 @@ def report_template(request, group_id):
         return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
 
     # 修改模板
-    if request.method == "PATCH":
+    if request.method == "PUT":
         template_name = req.get("name")
         template_content = req.get("content")
         template_id = req.get("template_id")
@@ -72,18 +72,15 @@ def report_template(request, group_id):
         if not template_name:
             return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
 
-        # 构造更新数据
-        template_update_data = {}
-        if template_content is not None:
-            template_update_data["content"] = template_content
-        if template_name:
-            template_update_data["name"] = template_name
-        # 验证模板是否存在
+        # 验证模板是否存在，存在则更新模板
         try:
-            DailyReportTemplate.objects.filter(id=template_id, group_id=group_id).update(**template_update_data)
-            return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
+            target_template = DailyReportTemplate.objects.get(id=template_id, group_id=group_id)
         except DailyReportTemplate.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
+        target_template.content = template_content
+        target_template.name = template_name
+        target_template.save()
+        return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
 
     # 删除模板
     if request.method == "DELETE":
@@ -292,3 +289,46 @@ def exit_group(request):
     except GroupUser.DoesNotExist:
         return JsonResponse({"result": False, "code": 1, "message": "该用户不在组中"})
     return JsonResponse({"result": True, "code": 0, "message": "移除成功", "data": []})
+
+
+@require_http_methods(["POST", "GET"])
+def daily_report(request):
+    """日报模块的增删改查"""
+    # 获取今天的日报，没有就返回空-------------------------------------------------------------------------------
+    if request.method == "GET":
+        try:
+            today_report = Daily.objects.get(create_by=request.user.username, date=datetime.today())
+            return JsonResponse({"result": True, "code": 0, "message": "获取今天日报成功", "data": today_report.to_json()})
+        except Daily.DoesNotExist:
+            return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": {}})
+
+    # 参数校验-----------------------------------------------------------------------------------------
+    req = json.loads(request.body)
+    report_content = req.get("content")
+    report_date = req.get("date")
+    if not isinstance(report_content, dict):
+        return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
+    try:
+        report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+    if report_date > datetime.today():
+        return JsonResponse({"result": False, "code": -1, "message": "日期不合法", "data": []})
+
+    # 添加或修改日报--------------------------------------------------------------------------------------
+    if request.method == "POST":
+        try:
+            # 修改日报
+            target_report = Daily.objects.get(create_by=request.user.username, date=report_date)
+            # 日报如果已经发送管理员审核的话就直接返回不可修改
+            if target_report.send_status:
+                return JsonResponse({"result": False, "code": -1, "message": "日报已经发送管理员查看，不可修改", "data": []})
+            target_report.content = report_content
+            target_report.save()
+            return JsonResponse({"result": True, "code": 0, "message": "修改日报成功", "data": []})
+        except Daily.DoesNotExist:
+            # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
+            Daily.objects.create(
+                content=report_content, create_by=request.user.username, date=report_date, send_status=False
+            )
+            return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})
