@@ -112,30 +112,32 @@ def add_group(request):
         return JsonResponse({"result": False, "code": 1, "message": message})
     name = req.get("name")
     admins = req.get("admin")
-    admin_names = ""  # 管理员username连接字符串
-    admin_list = []  # 管理员用户实体，用于添加用户
+    admin_names = []  # 管理员username连接字符串
     for admin in admins:
-        admin_names = f"{admin_names}{admin.get('username')};"
-        admin_list.append(
-            User(
-                id=admin.get("id"),
-                username=admin.get("username"),
-                name=admin.get("name"),
-                phone=admin.get("phone"),
-                email=admin.get("email"),
-            )
-        )
+        admin_names.append(admin.get("username"))
     try:
         group = Group.objects.create(name=name, admin=admin_names, create_by=request.user.username)
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     else:
-        # 批量添加管理员信息
-        try:
-            User.objects.bulk_create(admin_list)
-        except IntegrityError:
-            pass  # 管理员已注册
-        # 批量添加管理员-组信息
+        # 批量新传来的用户信息
+        # 查询已经存在的用户信息
+        exist_users = User.objects.filter(username__in=admin_names).values("username")
+        admin_list = []
+        for admin in admins:
+            if not {"username": admin.get("username")} in exist_users:
+                # 除去已经存在的用户，添加新用户
+                admin_list.append(
+                    User(
+                        id=admin.get("id"),
+                        username=admin.get("username"),
+                        name=admin.get("name"),
+                        phone=admin.get("phone"),
+                        email=admin.get("email"),
+                    )
+                )
+        User.objects.bulk_create(admin_list)  # 注册未曾注册的管理员用户
+        # 添加组-用户信息
         group_user_list = []
         for admin in admins:
             group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
@@ -152,9 +154,36 @@ def update_group(request):
         return JsonResponse({"result": False, "code": 1, "message": message})
     id = req.get("id")
     name = req.get("name")
-    admin = req.get("admin")
+    admins = req.get("admin")
+    admin_names = []
+    admin_ids = []
+    for admin in admins:
+        admin_ids.append(admin.get("id"))
+        admin_names.append(admin.get("username"))
+    # 添加未注册的用户信息
+    exist_users = User.objects.filter(username__in=admin_names).values("username")
+    admin_list = []
+    for admin in admins:
+        if not {"username": admin.get("username")} in exist_users:
+            admin_list.append(
+                User(
+                    id=admin.get("id"),
+                    username=admin.get("username"),
+                    name=admin.get("name"),
+                    phone=admin.get("phone"),
+                    email=admin.get("email"),
+                )
+            )
+    User.objects.bulk_create(admin_list)  # 注册未曾注册的管理员用户
+    # 批量添加用户-组信息
+    exist_user_ids = GroupUser.objects.filter(group_id=id, user_id__in=admin_ids).values("user_id")
+    group_user_list = []
+    for admin_id in admin_ids:
+        if not {"user_id": admin_id} in exist_user_ids:
+            group_user_list.append(GroupUser(group_id=id, user_id=admin_id))
+    GroupUser.objects.bulk_create(group_user_list)
     try:
-        Group.objects.filter(id=id).update(name=name, admin=admin, update_time=datetime.now())
+        Group.objects.filter(id=id).update(name=name, admin=admin_names, update_time=datetime.now())
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
     else:
