@@ -12,7 +12,6 @@ specific language governing permissions and limitations under the License.
 """
 import json
 
-from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.http import JsonResponse
 
@@ -20,7 +19,7 @@ from django.http import JsonResponse
 # 装饰器引入 from blueapps.account.decorators import login_exempt
 from django.shortcuts import render
 from django.utils.datetime_safe import datetime
-from django.views.decorators.http import require_http_methods, require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
@@ -348,26 +347,21 @@ def report_filter(request, group_id):
             GroupUser.objects.get(group_id=group_id, user_id=member_id)
             member_name = User.objects.get(id=member_id).username
             # 参数校验
-            pagesize = int(request.GET.get("pagesize", 5))
-            target_page_number = int(request.GET.get("page_number", 1))
+            report_num = int(request.GET.get("report_num", 5))
         except GroupUser.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "与目标用户非同组成员，查询被拒绝", "data": []})
         except User.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "目标用户不存在", "data": []})
         except ValueError:
-            return JsonResponse({"result": False, "code": -1, "message": "页码或者页大小无效", "data": []})
+            return JsonResponse({"result": False, "code": -1, "message": "日报数量无效", "data": []})
 
-        # 分页查询当前成员的日报，按照日期降序
+        # 查询当前成员的日报，按照日期降序
         member_report = Daily.objects.filter(create_by=member_name).order_by("-date")
-        member_report_pages = Paginator(member_report, pagesize)
-        total_pages_number = member_report_pages.num_pages
-        if target_page_number > total_pages_number or target_page_number <= 0:
-            return JsonResponse({"result": False, "code": -1, "message": "页码超出总页数", "data": []})
+        total_report_num = member_report.count()
+        if report_num > 0:
+            member_report = member_report[:report_num]
         # 查询完毕返回数据
-        res_data = {
-            "page_num": total_pages_number,
-            "reports": list(member_report_pages.page(target_page_number).object_list.values())
-        }
+        res_data = {"total_report_num": total_report_num, "reports": list(member_report.values())}
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
 
     # 根据日期获取组内所有成员的日报------------------------------------------------------------------------------
