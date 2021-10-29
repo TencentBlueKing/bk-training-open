@@ -18,14 +18,15 @@ def is_group_member(admin_needed: list = None):
         admin_needed = []
 
     def wrapper(func):
-        def inner(request, group_id):
+        def inner(request, *args, **kwargs):
+            group_id = kwargs["group_id"]
             username = request.user.username
             if request.method in admin_needed:
                 # 判断是否具有管理员权限
                 try:
                     temp_group = Group.objects.get(id=group_id)
                     if username in temp_group.admin:
-                        return func(request, group_id)
+                        return func(request, *args, **kwargs)
                     else:
                         return JsonResponse({"result": False, "code": -1, "message": "没有相应组的管理权限", "data": []})
                 except Group.DoesNotExist:
@@ -34,7 +35,7 @@ def is_group_member(admin_needed: list = None):
                 # 判断是否为当前组的组员
                 try:
                     GroupUser.objects.get(group_id=group_id, user_id=request.user.id)
-                    return func(request, group_id)
+                    return func(request, *args, **kwargs)
                 except GroupUser.DoesNotExist:
                     return JsonResponse({"result": False, "code": -1, "message": "您不在对应的组", "data": []})
 

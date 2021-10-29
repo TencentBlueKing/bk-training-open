@@ -84,7 +84,7 @@ def report_template(request, group_id):
 
     # 删除模板
     if request.method == "DELETE":
-        template_id = req.get("template_id")
+        template_id = request.GET.get("template_id")
         # 尝试删除模板，找不到则返回异常
         try:
             DailyReportTemplate.objects.get(id=template_id, group_id=group_id).delete()
