@@ -9,9 +9,9 @@
         components: {},
         data () {
             return {
-            };
+            }
         }
-    };
+    }
 </script>
 
 <style scoped>

@@ -19,13 +19,15 @@ from . import views
 urlpatterns = (
     path("", views.home),
     path("report_template/<int:group_id>/", views.report_template),
+    path("get_group_info/<int:group_id>/", views.get_group_info),
     url(r"^add_group/$", views.add_group),
-    url(r"^update_group/$", views.update_group),
+    path("update_group/<int:group_id>/", views.update_group),
     url(r"^get_all_bk_users/$", views.get_all_bk_users),
     path("add_user/<int:group_id>/", views.add_user),
+    path("daily_report/", views.daily_report),
     url(r"^update_user/$", views.update_user),
     url(r"^get_user/$", views.get_user),
     url(r"^get_user_groups/$", views.get_user_groups),
     path("get_group_users/<int:group_id>/", views.get_group_users),
-    url(r"^exit_group/$", views.exit_group),
+    path("exit_group/<int:group_id>/", views.exit_group),
 )

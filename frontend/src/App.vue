@@ -69,7 +69,7 @@
     import {
         bkNavigation,
         bkPopover
-    } from 'bk-magic-vue';
+    } from 'bk-magic-vue'
     export default {
         name: 'monitor-navigation',
         components: {
@@ -102,13 +102,13 @@
                             show: true
                         },
                         {
-                            name: '我的组',
+                            name: '我的日报',
                             id: 2,
                             url: 'myGroup',
                             show: true
                         },
                         {
-                            name: '我的日报',
+                            name: '我的组',
                             id: 3,
                             url: 'myDaily',
                             show: true
@@ -117,30 +117,30 @@
                     active: 2,
                     bizId: 1
                 }
-            };
+            }
         },
         computed: {
             curNav () {
-                return this.navMap[this.navActive];
+                return this.navMap[this.navActive]
             },
             curHeaderNav () {
-                return this.header.list[this.header.active] || {};
+                return this.header.list[this.header.active] || {}
             }
         },
         methods: {
             handleSelect (id, item) {
-                this.nav.id = id;
-                console.info(`你选择了${id}`);
+                this.nav.id = id
+                console.info(`你选择了${id}`)
             },
             handleToggle (v) {
-                this.nav.toggle = v;
+                this.nav.toggle = v
             },
             beforeNavChange (newId, oldId) {
-                console.info(newId, oldId);
-                return true;
+                console.info(newId, oldId)
+                return true
             }
         }
-    };
+    }
 </script>
 
 <style>
@@ -372,6 +372,7 @@ body{
 }
 .monitor-navigation-content {
   height: calc(100% - 84px);
+  overflow-y: auto;
   background: #ffffff;
   -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
