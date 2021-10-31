@@ -192,13 +192,6 @@ def get_all_bk_users(request):
     response = client.usermanage.list_users(fields="id,username,display_name,email,telephone")
     result = response.get("result")
     data = response.get("data")
-    data.get("results")[0] = {
-        "id": 1,
-        "username": "1105357176Q",
-        "display_name": "郑郑",
-        "phone": "15071314270",
-        "email": "zheng@qq.com",
-    }
     if result:
         return JsonResponse({"result": True, "code": 0, "data": data, "message": "获取蓝鲸用户列表成功"})
     else:
