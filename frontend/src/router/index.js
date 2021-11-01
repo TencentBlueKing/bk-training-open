@@ -5,7 +5,6 @@
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-   
 import store from '@/store'
 import http from '@/api'
 import preload from '@/common/preload'
