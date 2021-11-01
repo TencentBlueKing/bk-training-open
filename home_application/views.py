@@ -231,7 +231,7 @@ def add_user(request, group_id):
 
 
 def get_user(request):
-    """获取当前用户信息"""
+    """当前用户信息"""
     try:
         user = User.objects.get(id=request.user.id)
         data = {"id": user.id, "username": user.username, "name": user.name, "phone": user.phone, "email": user.email}
