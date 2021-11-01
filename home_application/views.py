@@ -45,6 +45,16 @@ def report_template(request, group_id):
         templates = list(DailyReportTemplate.objects.filter(group_id=group_id).values())
         return JsonResponse({"result": True, "code": 0, "message": "", "data": templates})
 
+    # 删除模板
+    if request.method == "DELETE":
+        template_id = request.GET.get("template_id")
+        # 尝试删除模板，找不到则返回异常
+        try:
+            DailyReportTemplate.objects.get(id=template_id, group_id=group_id).delete()
+            return JsonResponse({"result": True, "code": 0, "message": "模板删除成功", "data": []})
+        except DailyReportTemplate.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
+
     req = json.loads(request.body)
 
     # 创建模板
@@ -82,16 +92,6 @@ def report_template(request, group_id):
         target_template.save()
         return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
 
-    # 删除模板
-    if request.method == "DELETE":
-        template_id = req.get("template_id")
-        # 尝试删除模板，找不到则返回异常
-        try:
-            DailyReportTemplate.objects.get(id=template_id, group_id=group_id).delete()
-            return JsonResponse({"result": True, "code": 0, "message": "模板删除成功", "data": []})
-        except DailyReportTemplate.DoesNotExist:
-            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
-
 
 @is_group_member()
 def get_group_info(request, group_id):
@@ -128,7 +128,7 @@ def add_group(request):
                     User(
                         id=admin.get("id"),
                         username=admin.get("username"),
-                        name=admin.get("name"),
+                        name=admin.get("display_name"),
                         phone=admin.get("phone"),
                         email=admin.get("email"),
                     )
@@ -139,17 +139,17 @@ def add_group(request):
         for admin in admins:
             group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
         GroupUser.objects.bulk_create(group_user_list)
-        return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": []})
+        return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": {"group_id": group.id}})
 
 
-def update_group(request):
+@is_group_member(admin_needed=["POST", "PUT", "DELETE"])
+def update_group(request, group_id):
     """编辑组信息"""
     req = json.loads(request.body)
-    params = {"id": "组id", "name": "组名", "admin": "管理员"}
+    params = {"name": "组名", "admin": "管理员"}
     check_result, message = check_param(params, req)
     if not check_result:
         return JsonResponse({"result": False, "code": 1, "message": message})
-    id = req.get("id")
     name = req.get("name")
     admins = req.get("admin")
     admin_names = []
@@ -173,14 +173,14 @@ def update_group(request):
             )
     User.objects.bulk_create(admin_list)  # 注册未曾注册的管理员用户
     # 批量添加用户-组信息
-    exist_user_ids = GroupUser.objects.filter(group_id=id, user_id__in=admin_ids).values("user_id")
+    exist_user_ids = GroupUser.objects.filter(group_id=group_id, user_id__in=admin_ids).values("user_id")
     group_user_list = []
     for admin_id in admin_ids:
         if not {"user_id": admin_id} in exist_user_ids:
-            group_user_list.append(GroupUser(group_id=id, user_id=admin_id))
+            group_user_list.append(GroupUser(group_id=group_id, user_id=admin_id))
     GroupUser.objects.bulk_create(group_user_list)
     try:
-        Group.objects.filter(id=id).update(name=name, admin=admin_names, update_time=datetime.now())
+        Group.objects.filter(id=group_id).update(name=name, admin=admin_names, update_time=datetime.now())
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
     else:
@@ -210,7 +210,7 @@ def add_user(request, group_id):
         return JsonResponse({"result": False, "code": 1, "message": message})
     id = req.get("id")
     username = req.get("username")
-    name = req.get("name")
+    name = req.get("display_name")
     phone = req.get("phone")
     email = req.get("email")
     # 判断用户是否存在
@@ -226,22 +226,24 @@ def add_user(request, group_id):
     try:
         GroupUser.objects.create(group_id=group_id, user_id=id)
     except IntegrityError:
-        return JsonResponse({"result": True, "code": 0, "message": "用户已在组中", "data": []})
+        return JsonResponse({"result": False, "code": 0, "message": "用户已在组中", "data": []})
     return JsonResponse({"result": True, "code": 0, "message": "添加用户成功", "data": []})
 
 
 def get_user(request):
     """获取当前用户信息"""
-    user = (
-        User.objects.filter(username=request.user.username).values("id", "username", "name", "phone", "email").first()
-    )
-    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user})
+    try:
+        user = User.objects.get(id=request.user.id)
+        data = {"id": user.id, "username": user.username, "name": user.name, "phone": user.phone, "email": user.email}
+    except User.DoesNotExist:
+        data = {"id": request.user.id, "username": request.user.username}
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": data})
 
 
 def update_user(request):
     """更改用户信息"""
     req = json.loads(request.body)
-    name = req.get("name")
+    name = req.get("display_name")
     phone = req.get("phone")
     email = req.get("email")
     try:
@@ -259,7 +261,16 @@ def get_user_groups(request):
     groups = Group.objects.in_bulk(list(group_ids))
     group_list = []
     for group in groups.values():
-        group_list.append({"id": group.id, "name": group.name, "admin": group.admin})
+        admin = group.admin.strip("[").rstrip("]").replace("'", "").split(", ")
+        group_list.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "admin": admin,
+                "create_by": group.create_by,
+                "create_time": group.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": group_list})
 
 
@@ -275,15 +286,14 @@ def get_group_users(request, group_id):
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user_list})
 
 
-def exit_group(request):
+def exit_group(request, group_id):
     """组内移除用户（可能不是当前用户），用户退出组"""
     req = json.loads(request.body)
-    params = {"group_id": "组id", "username": "用户名"}
+    params = {"user_id": "用户id"}
     check_result, message = check_param(params, req)
     if not check_result:
         return JsonResponse({"result": False, "code": 1, "message": message})
-    group_id = req.get("group_id")
-    user_id = User.objects.get(username=req.get("username")).id
+    user_id = req.get("user_id")
     try:
         GroupUser.objects.get(group_id=group_id, user_id=user_id).delete()
     except GroupUser.DoesNotExist:

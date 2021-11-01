@@ -1,19 +1,26 @@
 <template>
-    <div>
-        我的日报
+    <div id="myDaily">
+
     </div>
 </template>
 
 <script>
     export default {
-        components: {},
+        name: '',
         data () {
             return {
-            };
+
+            }
+        },
+        created () {
+
+        },
+        methods: {
+
         }
-    };
+    }
 </script>
 
 <style scoped>
-@import "./index.css";
+
 </style>
