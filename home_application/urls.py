@@ -19,6 +19,7 @@ from . import views
 urlpatterns = (
     path("", views.home),
     path("report_template/<int:group_id>/", views.report_template),
+    path("get_all_report_template/", views.get_all_report_template),
     path("get_group_info/<int:group_id>/", views.get_group_info),
     url(r"^add_group/$", views.add_group),
     path("update_group/<int:group_id>/", views.update_group),
