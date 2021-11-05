@@ -86,7 +86,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]  # noqa
 # worker: python manage.py celery worker -l info
 # beat: python manage.py celery beat -l info
 # 不使用时，请修改为 False，并删除项目目录下的 Procfile 文件中 celery 配置
-IS_USE_CELERY = False
+IS_USE_CELERY = True
 
 # 前后端分离开发配置开关，设置为True时dev和stag环境会自动加载允许跨域的相关选项
 FRONTEND_BACKEND_SEPARATION = False
@@ -95,7 +95,7 @@ FRONTEND_BACKEND_SEPARATION = False
 CELERYD_CONCURRENCY = os.getenv("BK_CELERYD_CONCURRENCY", 2)  # noqa
 
 # CELERY 配置，申明任务的文件路径，即包含有 @task 装饰器的函数文件
-CELERY_IMPORTS = ()
+CELERY_IMPORTS = ("home_application.celery_task",)
 
 # log level setting
 LOG_LEVEL = "INFO"
@@ -136,7 +136,9 @@ LANGUAGES = (
 if IS_USE_CELERY:
     INSTALLED_APPS = locals().get("INSTALLED_APPS", [])
     INSTALLED_APPS += ("django_celery_beat", "django_celery_results")
-    CELERY_ENABLE_UTC = False
+    # 设置使用上海时区
+    # CELERY_ENABLE_UTC = False
+    CELERY_TIMEZONE = "Asia/Shanghai"
     CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
 
 # remove disabled apps

@@ -10,6 +10,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import ast
 
 from django.db import models
 
@@ -95,4 +96,10 @@ class Daily(TimeBasic):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
 
     def to_json(self):
-        return {"id": self.id, "content": self.content, "date": str(self.date)}
+        # TODO 日报内容的json格式化这里，按照开发规范是不能直接让变量做key的，这里先做好前后端联调，之后再修正
+        return {
+            "id": self.id,
+            "content": ast.literal_eval(self.content),
+            "date": str(self.date),
+            "create_by": self.create_by,
+        }

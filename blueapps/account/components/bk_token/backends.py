@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import logging
+import os
 import traceback
 
 from django.conf import settings
@@ -22,6 +23,7 @@ from blueapps.account import get_user_model
 from blueapps.account.conf import ConfFixture
 from blueapps.account.utils.http import send
 from blueapps.utils import client
+from blueking.component.shortcuts import get_client_by_user
 
 logger = logging.getLogger("component")
 
@@ -42,7 +44,11 @@ class TokenBackend(ModelBackend):
 
         user_model = get_user_model()
         try:
-            user, _ = user_model.objects.get_or_create(username=username)
+            user = os.environ.get("BKAPP_API_INVOKE_USER")
+            bk_client = get_client_by_user(user=user)
+            kwargs = {"id": username, "fields": "username,id"}
+            user_info = bk_client.usermanage.retrieve_user(kwargs)
+            user, _ = user_model.objects.get_or_create(id=user_info["data"]["id"], username=username)
             get_user_info_result, user_info = self.get_user_info(bk_token)
             # 判断是否获取到用户信息,获取不到则返回None
             if not get_user_info_result:

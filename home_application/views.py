@@ -24,6 +24,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from blueking.component.shortcuts import get_client_by_request
 from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
+from home_application.utils.report_operation import content_format_as_json
 from home_application.utils.tools import check_param
 
 
@@ -387,7 +388,7 @@ def report_filter(request, group_id):
         if report_num > 0:
             member_report = member_report[:report_num]
         # 查询完毕返回数据
-        res_data = {"total_report_num": total_report_num, "reports": list(member_report.values())}
+        res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
 
     # 根据日期获取组内所有成员的日报------------------------------------------------------------------------------
@@ -401,5 +402,5 @@ def report_filter(request, group_id):
     member_in_group = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     member_in_group = User.objects.filter(id__in=member_in_group).values_list("username", flat=True)
     # 查询所有人的日报
-    member_report = list(Daily.objects.filter(date=report_date, create_by__in=member_in_group).values())
-    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": member_report})
+    member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group)
+    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": content_format_as_json(member_report)})
