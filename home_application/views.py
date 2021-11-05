@@ -11,6 +11,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import math
 
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -207,10 +208,24 @@ def update_group(request, group_id):
 def get_all_bk_users(request):
     """从蓝鲸平台，拉取所有用户列表"""
     client = get_client_by_request(request=request)
-    response = client.usermanage.list_users(fields="id,username,display_name,email,telephone")
+    response = client.usermanage.list_users(fields="id,username,display_name,email,telephone", page=1, pageSize=50)
     result = response.get("result")
     if result:
-        return JsonResponse({"result": True, "code": 0, "data": response.get("data"), "message": "获取蓝鲸用户列表成功"})
+        count = response.get("data").get("count")
+        total_page = math.ceil(count / 50)
+        data = response.get("data").get("results")
+        for page in range(2, total_page + 1):
+            response = client.usermanage.list_users(
+                fields="id,username,display_name,email,telephone", page=page, pageSize=50
+            )
+            result = response.get("result")
+            if result:
+                data.extend(response.get("data").get("results"))
+            else:
+                return response
+        return JsonResponse(
+            {"result": True, "code": 0, "data": {"count": count, "results": data}, "message": "获取蓝鲸用户列表成功"}
+        )
     else:
         # 请求接口成功，但获取内容失败，返回错误信息
         return response
@@ -374,7 +389,7 @@ def report_filter(request, group_id):
             GroupUser.objects.get(group_id=group_id, user_id=member_id)
             member_name = User.objects.get(id=member_id).username
             # 参数校验
-            report_num = int(request.GET.get("report_num", 5))
+            report_num = int(request.GET.get("report_num", 7))
         except GroupUser.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "与目标用户非同组成员，查询被拒绝", "data": []})
         except User.DoesNotExist:
