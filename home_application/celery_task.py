@@ -10,6 +10,7 @@ from celery.task import periodic_task
 
 from home_application.utils.get_people_for_mail_notify import (
     get_people_not_reported,
+    get_yesterday_not_report_user,
     get_yesterday_reports,
 )
 from home_application.utils.mail_operation import send_mail
@@ -25,7 +26,21 @@ def remind_to_write_daily():
     send_mail(receiver__username=user_to_notified, title="日报提醒助手", content="你好，你今天的日报还没有写，快去写日报吧")
 
 
-# 每天早上10点发送前一天日报
+def notify_admin_who_not_reported():
+    """
+    告知管理员组内哪些人没写日报
+    """
+    logger.info("定时任务：每早10点告知管理员昨天没写日报的用户")
+    not_reported = get_yesterday_not_report_user()
+    for mail_info in not_reported:
+        mail_content = "您所管理的组{}内以下成员昨天没写日报，请留意：\n{}".format(
+            mail_info["group_name"], ", ".join(mail_info["user_not_reported"])
+        )
+        mail_title = "%s昨日未写日报用户" % mail_info["group_name"]
+        send_mail(receiver__username=mail_info["admins"], title=mail_title, content=mail_content)
+
+
+# 每天早上10点发送前一天日报，同时告知管理员组内那些同学没交日报
 @periodic_task(run_every=crontab(minute=0, hour=10))
 def send_yesterday_report():
     logger.info("定时任务：每早10点发送前一天所有人的日报")
@@ -47,3 +62,5 @@ def send_yesterday_report():
             title="{}的日报({})".format(str(yesterday_date.date()), group_name),
             content=group_reports,
         )
+    # 然后告知管理员昨天没写日报的用户
+    notify_admin_who_not_reported()
