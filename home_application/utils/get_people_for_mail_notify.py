@@ -60,3 +60,35 @@ def get_yesterday_reports():
             }
         )
     return res
+
+
+def get_yesterday_not_report_user():
+    """
+    获取昨天没写日报的成员，然后告知管理员
+    """
+    # 查询所有组
+    res = []
+    groups = Group.objects.all()
+    groups_id = groups.values_list("id", flat=True)
+    # 获取组相关的所有用户
+    group_user = GroupUser.objects.filter(group_id__in=groups_id)
+    # 获取这些用户的信息
+    users = User.objects.filter(id__in=group_user.values_list("user_id", flat=True))
+    # 获取写了日报的用户
+    yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
+    user_reported = Daily.objects.filter(date=yesterday).values_list("create_by")
+    user_not_reported = users.exclude(username__in=user_reported)
+    for g in groups:
+        gid = g.id
+        # 筛选组下没写日报的用户
+        g_user = user_not_reported.filter(id__in=group_user.filter(group_id=gid).values_list("user_id", flat=True))
+        if g_user.count() != 0:
+            # 将所有没写日报的用户名字放到一个list里边
+            username_not_reported = []
+            for u in g_user:
+                if u.name:
+                    username_not_reported.append(u.name)
+                else:
+                    username_not_reported.append(u.username)
+            res.append({"admins": g.admin, "group_name": g.name, "user_not_reported": username_not_reported})
+    return res
