@@ -22,7 +22,7 @@
                 <div style="margin-top:18px;margin-left:20px;height:707px;">
                     <div v-if="isUser" class="users_list">
                         <div>
-                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
+                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
                                 {{user.name}}
                             </bk-button>
                         </div>
@@ -38,6 +38,9 @@
                 </div>
             </div>
             <div class="right_container">
+                <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
+                    没有日报内容哟~
+                </div>
                 <!-- 显示筛选日报个数等 -->
                 <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
                     <div style="float:left;">
@@ -58,7 +61,7 @@
                     <span style="float:right;">日报总数：{{dailysData.count}}</span>
                 </div>
                 <div>
-                    <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
+                    <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
                         <div>日期：{{daily.date}}</div>
                         <div>日报状态：{{daily.send_describe}}</div>
                         <div v-for="(value, key) in daily.content" :key="key">
@@ -87,6 +90,7 @@
                     name: '',
                     admin: [],
                     create_by: '',
+                    create_name: '',
                     create_time: ''
                 },
                 customOption: {
@@ -143,7 +147,11 @@
                         this.dailysData.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
                     } else {
-                        alert(res.message)
+                        const config = {}
+                        config.message = res.message
+                        config.offsetY = 80
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             },
@@ -211,7 +219,11 @@
                         this.dailysData.count = res.data.length
                         this.dailysData.dailys = res.data
                     } else {
-                        alert(res.message)
+                        const config = {}
+                        config.message = res.message
+                        config.offsetY = 80
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             }

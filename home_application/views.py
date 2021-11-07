@@ -86,8 +86,16 @@ def report_template(request, group_id):
         # 数据合法，创建新的日报模板
         if template_content is None:
             template_content = ""
+        try:
+            create_name = User.objects.get(username=request.user.username).name
+        except User.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "当前用户不存在", "data": []})
         DailyReportTemplate.objects.create(
-            name=template_name, content=template_content, create_by=request.user.username, group_id=group_id
+            name=template_name,
+            content=template_content,
+            create_by=request.user.username,
+            create_name=create_name,
+            group_id=group_id,
         )
         return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
 
@@ -113,9 +121,19 @@ def report_template(request, group_id):
 
 @is_group_member()
 def get_group_info(request, group_id):
-    return JsonResponse(
-        {"result": True, "code": 0, "message": "获取组信息成功", "data": Group.objects.get(id=group_id).to_json()}
-    )
+    group = Group.objects.get(id=group_id)
+    admin_usernames = group.admin.strip("[").rstrip("]").replace("'", "").split(", ")
+    admin_list = User.objects.filter(username__in=admin_usernames).values("id", "username", "name")
+    data = {
+        "id": group.id,
+        "name": group.name,
+        "admin": group.admin,
+        "admin_list": list(admin_list),
+        "create_by": group.create_by,
+        "create_name": group.create_name,
+        "create_time": group.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    return JsonResponse({"result": True, "code": 0, "message": "获取组信息成功", "data": data})
 
 
 def add_group(request):
@@ -128,10 +146,18 @@ def add_group(request):
     name = req.get("name")
     admins = req.get("admin")
     admin_names = []  # 管理员username连接字符串
+    has_create_user = False
     for admin in admins:
         admin_names.append(admin.get("username"))
+        if admin.get("username") == request.user.username:
+            has_create_user = True
+            create_name = admin.get("display_name")
+    if has_create_user is False:
+        return JsonResponse({"result": False, "code": 1, "message": "创建人未在管理员中"})
     try:
-        group = Group.objects.create(name=name, admin=admin_names, create_by=request.user.username)
+        group = Group.objects.create(
+            name=name, admin=admin_names, create_by=request.user.username, create_name=create_name
+        )
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     else:
@@ -300,6 +326,7 @@ def get_user_groups(request):
                 "name": group.name,
                 "admin": admin,
                 "create_by": group.create_by,
+                "create_name": group.create_name,
                 "create_time": group.create_time.strftime("%Y-%m-%d %H:%M:%S"),
             }
         )
@@ -370,8 +397,13 @@ def daily_report(request):
             return JsonResponse({"result": True, "code": 0, "message": "修改日报成功", "data": []})
         except Daily.DoesNotExist:
             # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
+            create_name = User.objects.get(username=request.user.username).name
             Daily.objects.create(
-                content=report_content, create_by=request.user.username, date=report_date, send_status=False
+                content=report_content,
+                create_by=request.user.username,
+                create_name=create_name,
+                date=report_date,
+                send_status=False,
             )
             return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})
 
