@@ -31,12 +31,13 @@ class Group(TimeBasic):
     # 多个管理员用户名拼接成的字符串
     admin = models.CharField(max_length=255, verbose_name="管理员们")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
+    create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
 
     def __str__(self):
         return self.name
 
     def to_json(self):
-        return {"name": self.name, "admin": self.admin, "create_by": self.create_by}
+        return {"name": self.name, "admin": self.admin, "create_by": self.create_by, "create_name": self.create_name}
 
 
 # 组中的日报通知人
@@ -79,6 +80,7 @@ class DailyReportTemplate(models.Model):
     name = models.CharField(max_length=128, verbose_name="日报模板名字")
     content = models.CharField(max_length=255, verbose_name="日报模板内容")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
+    create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     group_id = models.IntegerField(verbose_name="组id")
 
     def __str__(self):
@@ -89,6 +91,7 @@ class DailyReportTemplate(models.Model):
 class Daily(TimeBasic):
     content = models.TextField(verbose_name="日报内容")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
+    create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     date = models.DateField(verbose_name="日报日期")
     send_status = models.BooleanField(verbose_name="发送状态")
 
@@ -106,5 +109,6 @@ class Daily(TimeBasic):
             "content": ast.literal_eval(self.content),
             "date": str(self.date),
             "create_by": self.create_by,
+            "create_name": self.create_name,
             "send_describe": send_describe,
         }

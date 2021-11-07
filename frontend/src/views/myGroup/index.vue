@@ -10,7 +10,7 @@
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     searchable
-                    @change="selectedGroup(curGroupId)">
+                    @change="changeGroup(curGroupId)">
                     <bk-option v-for="option in groupsData"
                         :key="option.id"
                         :id="option.id"
@@ -66,13 +66,13 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editGroup">提交</bk-button>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editGroup(curGroupId)">提交</bk-button>
                             <bk-button ext-cls="mr5" @click="editGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
                         </bk-form-item>
                     </bk-form>
                 </bk-dialog>
-                <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="(item,i) in curGroup.admin" :key="i">{{item}}; </span></div>
-                <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：{{curGroup.create_by}}</div>
+                <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
+                <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：{{curGroup.create_by}}({{curGroup.create_name}})</div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
             </div>
             <div class="line-container daily-template-info" style="margin-top:0px;">
@@ -208,8 +208,10 @@
                 curGroup: {
                     id: '',
                     name: '',
-                    admin: [],
+                    admin: '',
+                    admin_list: [],
                     create_by: '',
+                    create_name: '',
                     create_time: ''
                 },
                 // 所有蓝鲸用户
@@ -292,10 +294,22 @@
                     console.log('bkUsers', this.bkUsers)
                 })
             },
+            // 获取组信息，并检查当前用户是否为该组管理员
+            getGroupInfo (groupId) {
+                this.$http.get('/get_group_info/' + groupId + '/').then(res => {
+                    this.curGroup = res.data
+                    console.log('curGroup', this.curGroup)
+                    // 是否为此组管理员
+                    this.curUser.isAdmin = false
+                    if (this.curGroup.admin.indexOf(this.curUser.info.username) !== -1) {
+                        this.curUser.isAdmin = true
+                    }
+                    console.log('isAdmin', this.curUser.isAdmin)
+                })
+            },
             // 获取组内成员
             getGroupUsers (groupId) {
                 this.$http.get('/get_group_users/' + groupId + '/').then(res => {
-                    // res.data.results
                     this.groupUsers = res.data
                     console.log('get_group_users:', res.data)
                 })
@@ -303,38 +317,22 @@
             // 获取组模板
             getGroupTemplates (groupId) {
                 this.$http.get('/report_template/' + groupId + '/').then(res => {
-                    // res.data.results
                     this.dailyTemplates = res.data
                     console.log('get_report_templates:', res.data)
                 })
             },
-            // 切换组模板、组成员、是否管理员等信息
-            changeGroup (group) {
-                // 是否为此组管理员
-                this.curUser.isAdmin = false
-                if (group.admin.indexOf(this.curUser.info.username) !== -1) {
-                    this.curUser.isAdmin = true
-                }
-                console.log('isAdmin', this.curUser.isAdmin)
-                // 切换组成员信息
-                this.getGroupUsers(group.id)
-                // 切换组模板
-                this.getGroupTemplates(group.id)
-            },
-            // 选定select切换组
-            selectedGroup (groupId) {
-                console.log('groupsData', this.groupsData)
-                // 更改当前组
-                const vm = this
-                this.groupsData.forEach(function (group) {
-                    if (group.id === groupId) {
-                        vm.curGroup = group
-                    }
-                })
-                console.log('curGroup', this.curGroup)
-                this.changeGroup(this.curGroup)
-            },
             // 前端反应操作
+            // 切换组模板、组成员、是否管理员等信息
+            changeGroup (groupId) {
+                console.log('curGroupId', this.curGroupId)
+                // 更改组信息，和当前用户是否为当前组管理员信息
+                this.getGroupInfo(groupId)
+                // 切换组成员信息
+                this.getGroupUsers(groupId)
+                // 切换组模板
+                this.getGroupTemplates(groupId)
+            },
+            // 点击添加用户
             clickAddUser () {
                 this.addUserDialog.visible = true
                 // 默认把蓝鲸平台第一个用户放在选项框里
@@ -379,10 +377,7 @@
                         console.log('init_group, groupsData:', this.groupsData)
                         if (this.groupsData.length !== 0) {
                             this.curGroupId = this.groupsData[0].id
-                            this.curGroup = this.groupsData[0]
-                            console.log('curGroup', this.curGroup)
-                            // 切换其他信息及设置管理员信息
-                            this.changeGroup(this.curGroup)
+                            this.changeGroup(this.curGroupId)
                         }
                     })
                 })
@@ -410,14 +405,23 @@
                     })
                     console.log('hasUser', flag)
                     if (!flag) {
-                        alert('未在蓝鲸用户平台找到登录用户信息')
+                        const config = {}
+                        config.message = '未在蓝鲸用户平台找到登录用户信息'
+                        config.offsetY = 80
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                         return
                     }
                 }
                 this.addGroupData.formData.admin = adminlist
                 console.log('参数formData', this.addGroupData.formData)
                 this.$http.post('/add_group/', this.addGroupData.formData).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = res.message
                     if (res.result) {
+                        config.theme = 'success'
+                        this.$bkMessage(config)
                         console.log('新建组id', res.data.group_id)
                         // 更新用户所有的组列表,后更新当前组
                         this.$http.get('/get_user_groups/').then((res2) => {
@@ -425,18 +429,21 @@
                             console.log('init_groups, allGroupsData:', this.groupsData)
                             // 切换组
                             this.curGroupId = res.data.group_id
-                            this.selectedGroup(this.curGroupId)
+                            this.changeGroup(this.curGroupId)
                             // dialog不可见
                             this.addGroupDialog.visible = false
                             // 将dialog内的内容清空
                             this.addGroupData.formData.name = ''
                             this.addGroupData.adminIds = []
                         })
+                    } else {
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             },
             // 编辑组
-            editGroup () {
+            editGroup (groupId) {
                 // 设置管理员信息
                 const vm = this
                 const adminlist = []
@@ -448,29 +455,23 @@
                 this.editGroupData.formData.admin = adminlist
                 console.log('editGroup-formData', this.editGroupData.formData)
                 // 调用更新组信息接口
-                this.$http.post('/update_group/' + this.curGroup.id + '/', this.editGroupData.formData).then(res => {
+                this.$http.post('/update_group/' + groupId + '/', this.editGroupData.formData).then(res => {
+                    const config = {}
+                    config.offsetY = 80
                     if (res.result) {
-                        console.log('更新组信息成功')
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
                         // 重新获取组列表
                         this.$http.get('/get_user_groups/').then((res2) => {
                             this.groupsData = res2.data
-                            const vm = this
-                            // 重新获取组信息
-                            this.groupsData.forEach(function (group) {
-                                if (group.id === vm.curGroup.id) {
-                                    vm.curGroup = group
-                                }
-                            })
-                            // 是否为此组管理员
-                            this.curUser.isAdmin = false
-                            if (this.curGroup.admin.indexOf(this.curUser.info.username) !== -1) {
-                                this.curUser.isAdmin = true
-                            }
-                            console.log('isAdmin', this.curUser.isAdmin)
+                            this.changeGroup(groupId)
                             this.editGroupDialog.visible = false
                         })
                     } else {
-                        alert(res.message)
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             },
@@ -478,14 +479,20 @@
             addDailyTemplate () {
                 console.log('addDailyTemplateData:', this.addDailyTemplateData.formData)
                 this.$http.post('/report_template/' + this.curGroup.id + '/', this.addDailyTemplateData.formData).then((res) => {
+                    const config = {}
+                    config.offsetY = 80
                     if (res.result) {
-                        alert('新增模板成功')
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
                         // 更新模板内容
                         this.getGroupTemplates(this.curGroup.id)
                         this.addDailyTemplateDialog.visible = false
                         this.addDailyTemplateData.formData = { name: '', content: '' }
                     } else {
-                        alert(res.message)
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             },
@@ -493,11 +500,17 @@
             editDailyTemplate () {
                 console.log('editDailyTemplateData', this.editDailyTemplateData)
                 this.$http.put('/report_template/' + this.curGroup.id + '/', this.editDailyTemplateData.formData).then(res => {
+                    const config = {}
+                    config.offsetY = 80
                     if (res.result) {
-                        alert('修改成功')
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
                         this.editDailyTemplateDialog.visible = false
                     } else {
-                        alert('修改失败')
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                     // 更新模板信息
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
@@ -511,10 +524,15 @@
                 const templateId = row.id
                 this.$http.delete('/report_template/' + this.curGroup.id + '/?template_id=' + templateId, { 'template_id': 12
                 }).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = res.message
                     if (res.result) {
-                        alert('删除模板' + row.name + '成功')
+                        config.theme = 'success'
+                        this.$bkMessage(config)
                     } else {
-                        alert('删除模板' + row.name + '失败')
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                     // 更新模板信息
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
@@ -534,16 +552,20 @@
                 })
                 console.log('addUserForm', this.addUserForm)
                 this.$http.post('/add_user/' + this.curGroup.id + '/', this.addUserForm).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = res.message
                     if (res.result) {
-                        alert('添加用户成功')
                         this.addUserDialog.visible = false
+                        config.theme = 'success'
+                        this.$bkMessage(config)
                         // 将提交的表单清空，因为当前（刚打开时的第一个元素）和它关联
                         this.addUserForm = {}
                         // 更新组-用户信息
                         this.getGroupUsers(this.curGroup.id)
                     } else {
-                        console.log('添加用户失败', res)
-                        alert(res.message)
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             },
@@ -551,18 +573,27 @@
             removeUser (row) {
                 // 检验删除的是否是管理员
                 if (this.curGroup.admin.indexOf(row.username) !== -1) {
-                    alert('不可移除管理员，可通过编辑组信息修改')
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = '不可移除管理员，可通过编辑组信息修改'
+                    config.theme = 'error'
+                    this.$bkMessage(config)
                 } else {
                     // props.row是当前行的遍历元素的全部信息=该行user
-                    console.log('当前user', row)
+                    console.log('row-user', row)
                     const deletForm = { 'user_id': row.id }
                     // 将用户从组里移除
                     this.$http.post('/exit_group/' + this.curGroup.id + '/', deletForm).then(res => {
+                        const config = {}
+                        config.offsetY = 80
+                        config.message = res.message
                         if (res.result) {
-                            alert('移除成功')
                             this.getGroupUsers(this.curGroup.id)
+                            config.theme = 'success'
+                            this.$bkMessage(config)
                         } else {
-                            alert(res.message)
+                            config.theme = 'error'
+                            this.$bkMessage(config)
                         }
                     })
                 }
