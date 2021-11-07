@@ -7,6 +7,7 @@ import logging
 
 from celery.schedules import crontab
 from celery.task import periodic_task
+from django.template.loader import get_template
 
 from home_application.utils.get_people_for_mail_notify import (
     get_people_not_reported,
@@ -49,18 +50,27 @@ def send_yesterday_report():
     for group_info in notify_info:
         group_name = group_info["group_name"]
         group_username = group_info["group_username"]
-        # 下边拼接日报内容成字符串
-        group_reports = ""
-        for report_info in group_info["group_reports"]:
-            group_reports += report_info["report_user"] + "\n"
-            group_reports += str(report_info["report_content"]) + "\n"
-        if len(group_reports) == 0:
-            group_reports = "昨天没人写日报，今天加油！"
+
+        if len(group_info["group_reports"]) != 0:
+            html_template = get_template("daily_report.html")
+            mail_content = html_template.render(
+                {
+                    "mail_title": "昨天日报信息速览",
+                    "mail_subhead": "%s 昨天的日报情况如下:" % group_name,
+                    "group_reports": group_info["group_reports"],
+                }
+            )
+            mail_format = "Html"
+        else:
+            mail_content = "昨天没人写日报，今天加油！"
+            mail_format = "Text"
+
         # 分组发送各组的日报
         send_mail(
             receiver__username=group_username,
             title="{}的日报({})".format(str(yesterday_date.date()), group_name),
-            content=group_reports,
+            content=mail_content,
+            body_format=mail_format,
         )
     # 然后告知管理员昨天没写日报的用户
     notify_admin_who_not_reported()

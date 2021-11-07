@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time     : 2020-07-06 10:24:59
 # @Remarks  :
+import ast
 import datetime
 
 from home_application.models import Daily, Group, GroupUser, User
@@ -45,11 +46,14 @@ def get_yesterday_reports():
         # for循环: 获取组内日报信息
         for report in yesterday_reports.filter(create_by__in=group_members_username):
             report_user = group_members.get(username=report.create_by).name
-            # 如果用户没有补充自己的真实姓名，则用username代替
-            if not report_user:
+            # 显示方式为 真实姓名(账号)
+            # 如果用户没有补充自己的真实姓名，则只显示username
+            if report_user:
+                report_user = "{}({})".format(report_user, report.create_by)
+            else:
                 report_user = report.create_by
 
-            report_info.append({"report_user": report_user, "report_content": report.content})
+            report_info.append({"report_user": report_user, "report_content": ast.literal_eval(report.content)})
         # for循环结束
 
         res.append(

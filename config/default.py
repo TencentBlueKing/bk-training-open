@@ -67,6 +67,8 @@ MIDDLEWARE += ("blueapps.middleware.bkui.middlewares.BkuiPageMiddleware",)
 
 # 添加首页搜索范围
 TEMPLATES[0]["DIRS"] += (os.path.join(BASE_DIR, "static", "dist"),)
+# 添加邮件模板搜索范围
+TEMPLATES[0]["DIRS"] += (os.path.join(BASE_DIR, "home_application", "templates", "email_templates"),)
 
 # 所有环境的日志级别可以在这里配置
 # LOG_LEVEL = 'INFO'
