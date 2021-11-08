@@ -94,15 +94,16 @@ class Daily(TimeBasic):
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     date = models.DateField(verbose_name="日报日期")
     send_status = models.BooleanField(verbose_name="发送状态")
+    template_id = models.IntegerField(verbose_name="模板id")
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
 
     def to_json(self):
         # TODO 日报内容的json格式化这里，按照开发规范是不能直接让变量做key的，这里先做好前后端联调，之后再修正
-        if self.send_status:
+        if self.send_status:  # 1
             send_describe = "邮件已发送小组成员查看"
-        else:
+        else:  # 0
             send_describe = "邮件已保存但未发送管理员查看"
         return {
             "id": self.id,
@@ -111,4 +112,5 @@ class Daily(TimeBasic):
             "create_by": self.create_by,
             "create_name": self.create_name,
             "send_describe": send_describe,
+            "template_id": self.template_id,
         }

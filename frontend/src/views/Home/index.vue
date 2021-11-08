@@ -237,7 +237,7 @@
         border: 2px solid #EAEBF0 ;
         /* border-radius: 4px; */
         margin:0px 100px;
-        padding: 10px 10px;
+        padding: 20px 50px;
         
     }
     .container_title {

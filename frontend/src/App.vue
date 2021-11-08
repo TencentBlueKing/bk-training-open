@@ -96,17 +96,18 @@
                 header: {
                     list: [
                         {
-                            name: '日报查看',
-                            id: 1,
-                            url: 'Home',
-                            show: true
-                        },
-                        {
                             name: '我的日报',
                             id: 2,
                             url: 'myGroup',
                             show: true
                         },
+                        {
+                            name: '日报查看',
+                            id: 1,
+                            url: 'Home',
+                            show: true
+                        },
+                        
                         {
                             name: '我的组',
                             id: 3,
