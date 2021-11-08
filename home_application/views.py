@@ -365,16 +365,25 @@ def daily_report(request):
     """日报模块的增删改查"""
     # 获取今天的日报，没有就返回空-------------------------------------------------------------------------------
     if request.method == "GET":
-        try:
-            today_report = Daily.objects.get(create_by=request.user.username, date=datetime.today())
-            return JsonResponse({"result": True, "code": 0, "message": "获取今天日报成功", "data": today_report.to_json()})
-        except Daily.DoesNotExist:
-            return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": {}})
+        # 获取日期
+        date = request.GET.get("date")
+        if date:
+            try:
+                date = datetime.strptime(date, "%Y-%m-%d").date()
+                today_report = Daily.objects.get(create_by=request.user.username, date=date)
+                return JsonResponse({"result": True, "code": 0, "message": "获取今天日报成功", "data": today_report.to_json()})
+            except ValueError:
+                return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+            except Daily.DoesNotExist:
+                return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": {}})
 
     # 参数校验-----------------------------------------------------------------------------------------
     req = json.loads(request.body)
     report_content = req.get("content")
     report_date = req.get("date")
+    if "template_id" not in req or not req["template_id"]:
+        return JsonResponse({"result": False, "code": -1, "message": "缺少模板id", "data": []})
+    template_id = req.get("template_id")
     if not isinstance(report_content, dict):
         return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
     try:
@@ -393,6 +402,7 @@ def daily_report(request):
             if target_report.send_status:
                 return JsonResponse({"result": False, "code": -1, "message": "日报已经发送管理员查看，不可修改", "data": []})
             target_report.content = report_content
+            target_report.template_id = template_id
             target_report.save()
             return JsonResponse({"result": True, "code": 0, "message": "修改日报成功", "data": []})
         except Daily.DoesNotExist:
@@ -403,6 +413,7 @@ def daily_report(request):
                 create_by=request.user.username,
                 create_name=create_name,
                 date=report_date,
+                template_id=template_id,
                 send_status=False,
             )
             return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})

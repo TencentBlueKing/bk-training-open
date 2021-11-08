@@ -84,7 +84,7 @@
                                 <bk-input v-model="addDailyTemplateData.formData.name"></bk-input>
                             </bk-form-item>
                             <bk-form-item label="模板内容" required="true">
-                                <bk-input type="textarea" v-model="addDailyTemplateData.formData.content" placeholder="请输入描述"></bk-input>
+                                <bk-input type="textarea" v-model="addDailyTemplateData.formData.content" placeholder="例如：今日任务;明日计划;总结"></bk-input>
                             </bk-form-item>
                             <bk-form-item>
                                 <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addDailyTemplate">提交</bk-button>
