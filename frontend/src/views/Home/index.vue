@@ -34,8 +34,8 @@
                     type="submit" :title="'保存'" @click="saveDaily()" class="mr10" style="margin-left:40px;">
                     保存
                 </bk-button>
-                <span class="tag-view" style="display:inline-block; width:200px;">
-                    <bk-tag id="saveTag" :theme="tagTheme">{{saveText}}</bk-tag>
+                <span class="tag-view" style="float:right;display:inline-block; width:120px;margin-top:16px;font-size:14px;">
+                    日报状态：{{saveText}}
                 </span>
 
             </div>
@@ -177,7 +177,7 @@
                             console.log('curTemplateId', this.curTemplateId)
                             console.log('curTemplate', this.curTemplate)
                             console.log('dailyData', this.dailyData)
-                            if (res.data.send_describe === '邮件已发送小组成员查看') {
+                            if (res.data.send_describe === '已发送') {
                                 this.writeFalg = false
                             }
                             this.saveText = res.data.send_describe

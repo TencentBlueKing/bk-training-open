@@ -16,14 +16,15 @@
                             :key="item.id"
                             theme="light navigation-message"
                             :arrow="false"
+                           
                         >
                             <li
                                 v-show="item.show"
                                 class="header-nav-item"
-                                :class="{ 'item-active': index === header.active }"
                                 style="text-decoration:none;"
+                                @click="changeHead(index)"
                             >
-                                <router-link :to="item.url" style="color:white;">   {{ item.name }}</router-link>
+                                <router-link :to="item.url" style="color:#979BA5;" :class="{ 'item-active': index === header.active }">   {{ item.name }}</router-link>
                             </li>
                         </bk-popover>
                     </ol>
@@ -116,7 +117,7 @@
                             show: true
                         }
                     ],
-                    active: 2,
+                    active: 0,
                     bizId: 1
                 }
             }
@@ -130,6 +131,11 @@
             }
         },
         methods: {
+            changeHead (index) {
+                console.log('dsdasdsa === ', index)
+                const vm = this
+                vm.header.active = index
+            },
             handleSelect (id, item) {
                 this.nav.id = id
                 console.info(`你选择了${id}`)
@@ -207,7 +213,7 @@ body{
   color: #96a2b9;
   min-width: 56px;
 }
-.monitor-navigation-header .header-nav-item.item-active {
+.monitor-navigation-header .header-nav-item .item-active  {
   color: #ffffff !important;
 }
 .monitor-navigation-header .header-nav-item:hover {
