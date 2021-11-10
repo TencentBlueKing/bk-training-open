@@ -210,7 +210,7 @@ def update_group(request, group_id):
                 User(
                     id=admin.get("id"),
                     username=admin.get("username"),
-                    name=admin.get("name"),
+                    name=admin.get("display_name"),
                     phone=admin.get("phone"),
                     email=admin.get("email"),
                 )

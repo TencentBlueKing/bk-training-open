@@ -21,6 +21,7 @@
                                 v-show="item.show"
                                 class="header-nav-item"
                                 :class="{ 'item-active': index === header.active }"
+                                style="text-decoration:none;"
                             >
                                 <router-link :to="item.url" style="color:white;">   {{ item.name }}</router-link>
                             </li>
@@ -96,22 +97,22 @@
                 header: {
                     list: [
                         {
-                            name: '我的日报',
-                            id: 2,
-                            url: 'myGroup',
+                            name: '填写日报',
+                            id: 1,
+                            url: 'Home',
                             show: true
                         },
                         {
                             name: '日报查看',
-                            id: 1,
-                            url: 'Home',
+                            id: 2,
+                            url: 'groupDailys',
                             show: true
                         },
                         
                         {
                             name: '我的组',
                             id: 3,
-                            url: 'myDaily',
+                            url: 'myGroup',
                             show: true
                         }
                     ],
@@ -153,6 +154,9 @@ body{
   width: 100%;
   height: 100%;
   outline: 1px solid #ebebeb;
+}
+.header-nav-item a {
+  text-decoration: none ;
 }
 .container-content{
     padding:0px!important;
