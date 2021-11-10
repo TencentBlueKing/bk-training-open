@@ -20,7 +20,7 @@
                 <bk-button :theme="'primary'" style="margin-left:30px; margin-top:-20px;" class="mr10" @click="addGroupDialog.visible = true">
                     +新增组
                 </bk-button>
-                <bk-dialog v-model="addGroupDialog.visible" theme="primary" title="添加成员" class="add-group-dialog" :show-footer="false">
+                <bk-dialog v-model="addGroupDialog.visible" theme="primary" title="新增组" class="add-group-dialog" :show-footer="false">
                     <bk-form label-width="120">
                         <bk-form-item label="组名称" required="true">
                             <bk-input v-model="addGroupData.formData.name"></bk-input>
@@ -34,7 +34,7 @@
                                 <bk-option v-for="option in bkUsers"
                                     :key="option.id"
                                     :id="option.id"
-                                    :name="option.display_name">
+                                    :name="option.username + '(' + option.display_name + ')'">
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
@@ -61,7 +61,7 @@
                                 <bk-option v-for="option in bkUsers"
                                     :key="option.id"
                                     :id="option.id"
-                                    :name="option.display_name">
+                                    :name="option.username + '(' + option.display_name + ')'">
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
@@ -72,7 +72,7 @@
                     </bk-form>
                 </bk-dialog>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
-                <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：{{curGroup.create_by}}({{curGroup.create_name}})</div>
+                <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：<span v-if="curGroupId !== null ">{{curGroup.create_by}}({{curGroup.create_name}})</span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
             </div>
             <div class="line-container daily-template-info" style="margin-top:0px;">
@@ -144,7 +144,7 @@
                                     <bk-option v-for="option in bkUsers"
                                         :key="option.id"
                                         :id="option.id"
-                                        :name="option.display_name">
+                                        :name="option.username + '(' + option.display_name + ')'">
                                     </bk-option>
                                 </bk-select>
                             </bk-form-item>
@@ -324,13 +324,28 @@
             // 前端反应操作
             // 切换组模板、组成员、是否管理员等信息
             changeGroup (groupId) {
-                console.log('curGroupId', this.curGroupId)
-                // 更改组信息，和当前用户是否为当前组管理员信息
-                this.getGroupInfo(groupId)
-                // 切换组成员信息
-                this.getGroupUsers(groupId)
-                // 切换组模板
-                this.getGroupTemplates(groupId)
+                if (groupId === '' || groupId === null) {
+                    console.log('点x')
+                    this.curGroupId = null
+                    this.curGroup = {
+                        id: '',
+                        name: '',
+                        admin: '',
+                        admin_list: [],
+                        create_by: '',
+                        create_name: '',
+                        create_time: ''
+                    }
+                    this.dailyTemplates = []
+                    this.groupUsers = []
+                } else {
+                    // 更改组信息，和当前用户是否为当前组管理员信息
+                    this.getGroupInfo(groupId)
+                    // 切换组成员信息
+                    this.getGroupUsers(groupId)
+                    // 切换组模板
+                    this.getGroupTemplates(groupId)
+                }
             },
             // 点击添加用户
             clickAddUser () {
