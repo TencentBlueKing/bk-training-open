@@ -43,13 +43,16 @@ def get_yesterday_reports():
         group_members = users.filter(id__in=group_members_id)
         group_members_username = group_members.values_list("username", flat=True)
 
-        # for循环: 获取组内日报信息
-        for report in yesterday_reports.filter(create_by__in=group_members_username):
+        # 循环获取组内日报信息
+        group_reports = yesterday_reports.filter(create_by__in=group_members_username)
+        # 存放日报id，用于在发送邮件后修改日报状态为已发送
+        group_reports_id = list(group_reports.values_list("id", flat=True))
+        for report in group_reports:
             report_user = group_members.get(username=report.create_by).name
-            # 显示方式为 真实姓名(账号)
-            # 如果用户没有补充自己的真实姓名，则只显示username
+            # 显示方式为 username(name)
+            # 如果用户没有补充自己的name，则只显示username
             if report_user:
-                report_user = "{}({})".format(report_user, report.create_by)
+                report_user = "{}({})".format(report.create_by, report_user)
             else:
                 report_user = report.create_by
 
@@ -61,6 +64,7 @@ def get_yesterday_reports():
                 "group_name": g.name,
                 "group_username": ",".join(list(group_members_username)),
                 "group_reports": report_info,
+                "group_reports_id": group_reports_id,
             }
         )
     return res
@@ -91,7 +95,7 @@ def get_yesterday_not_report_user():
             username_not_reported = []
             for u in g_user:
                 if u.name:
-                    username_not_reported.append(u.name)
+                    username_not_reported.append("{}({})".format(u.username, u.name))
                 else:
                     username_not_reported.append(u.username)
             res.append({"admins": g.admin, "group_name": g.name, "user_not_reported": username_not_reported})

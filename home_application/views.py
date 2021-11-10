@@ -40,16 +40,22 @@ def get_all_report_template(request):
     """
     获取用户所在组的所有的日报模板
     """
+    templates = [
+        {"id": 0, "name": "日报", "content": "今日总结;明日计划;感想", "create_by": "系统默认", "create_name": "系统默认", "group_id": 0},
+        {"id": -1, "name": "周报", "content": "本周总结;下周计划;感想", "create_by": "系统默认", "create_name": "系统默认", "group_id": 0},
+    ]
+
     user_id = request.user.id
     groups_id = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
     groups = Group.objects.filter(id__in=groups_id)
     group_id_name_map = {}
     for g in groups:
         group_id_name_map[g.id] = g.name
-    templates = DailyReportTemplate.objects.filter(group_id__in=groups_id).values()
-    for t in templates:
+    group_templates = list(DailyReportTemplate.objects.filter(group_id__in=groups_id).values())
+    for t in group_templates:
         t["name"] += "(%s)" % (group_id_name_map[t["group_id"]])
-    return JsonResponse({"result": True, "code": 0, "message": "", "data": list(templates)})
+    templates.extend(group_templates)
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": templates})
 
 
 @require_http_methods(["GET", "POST", "PUT", "DELETE"])
