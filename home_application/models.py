@@ -100,11 +100,10 @@ class Daily(TimeBasic):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
 
     def to_json(self):
-        # TODO 日报内容的json格式化这里，按照开发规范是不能直接让变量做key的，这里先做好前后端联调，之后再修正
-        if self.send_status:  # 1
-            send_describe = "邮件已发送小组成员查看"
-        else:  # 0
-            send_describe = "邮件已保存但未发送管理员查看"
+        if self.send_status:
+            send_describe = "已保存"
+        else:
+            send_describe = "已发送"
         return {
             "id": self.id,
             "content": ast.literal_eval(self.content),

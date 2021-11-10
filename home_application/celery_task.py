@@ -9,6 +9,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.template.loader import get_template
 
+from home_application.models import Daily
 from home_application.utils.get_people_for_mail_notify import (
     get_people_not_reported,
     get_yesterday_not_report_user,
@@ -66,11 +67,14 @@ def send_yesterday_report():
             mail_format = "Text"
 
         # 分组发送各组的日报
-        send_mail(
+        send_res = send_mail(
             receiver__username=group_username,
             title="{}的日报({})".format(str(yesterday_date.date()), group_name),
             content=mail_content,
             body_format=mail_format,
         )
+        if send_res["result"]:
+            ids = group_info["group_reports_id"]
+            Daily.objects.filter(id__in=ids).update(send_status=True)
     # 然后告知管理员昨天没写日报的用户
     notify_admin_who_not_reported()
