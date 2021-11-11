@@ -25,7 +25,19 @@ logger = logging.getLogger(__name__)
 def remind_to_write_daily():
     logger.info("定时任务：每晚8点提醒没写日报的同学")
     user_to_notified = ",".join(get_people_not_reported())
-    send_mail(receiver__username=user_to_notified, title="日报提醒助手", content="你好，你今天的日报还没有写，快去写日报吧")
+    # 都写了日报则无需处理
+    if not user_to_notified:
+        return
+    html_template = get_template("simple_notify.html")
+    mail_content = html_template.render(
+        {
+            "notify_title": "日报提醒",
+            "notify_content": "Hi,你今天还写日报，是不是忘记？快来写吧",
+            "button_text": "点我去写日报",
+            "button_link": "https://paas-edu.bktencent.com/t/train-test/",
+        }
+    )
+    send_mail(receiver__username=user_to_notified, title="日报提醒助手", content=mail_content, body_format="Html")
 
 
 def notify_admin_who_not_reported():
@@ -35,11 +47,15 @@ def notify_admin_who_not_reported():
     logger.info("定时任务：每早10点告知管理员昨天没写日报的用户")
     not_reported = get_yesterday_not_report_user()
     for mail_info in not_reported:
-        mail_content = "您所管理的组{}内以下成员昨天没写日报，请留意：\n{}".format(
+        html_template = get_template("simple_notify.html")
+        notify_content = "您所管理的组『{}』内以下成员昨天没写日报，请留意：\n\n{}".format(
             mail_info["group_name"], ", ".join(mail_info["user_not_reported"])
         )
-        mail_title = "%s昨日未写日报用户" % mail_info["group_name"]
-        send_mail(receiver__username=mail_info["admins"], title=mail_title, content=mail_content)
+        mail_content = html_template.render(
+            {"notify_title": "日报提醒", "notify_content": notify_content, "button_text": None, "button_link": None}
+        )
+        mail_title = "昨日未写日报用户(%s)" % mail_info["group_name"]
+        send_mail(receiver__username=mail_info["admins"], title=mail_title, content=mail_content, body_format="Html")
 
 
 # 每天早上10点发送前一天日报，同时告知管理员组内那些同学没交日报
@@ -48,6 +64,8 @@ def send_yesterday_report():
     logger.info("定时任务：每早10点发送前一天所有人的日报")
     yesterday_date = datetime.datetime.today() - datetime.timedelta(days=1)
     notify_info = get_yesterday_reports()
+
+    # 分组发送各组的日报
     for group_info in notify_info:
         group_name = group_info["group_name"]
         group_username = group_info["group_username"]
@@ -57,21 +75,25 @@ def send_yesterday_report():
             mail_content = html_template.render(
                 {
                     "mail_title": "昨天日报信息速览",
-                    "mail_subhead": "%s 昨天的日报情况如下:" % group_name,
+                    "mail_subhead": "『%s』昨天的日报情况如下:" % group_name,
                     "group_reports": group_info["group_reports"],
                 }
             )
-            mail_format = "Html"
         else:
-            mail_content = "昨天没人写日报，今天加油！"
-            mail_format = "Text"
-
-        # 分组发送各组的日报
+            html_template = get_template("simple_notify.html")
+            mail_content = html_template.render(
+                {
+                    "notify_title": "昨天日报信息",
+                    "notify_content": "你所在组『%s』，昨天没人写日报，今天要加油啊！" % group_name,
+                    "button_text": None,
+                    "button_link": None,
+                }
+            )
         send_res = send_mail(
             receiver__username=group_username,
             title="{}的日报({})".format(str(yesterday_date.date()), group_name),
             content=mail_content,
-            body_format=mail_format,
+            body_format="Html",
         )
         if send_res["result"]:
             ids = group_info["group_reports_id"]
