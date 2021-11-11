@@ -121,9 +121,8 @@
                         @row-mouse-leave="handleRowMouseLeave"
                         @page-change="handlePageChange"
                         @page-limit-change="handlePageLimitChange">
-                        <bk-table-column type="selection" width="60"></bk-table-column>
-                        <bk-table-column type="index" label="序列" width="60"></bk-table-column>
-                        <bk-table-column label="模板名称" prop="name" width="400"></bk-table-column>
+                        <bk-table-column type="index" label="序列" width="100"></bk-table-column>
+                        <bk-table-column label="模板名称" prop="name" width="320"></bk-table-column>
                         <bk-table-column label="模板内容" prop="content"></bk-table-column>
                         <bk-table-column label="创建人" prop="create_by"></bk-table-column>
                         <bk-table-column label="操作" width="150">
@@ -182,8 +181,7 @@
                         @row-mouse-leave="handleRowMouseLeave"
                         @page-change="handlePageChange"
                         @page-limit-change="handlePageLimitChange">
-                        <bk-table-column type="selection" width="60"></bk-table-column>
-                        <bk-table-column type="index" label="序列" width="60"></bk-table-column>
+                        <bk-table-column type="index" label="序列" width="100"></bk-table-column>
                         <bk-table-column label="用户名" prop="username"></bk-table-column>
                         <bk-table-column label="姓名" prop="name"></bk-table-column>
                         <bk-table-column label="电话" prop="phone"></bk-table-column>
@@ -523,6 +521,19 @@
                         config.theme = 'success'
                         this.$bkMessage(config)
                         this.deleteGroupDialog.visible = false
+                        this.curGroupId = null
+                        this.curGroup = {
+                            id: '',
+                            name: '',
+                            admin: '',
+                            admin_list: [],
+                            create_by: '',
+                            create_name: '',
+                            create_time: ''
+                        }
+                        this.dailyTemplates = []
+                        this.groupUsers = []
+                        this.curUser.isAdmin = false
                         // 更新页面全部信息
                         this.init()
                     } else {

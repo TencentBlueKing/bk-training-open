@@ -5,7 +5,7 @@
         </bk-divider>
         <div class="container">
             <div class="left_container">
-                <bk-select :disabled="false" v-model="curGroupId" style="width: 230px;display: inline-block;"
+                <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     @change="changeGroup(curGroupId)"
@@ -16,10 +16,10 @@
                         :name="group.name">
                     </bk-option>
                 </bk-select>
-                <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" style="margin-top:-21px;margin-left:18px;" @click="changeType" class="mr10">
+                <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" style="margin-top:-21px;margin-left:5px;" @click="changeType" class="mr10">
                     {{isUser ? '日期' : '成员'}}
                 </bk-button>
-                <div style="margin-top:18px;margin-left:20px;height:707px;">
+                <div style="margin-top:18px;height:707px;">
                     <div v-if="isUser" class="users_list">
                         <div>
                             <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
@@ -27,7 +27,7 @@
                             </bk-button>
                         </div>
                     </div>
-                    <div class="date_picker" v-else>
+                    <div class="date_picker" style="margin-left:0px;" v-else>
                         <bk-date-picker class="mr15" @change="changeDate(curDate)" style="position:relative;" v-model="curDate"
                             :placeholder="'选择日期'"
                             open="true"
@@ -95,7 +95,7 @@
                 },
                 customOption: {
                     disabledDate: function (date) {
-                        if (date > new Date((new Date()).getTime() - 24 * 60 * 60 * 1000)) {
+                        if (date > new Date()) {
                             return true
                         }
                     }
@@ -104,7 +104,7 @@
                 isUser: false,
                 rightIsUser: false,
                 // 日期选择（当前正常，get时需要再次转化）
-                curDate: new Date((new Date()).getTime() - 24 * 60 * 60 * 1000),
+                curDate: new Date(),
                 // 日报数据
                 dailysData: {
                     count: 100,
@@ -217,7 +217,7 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.curDate = new Date((new Date()).getTime() - 24 * 60 * 60 * 1000)
+                    this.curDate = new Date()
                     this.changeDate(this.curDate)
                 }
             },

@@ -31,9 +31,20 @@
                 </bk-date-picker>
                 <bk-button :theme="'primary'"
                     :disabled="!writeFalg"
-                    type="submit" :title="'保存'" @click="saveDaily()" class="mr10" style="margin-left:40px;">
+                    type="submit" :title="'保存'" @click="clickSaveDaily()" class="mr10" style="margin-left:40px;">
                     保存
                 </bk-button>
+                <bk-dialog v-model="saveDailyDialog.visiable" theme="primary" class="save-daily-dialog" :show-footer="false">
+                    <bk-form label-width="80">
+                        <bk-form-item style="margin-left:60px;">
+                            请选择保存方式
+                        </bk-form-item>
+                        <bk-form-item>
+                            <bk-button style="margin-right: 20px;" theme="primary" title="保存并发送邮件" @click.stop.prevent="saveAndSend()">保存并发送邮件</bk-button>
+                            <bk-button ext-cls="mr5" @click="saveDaily()" theme="default" title="仅保存">仅保存</bk-button>
+                        </bk-form-item>
+                    </bk-form>
+                </bk-dialog>
                 <span class="tag-view" style="float:right;display:inline-block; width:120px;margin-top:16px;font-size:14px;">
                     日报状态：{{saveText}}
                 </span>
@@ -77,7 +88,8 @@
                 addDailyFormData: {
                     date: null,
                     content: {},
-                    template_id: null
+                    template_id: null,
+                    send_email: false
                 },
                 reportDate: new Date(),
                 customOption: {
@@ -86,6 +98,9 @@
                             return true
                         }
                     }
+                },
+                saveDailyDialog: {
+                    visiable: false
                 },
                 saveFalg: false,
                 writeFalg: true,
@@ -141,6 +156,14 @@
                     }
                 })
             },
+            clickSaveDaily () {
+                console.log('isToday', this.formateDate(this.reportDate) === this.formateDate(new Date()))
+                if (this.formateDate(this.reportDate) === this.formateDate(new Date())) {
+                    this.saveDaily()
+                } else {
+                    this.saveDailyDialog.visiable = true
+                }
+            },
             // 获取用户指定日期日报，如果没有写日报，则自动渲染第一个模板的内容
             getDailyByDate (date) {
                 this.writeFalg = true
@@ -188,6 +211,10 @@
                         this.$bkMessage(config)
                     }
                 })
+            },
+            saveAndSend () {
+                this.addDailyFormData.send_email = true
+                this.saveDaily()
             },
             // 保存日报
             saveDaily () {
@@ -238,6 +265,7 @@
                             config.theme = 'error'
                             this.$bkMessage(config)
                         }
+                        this.sendEmail = false
                     })
                 }
             }
