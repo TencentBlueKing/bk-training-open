@@ -111,7 +111,7 @@
             },
             // 切换模板
             selectTemplate () {
-                console.log('curTemplateId', this.curTemplateId)
+                console.log('切换模板curTemplateId', this.curTemplateId)
                 this.dailyData = []
                 const vm = this
                 vm.templateList.forEach(function (template) {
@@ -119,9 +119,8 @@
                         vm.curTemplate = template.content.split(';')
                     }
                 })
+                console.log('templateList', this.templateList)
                 console.log('template', this.curTemplate)
-                
-                console.log('templates', this.templateList)
             },
             // 界面初始化
             init () {
@@ -202,34 +201,45 @@
                     this.$bkMessage(config)
                     return
                 }
-                for (let i = 0; i < this.dailyData.length; i++) {
+                console.log(this.dailyData)
+                let flag = true
+                const content = {}
+                for (let i = 0; i < this.curTemplate.length; i++) {
                     console.log('日报内容', this.dailyData[i])
-                    if (this.dailyData[i].length === 0) {
-                        config.message = '"' + this.curTemplate.content[i] + '"不可为空'
-                        config.theme = 'error'
-                        this.$bkMessage(config)
-                        return
-                    }
-                    this.addDailyFormData.content[this.curTemplate[i]] = this.dailyData[i]
-                }
-                // 设置日期数据
-                this.addDailyFormData.date = this.reportDate.getFullYear() + '-'
-                    + (this.reportDate.getMonth() >= 9 ? (this.reportDate.getMonth() + 1) : '0' + (this.reportDate.getMonth() + 1)) + '-'
-                    + (this.reportDate.getDate() > 9 ? (this.reportDate.getDate()) : '0' + (this.reportDate.getDate()))
-                this.addDailyFormData.template_id = this.curTemplateId
-                // 调取添加日报接口
-                console.log('addDailyFormData:', this.addDailyFormData)
-                this.$http.post('/daily_report/', this.addDailyFormData).then(res => {
-                    config.message = res.message
-                    if (res.result) {
-                        config.theme = 'success'
-                        this.$bkMessage(config)
+                    if (this.dailyData[i] === null || this.dailyData[i] === '' || this.dailyData[i] === undefined) {
+                        config.message = '"' + this.curTemplate[i] + '"不可为空'
+                        flag = false
                     } else {
-                        this.addDailyFormData = null
-                        config.theme = 'error'
-                        this.$bkMessage(config)
+                        // 设置日期内容
+                        content[this.curTemplate[i]] = this.dailyData[i]
                     }
-                })
+                }
+                console.log('hasFullContentFlag:', flag)
+                if (flag === false) {
+                    this.addDailyFormData = { date: null, content: {}, template_id: null }
+                    config.theme = 'error'
+                    this.$bkMessage(config)
+                } else {
+                    // 设置日期数据
+                    this.addDailyFormData.date = this.formateDate(this.reportDate)
+                    this.addDailyFormData.content = content
+                    this.addDailyFormData.template_id = this.curTemplateId
+                    // 调取添加日报接口
+                    console.log('addDailyFormData:', this.addDailyFormData)
+                    this.$http.post('/daily_report/', this.addDailyFormData).then(res => {
+                        config.message = res.message
+                        if (res.result) {
+                            config.theme = 'success'
+                            this.$bkMessage(config)
+                            console.log('填写成功，重新获取日报信息')
+                            this.getDailyByDate(this.reportDate)
+                        } else {
+                            this.addDailyFormData = null
+                            config.theme = 'error'
+                            this.$bkMessage(config)
+                        }
+                    })
+                }
             }
 
         }

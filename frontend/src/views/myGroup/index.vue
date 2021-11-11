@@ -71,6 +71,24 @@
                         </bk-form-item>
                     </bk-form>
                 </bk-dialog>
+                <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" :title="'主要按钮'" class="mr10" style="margin-top:-20px;" @click="deleteGroupDialog.visible = true">
+                    删除组
+                </bk-button>
+                <bk-dialog v-model="deleteGroupDialog.visible" theme="primary" class="delete-group-dialog" :show-footer="false">
+                   
+                    <bk-form label-width="80">
+                        <bk-form-item style="margin-left:15px;">
+                            确认删除{{curGroup.name}}吗？
+                        </bk-form-item>
+                        
+                        <bk-form-item>
+                            <bk-button style="margin-left: 20px;margin-right: 20px;" theme="primary" title="提交" @click.stop.prevent="deleteGroup">提交</bk-button>
+                            <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                        </bk-form-item>
+                    </bk-form>
+                    
+                </bk-dialog>
+
                 <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：<span v-if="curGroupId !== null ">{{curGroup.create_by}}({{curGroup.create_name}})</span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
@@ -172,7 +190,7 @@
                         <bk-table-column label="邮箱" prop="email"></bk-table-column>
                         <bk-table-column label="操作" width="100px">
                             <template slot-scope="props">
-                                <bk-button v-show="curUser.isAdmin" class="mr10" :disabled="!curUser.isAdmin" theme="primary" text @click="removeUser(props.row)">移除</bk-button>
+                                <bk-button v-show="curUser.isAdmin " class="mr10" :disabled="curGroup.admin.indexOf(props.row.username) !== -1" theme="primary" text @click="removeUser(props.row)">移除</bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -242,6 +260,9 @@
                         name: '',
                         admin: []
                     }
+                },
+                deleteGroupDialog: {
+                    visible: false
                 },
                 addDailyTemplateDialog: {
                     visible: false
@@ -338,6 +359,7 @@
                     }
                     this.dailyTemplates = []
                     this.groupUsers = []
+                    this.curUser.isAdmin = false
                 } else {
                     // 更改组信息，和当前用户是否为当前组管理员信息
                     this.getGroupInfo(groupId)
@@ -483,6 +505,26 @@
                             this.changeGroup(groupId)
                             this.editGroupDialog.visible = false
                         })
+                    } else {
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                })
+            },
+            // 删除组
+            deleteGroup () {
+                console.log('clickDeleteGroup,groupId:', this.curGroupId)
+                this.$http.post('/delete_group/' + this.curGroupId + '/').then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    if (res.result) {
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        this.deleteGroupDialog.visible = false
+                        // 更新页面全部信息
+                        this.init()
                     } else {
                         config.message = res.message
                         config.theme = 'error'

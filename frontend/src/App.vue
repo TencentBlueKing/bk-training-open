@@ -21,10 +21,10 @@
                             <li
                                 v-show="item.show"
                                 class="header-nav-item"
-                                style="text-decoration:none;"
+                                style="margin-right:0px;text-decoration:none;"
                                 @click="changeHead(index)"
                             >
-                                <router-link :to="item.url" style="color:#979BA5;" :class="{ 'item-active': index === header.active }">   {{ item.name }}</router-link>
+                                <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;" :class="{ 'item-active': index === header.active }">   {{ item.name }}</router-link>
                             </li>
                         </bk-popover>
                     </ol>
@@ -132,7 +132,7 @@
         },
         methods: {
             changeHead (index) {
-                console.log('dsdasdsa === ', index)
+                console.log('当前点击', index)
                 const vm = this
                 vm.header.active = index
             },
