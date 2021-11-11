@@ -192,6 +192,17 @@ def add_group(request):
         return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": {"group_id": group.id}})
 
 
+@is_group_member(admin_needed=["POST"])
+def delete_group(request, group_id):
+    try:
+        DailyReportTemplate.objects.filter(group_id=group_id).delete()
+        GroupUser.objects.filter(group_id=group_id).delete()
+        Group.objects.get(id=group_id).delete()
+        return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})
+    except Group.DoesNotExist:
+        return JsonResponse({"result": True, "code": 0, "message": "组不存在", "data": []})
+
+
 @is_group_member(admin_needed=["POST", "PUT", "DELETE"])
 def update_group(request, group_id):
     """编辑组信息"""

@@ -22,6 +22,7 @@ urlpatterns = (
     path("get_all_report_template/", views.get_all_report_template),
     path("get_group_info/<int:group_id>/", views.get_group_info),
     url(r"^add_group/$", views.add_group),
+    path("delete_group/<int:group_id>/", views.delete_group),
     path("update_group/<int:group_id>/", views.update_group),
     url(r"^get_all_bk_users/$", views.get_all_bk_users),
     path("add_user/<int:group_id>/", views.add_user),

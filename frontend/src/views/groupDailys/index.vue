@@ -38,9 +38,6 @@
                 </div>
             </div>
             <div class="right_container">
-                <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
-                    没有日报内容哟~
-                </div>
                 <!-- 显示筛选日报个数等 -->
                 <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
                     <div style="float:left;">
@@ -59,6 +56,9 @@
                         </bk-select>
                     </div>
                     <span style="float:right;">日报总数：{{dailysData.count}}</span>
+                </div>
+                <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
+                    没有日报内容哟~
                 </div>
                 <div>
                     <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
