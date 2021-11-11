@@ -387,15 +387,14 @@ def daily_report(request):
     req = json.loads(request.body)
     report_content = req.get("content")
     report_date = req.get("date")
-    if "template_id" not in req or not req["template_id"]:
-        return JsonResponse({"result": False, "code": -1, "message": "缺少模板id", "data": []})
     template_id = req.get("template_id")
     if not isinstance(report_content, dict):
         return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
     try:
+        template_id = int(template_id)
         report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
     except ValueError:
-        return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+        return JsonResponse({"result": False, "code": -1, "message": "日期或模板id数据格式错误", "data": []})
     if report_date > datetime.today():
         return JsonResponse({"result": False, "code": -1, "message": "日期不合法", "data": []})
 

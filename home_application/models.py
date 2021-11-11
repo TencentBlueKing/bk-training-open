@@ -101,9 +101,9 @@ class Daily(TimeBasic):
 
     def to_json(self):
         if self.send_status:
-            send_describe = "已保存"
-        else:
             send_describe = "已发送"
+        else:
+            send_describe = "已保存"
         return {
             "id": self.id,
             "content": ast.literal_eval(self.content),
