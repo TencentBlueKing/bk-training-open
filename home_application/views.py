@@ -441,7 +441,9 @@ def daily_report(request):
             user_groups = Group.objects.filter(id__in=user_groups_id)
             group_admins = set()
             for g in user_groups:
-                group_admins.update(g.admin.split(";"))
+                # 获取admin的list
+                g_admin = g.admin.strip("[").rstrip("]").replace("'", "").split(", ")
+                group_admins.update(g_admin)
             user_name = User.objects.get(id=request.user.id).name
             send_daily_immediately.apply_async(
                 kwargs={

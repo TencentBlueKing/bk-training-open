@@ -98,5 +98,11 @@ def get_yesterday_not_report_user():
                     username_not_reported.append("{}({})".format(u.username, u.name))
                 else:
                     username_not_reported.append(u.username)
-            res.append({"admins": g.admin, "group_name": g.name, "user_not_reported": username_not_reported})
+            res.append(
+                {
+                    "admins": g.admin.strip("[").rstrip("]").replace("'", "").replace(" ", ""),
+                    "group_name": g.name,
+                    "user_not_reported": username_not_reported,
+                }
+            )
     return res
