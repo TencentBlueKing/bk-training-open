@@ -259,12 +259,13 @@
                             config.theme = 'success'
                             this.$bkMessage(config)
                             console.log('填写成功，重新获取日报信息')
-                            this.getDailyByDate(this.reportDate)
                         } else {
                             this.addDailyFormData = null
                             config.theme = 'error'
                             this.$bkMessage(config)
                         }
+                        this.getDailyByDate(this.reportDate)
+                        this.saveDailyDialog.visiable = false
                         this.sendEmail = false
                     })
                 }

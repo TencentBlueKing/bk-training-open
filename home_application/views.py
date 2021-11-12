@@ -23,6 +23,7 @@ from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_GET, require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
+from home_application.celery_task import send_daily_immediately
 from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
@@ -40,9 +41,9 @@ def get_all_report_template(request):
     """
     获取用户所在组的所有的日报模板
     """
+    # 默认的日报模板
     templates = [
-        {"id": 0, "name": "日报", "content": "今日总结;明日计划;感想", "create_by": "系统默认", "create_name": "系统默认", "group_id": 0},
-        {"id": -1, "name": "周报", "content": "本周总结;下周计划;感想", "create_by": "系统默认", "create_name": "系统默认", "group_id": 0},
+        {"id": 0, "name": "日报", "content": "今日总结;明日计划;感想", "create_by": "系统默认", "create_name": "系统默认", "group_id": 0}
     ]
 
     user_id = request.user.id
@@ -397,13 +398,13 @@ def daily_report(request):
     # 参数校验-----------------------------------------------------------------------------------------
     req = json.loads(request.body)
     report_content = req.get("content")
-    report_date = req.get("date")
+    report_date_str = req.get("date")
     template_id = req.get("template_id")
     if not isinstance(report_content, dict):
         return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
     try:
         template_id = int(template_id)
-        report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
+        report_date = datetime.strptime(report_date_str, "%Y-%m-%d").date()
     except ValueError:
         return JsonResponse({"result": False, "code": -1, "message": "日期或模板id数据格式错误", "data": []})
     if report_date > datetime.today():
@@ -420,11 +421,11 @@ def daily_report(request):
             target_report.content = report_content
             target_report.template_id = template_id
             target_report.save()
-            return JsonResponse({"result": True, "code": 0, "message": "修改日报成功", "data": []})
+            message = "修改日报成功"
         except Daily.DoesNotExist:
             # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
             create_name = User.objects.get(username=request.user.username).name
-            Daily.objects.create(
+            target_report = Daily.objects.create(
                 content=report_content,
                 create_by=request.user.username,
                 create_name=create_name,
@@ -432,7 +433,26 @@ def daily_report(request):
                 template_id=template_id,
                 send_status=False,
             )
-            return JsonResponse({"result": True, "code": 0, "message": "添加日报成功", "data": []})
+            message = "保存日报成功"
+        # 补写日报时可选发送邮件给管理员
+        if req.get("send_email"):
+            # 循环他所在的组
+            user_groups_id = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
+            user_groups = Group.objects.filter(id__in=user_groups_id)
+            group_admins = set()
+            for g in user_groups:
+                group_admins.update(g.admin.split(";"))
+            user_name = User.objects.get(id=request.user.id).name
+            send_daily_immediately.apply_async(
+                kwargs={
+                    "user_name": "{}({})".format(request.user.username, user_name),
+                    "group_admins": ",".join(group_admins),
+                    "daily_content": report_content,
+                    "report_date": report_date_str,
+                    "report_id": target_report.id,
+                }
+            )
+        return JsonResponse({"result": True, "code": 0, "message": message, "data": []})
 
 
 @require_GET
