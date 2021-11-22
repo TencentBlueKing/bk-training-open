@@ -41,6 +41,11 @@ if FRONTEND_BACKEND_SEPARATION:
     CORS_ORIGIN_ALLOW_ALL = True
     CORS_ALLOW_CREDENTIALS = True
 
+AJAX_REFERER_WHITE_LIST = [
+    "dev.paas-edu.bktencent.com:8080",
+    "paas-edu.bktencent.com",
+]
+
 DATABASES.update(
     {
         "default": {

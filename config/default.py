@@ -63,7 +63,10 @@ INSTALLED_APPS += (  # noqa
 # )
 
 # 自定义中间件
-MIDDLEWARE += ("blueapps.middleware.bkui.middlewares.BkuiPageMiddleware",)
+MIDDLEWARE += (
+    "blueapps.middleware.bkui.middlewares.BkuiPageMiddleware",
+    "home_application.utils.middlewares.CSRFTokenExemptMiddleware",
+)
 
 # 添加首页搜索范围
 TEMPLATES[0]["DIRS"] += (os.path.join(BASE_DIR, "static", "dist"),)
