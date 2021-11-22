@@ -67,20 +67,22 @@ BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
 
 ![](static/images/image-202111229321321908.png)
 
-4. 将`config/dev.py`复制到项目根目录下，并且重命名为`local_settings.py`，然后在`local_settings.py`添加数据库配置
+4. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
 
-   ````
-   DATABASES = {
-       "default": {
-           "ENGINE": "django.db.backends.mysql",
-           "NAME": APP_CODE,  # noqa
-           "USER": "", # 自己的mysql用户名
-           "PASSWORD": "",# 自己的mysql密码
-           "HOST": "localhost",
-           "PORT": "3306",
-       },
-   }
-   ````
+```
+from config import APP_CODE
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": APP_CODE,
+        "USER": "", #数据库用户名
+        "PASSWORD": "", #数据库密码
+        "HOST": "localhost",
+        "PORT": "3306",
+    },
+}
+```
 
    PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
 
