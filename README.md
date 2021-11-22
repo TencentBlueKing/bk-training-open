@@ -54,7 +54,20 @@ git pull blueking-train
    CREATE DATABASE `bk-training-open` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
    ```
 
-3. 将`config/dev.py`复制到项目根目录下，并且重命名为`local_settings.py`，然后在`local_settings.py`添加数据库配置
+3. 配置环境变量
+
+```
+# 项目 APP_CODE & APP_SECRET
+BKAPP_APP_CODE=xxxxxxxxxxxxx
+BKAPP_APP_SECRET=xxxxxxxxxxxxx
+
+# 自己的用户名
+BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
+```
+
+![](static/images/image-202111229321321908.png)
+
+4. 将`config/dev.py`复制到项目根目录下，并且重命名为`local_settings.py`，然后在`local_settings.py`添加数据库配置
 
    ````
    DATABASES = {
@@ -71,7 +84,7 @@ git pull blueking-train
 
    PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
 
-4. 运行
+5. 运行
 
    ```shell
    pip install -r requirements.txt
@@ -79,10 +92,10 @@ git pull blueking-train
    python manage.py runserver dev.paas-edu.bktencent.com:8000
    ```
 
-5. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
+6. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
    ![image-20210905115040095](static/images/image-20210905115040095.png)
 
-6. 本地运行bkui，检测跨域配置
+7. 本地运行bkui，检测跨域配置
 
    ```
    # 进入前端工作目录
