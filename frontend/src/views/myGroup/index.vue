@@ -86,7 +86,29 @@
                             <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
                         </bk-form-item>
                     </bk-form>
-                    
+                </bk-dialog>
+                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="clickApplyJoinGroup">
+                    请求入组
+                </bk-button>
+                <bk-dialog v-model="applyJoinGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
+                    <bk-form label-width="120">
+                        <bk-form-item label="组" required="true">
+                            <bk-select :disabled="false" v-model="applyJoinGroup.groupId" style="width: 250px;"
+                                ext-cls="select-custom"
+                                ext-popover-cls="select-popover-custom"
+                                searchable>
+                                <bk-option v-for="group in withOutGroups"
+                                    :key="group.id"
+                                    :id="group.id"
+                                    :name="group.name">
+                                </bk-option>
+                            </bk-select>
+                        </bk-form-item>
+                        <bk-form-item>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="applyJoinGroupMethods()">提交</bk-button>
+                            <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                        </bk-form-item>
+                    </bk-form>
                 </bk-dialog>
 
                 <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
@@ -262,6 +284,11 @@
                 deleteGroupDialog: {
                     visible: false
                 },
+                withOutGroups: [],
+                applyJoinGroup: {
+                    dialogVisible: false,
+                    groupId: null
+                },
                 addDailyTemplateDialog: {
                     visible: false
                 },
@@ -333,6 +360,16 @@
                     console.log('get_group_users:', res.data)
                 })
             },
+            // 获取所有组信息
+            getWithOutGroups () {
+                this.$http.get('/get_without_apply_groups/').then(res => {
+                    this.withOutGroups = res.data
+                    console.log('get_all_groups:', this.withOutGroups)
+                    if (this.withOutGroups.length > 0) {
+                        this.applyJoinGroup.groupId = this.withOutGroups[0].id
+                    }
+                })
+            },
             // 获取组模板
             getGroupTemplates (groupId) {
                 this.$http.get('/report_template/' + groupId + '/').then(res => {
@@ -389,6 +426,11 @@
                 })
                 this.editGroupData.adminIds = adminIds
                 console.log('curGroupAdminIds', this.editGroupData.adminIds)
+            },
+            clickApplyJoinGroup () {
+                this.applyJoinGroup.dialogVisible = true
+                // 获取所有(未在、未申请)组信息
+                this.getWithOutGroups()
             },
             clickEditDailyTemplate (row) {
                 // console.log('当前日报模板信息', row)
@@ -543,6 +585,22 @@
                     }
                 })
             },
+            applyJoinGroupMethods () {
+                const config = {}
+                config.offsetY = 80
+                
+                this.$http.post('/apply_join_group/', { group_id: this.applyJoinGroup.groupId }).then(res => {
+                    console.log('apply_join_group：', res.message)
+                    config.message = res.message
+                    if (res.result) {
+                        config.theme = 'success'
+                    } else {
+                        config.theme = 'error'
+                    }
+                    
+                    this.$bkMessage(config)
+                })
+            },
             // 新增日报模板
             addDailyTemplate () {
                 console.log('addDailyTemplateData:', this.addDailyTemplateData.formData)
@@ -685,6 +743,9 @@
     .line-container .container-label{
         font-size: 22px;
         font-weight: 700;
+    }
+    .apply-join-group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content{
+        width: 480px !important;
     }
     .add-group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content{
         width: 480px !important;

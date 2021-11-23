@@ -24,7 +24,14 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.celery_task import send_daily_immediately
-from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
+from home_application.models import (
+    ApplyJoinGroup,
+    Daily,
+    DailyReportTemplate,
+    Group,
+    GroupUser,
+    User,
+)
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
 from home_application.utils.tools import check_param
@@ -328,6 +335,42 @@ def update_user(request):
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，用户名已存在"})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
+
+
+def get_without_apply_groups(request):
+    """获取所有(未在、未申请)组信息"""
+    all_groups = Group.objects.all()
+    # 获取用户已经在的组
+    user_groups = list(GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True))
+    # 获取用户已经申请的组
+    apply_groups = list(ApplyJoinGroup.objects.filter(user_id=request.user.id).values_list("group_id", flat=True))
+    group_list = []
+    for group in all_groups:
+        if group.id not in user_groups and group.id not in apply_groups:
+            group_list.append(group.to_json())
+    return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": group_list})
+
+
+def apply_join_group(request):
+    """用户申请入组"""
+    req = json.loads(request.body)
+    params = {"group_id": "组id"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    group_id = req.get("group_id")
+    user_id = request.user.id
+    # 检查是否已在组中
+    try:
+        GroupUser.objects.get(group_id=group_id, user_id=user_id)
+    except GroupUser.DoesNotExist:
+        # 用户不在组中
+        try:
+            ApplyJoinGroup.objects.create(group_id=group_id, user_id=user_id)
+        except IntegrityError:
+            return JsonResponse({"result": False, "code": 0, "message": "已申请过入组", "data": []})
+        return JsonResponse({"result": True, "code": 0, "message": "申请入组成功", "data": []})
+    return JsonResponse({"result": False, "code": 0, "message": "用户已在组中", "data": []})
 
 
 def get_user_groups(request):
