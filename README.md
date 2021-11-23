@@ -54,20 +54,7 @@ git pull blueking-train
    CREATE DATABASE `bk-training-open` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
    ```
 
-3. 配置环境变量
-
-```
-# 项目 APP_CODE & APP_SECRET
-BKAPP_APP_CODE=xxxxxxxxxxxxx
-BKAPP_APP_SECRET=xxxxxxxxxxxxx
-
-# 自己的用户名
-BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
-```
-
-![](static/images/image-202111229321321908.png)
-
-4. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
+3. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
 
 ```
 from config import APP_CODE
@@ -85,6 +72,37 @@ DATABASES = {
 ```
 
    PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
+
+4. 配置环境变量
+
+   ```
+   # 项目 APP_CODE & APP_SECRET (找项目负责人获取)
+   BKAPP_APP_CODE=xxxxxxxxxxxxx
+   BKAPP_APP_SECRET=xxxxxxxxxxxxx
+   
+   # 自己的用户名（蓝鲸开发者账号）
+   BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
+   ```
+
+   + 在PyCharm中配置环境变量以及主机名
+
+   ![PyCharm配置环境变量](static/images/image-202111229321321908.png)
+
+   + 配置系统的环境变量
+
+     PS. 如果不在系统中配置环境变量，在PyCharm中terminal和Python Console都无法获取到APP_CODE，需要在执行之前手动设置：
+
+     ```shell
+     windows:
+     set BKAPP_APP_CODE=xxxx
+     
+     macOS:
+     export BKAPP_APP_CODE=xxxx
+     ```
+
+      ![配置Windows环境变量](static/images/image-system_envionment_variables.png) 
+     
+     PS. 如果只配置系统环境变量，可能会出现点击登录后不会跳转的情况，这里建议两处环境变量都配置一下
 
 5. 运行
 
