@@ -56,20 +56,20 @@ git pull blueking-train
 
 3. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
 
-```
-from config import APP_CODE
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": APP_CODE,
-        "USER": "", #数据库用户名
-        "PASSWORD": "", #数据库密码
-        "HOST": "localhost",
-        "PORT": "3306",
-    },
-}
-```
+   ```python
+   from config import APP_CODE
+   
+   DATABASES = {
+       "default": {
+           "ENGINE": "django.db.backends.mysql",
+           "NAME": APP_CODE,
+           "USER": "", #数据库用户名
+           "PASSWORD": "", #数据库密码
+           "HOST": "localhost",
+           "PORT": "3306",
+       },
+   }
+   ```
 
    PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
 
@@ -88,21 +88,20 @@ DATABASES = {
 
    ![PyCharm配置环境变量](static/images/image-202111229321321908.png)
 
-   + 配置系统的环境变量
+   + 配置Terminal和Python Console的环境变量
 
-     PS. 如果不在系统中配置环境变量，在PyCharm中terminal和Python Console都无法获取到APP_CODE，需要在执行之前手动设置：
+     只配置Django Server的环境变量的话，无法直接在Terminal中执行migrate命令，需要在执行前手动设置相关的环境变量
 
      ```shell
-     windows:
+     CMD:
      set BKAPP_APP_CODE=xxxx
+     
+     PowerShell:
+     $env:BKAPP_APP_CODE="xxx"
      
      macOS:
      export BKAPP_APP_CODE=xxxx
      ```
-
-      ![配置Windows环境变量](static/images/image-system_envionment_variables.png) 
-     
-     PS. 如果只配置系统环境变量，可能会出现点击登录后不会跳转的情况，这里建议两处环境变量都配置一下
 
 5. 运行
 
