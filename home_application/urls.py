@@ -33,6 +33,6 @@ urlpatterns = (
     url(r"^get_user_groups/$", views.get_user_groups),
     path("get_group_users/<int:group_id>/", views.get_group_users),
     path("exit_group/<int:group_id>/", views.exit_group),
-    url(r"^get_without_apply_groups/$", views.get_without_apply_groups),
-    url(r"^apply_join_group/$", views.apply_join_group),
+    url(r"^get_available_apply_groups/$", views.get_available_apply_groups),
+    url(r"^apply_for_group/$", views.apply_for_group),
 )

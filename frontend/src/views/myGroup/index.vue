@@ -87,17 +87,15 @@
                         </bk-form-item>
                     </bk-form>
                 </bk-dialog>
-                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="clickApplyJoinGroup">
+                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="applyJoinGroup.dialogVisible = true">
                     请求入组
                 </bk-button>
                 <bk-dialog v-model="applyJoinGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
-                    <bk-form label-width="120">
+                    <bk-form label-width="80">
                         <bk-form-item label="组" required="true">
                             <bk-select :disabled="false" v-model="applyJoinGroup.groupId" style="width: 250px;"
-                                ext-cls="select-custom"
-                                ext-popover-cls="select-popover-custom"
                                 searchable>
-                                <bk-option v-for="group in withOutGroups"
+                                <bk-option v-for="group in availableApplyGroups"
                                     :key="group.id"
                                     :id="group.id"
                                     :name="group.name">
@@ -105,7 +103,7 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="applyJoinGroupMethods()">提交</bk-button>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyJoinGroup.groupId == null" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
                             <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
                         </bk-form-item>
                     </bk-form>
@@ -284,7 +282,7 @@
                 deleteGroupDialog: {
                     visible: false
                 },
-                withOutGroups: [],
+                availableApplyGroups: [],
                 applyJoinGroup: {
                     dialogVisible: false,
                     groupId: null
@@ -361,12 +359,13 @@
                 })
             },
             // 获取所有组信息
-            getWithOutGroups () {
-                this.$http.get('/get_without_apply_groups/').then(res => {
-                    this.withOutGroups = res.data
-                    console.log('get_all_groups:', this.withOutGroups)
-                    if (this.withOutGroups.length > 0) {
-                        this.applyJoinGroup.groupId = this.withOutGroups[0].id
+            getAvailableApplyGroups () {
+                this.$http.get(
+                    '/get_available_apply_groups/'
+                ).then(res => {
+                    this.availableApplyGroups = res.data
+                    if (this.availableApplyGroups.length > 0) {
+                        this.applyJoinGroup.groupId = this.availableApplyGroups[0].id
                     }
                 })
             },
@@ -427,11 +426,6 @@
                 this.editGroupData.adminIds = adminIds
                 console.log('curGroupAdminIds', this.editGroupData.adminIds)
             },
-            clickApplyJoinGroup () {
-                this.applyJoinGroup.dialogVisible = true
-                // 获取所有(未在、未申请)组信息
-                this.getWithOutGroups()
-            },
             clickEditDailyTemplate (row) {
                 // console.log('当前日报模板信息', row)
                 this.editDailyTemplateDialog.visible = true
@@ -458,6 +452,8 @@
                         }
                     })
                 })
+                // 获取用户（未在、未申请）组
+                this.getAvailableApplyGroups()
             },
             // 新增组
             addGroup () {
@@ -585,20 +581,26 @@
                     }
                 })
             },
-            applyJoinGroupMethods () {
-                const config = {}
-                config.offsetY = 80
-                
-                this.$http.post('/apply_join_group/', { group_id: this.applyJoinGroup.groupId }).then(res => {
-                    console.log('apply_join_group：', res.message)
+            doApplyforGroup () {
+                const config = {
+                    offsetY: 80
+                }
+                this.$http.post(
+                    '/apply_for_group/',
+                    {
+                        group_id: this.applyJoinGroup.groupId
+                    }
+                ).then(res => {
                     config.message = res.message
                     if (res.result) {
                         config.theme = 'success'
                     } else {
                         config.theme = 'error'
                     }
-                    
                     this.$bkMessage(config)
+                    this.applyJoinGroup.dialogVisible = false
+                    // 重新获取（未申请、未在）的组列表
+                    this.getAvailableApplyGroups()
                 })
             },
             // 新增日报模板
@@ -743,12 +745,6 @@
     .line-container .container-label{
         font-size: 22px;
         font-weight: 700;
-    }
-    .apply-join-group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content{
-        width: 480px !important;
-    }
-    .add-group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content{
-        width: 480px !important;
     }
     .add-group-dialog /deep/ .bk-dialog-body .bk-form-content{
         margin-left: 120px !important;

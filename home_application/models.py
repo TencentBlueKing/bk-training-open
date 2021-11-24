@@ -40,10 +40,9 @@ class Group(TimeBasic):
         return {
             "id": self.id,
             "name": self.name,
-            "admin": self.admin.strip("[").rstrip("]").replace("'", "").split(", "),
+            "admin": self.admin,
             "create_by": self.create_by,
             "create_name": self.create_name,
-            "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
         }
 
 
@@ -83,15 +82,30 @@ class GroupUser(models.Model):
 
 
 # 申请入组表
-class ApplyJoinGroup(TimeBasic):
+class ApplyForGroup(TimeBasic):
     group_id = models.IntegerField(verbose_name="组id")
     user_id = models.IntegerField(verbose_name="用户id")
-
-    class Meta:
-        unique_together = ("group_id", "user_id")
+    operator = models.IntegerField(null=True, verbose_name="处理人id")
+    status = models.BooleanField(verbose_name="申请状态")
 
     def __str__(self):
         return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
+
+    def to_json(self):
+        if self.status == 0:
+            status = "待管理员处理"
+        elif self.status == 1:
+            status = "已同意"
+        else:
+            status = "已拒绝"
+        return {
+            "id": self.id,
+            "group_id": self.group_id,
+            "user_id": self.user_id,
+            "operator": self.operator,
+            "status": status,
+            "update_time": self.update_time.strftime("%Y-%m-%d %H:%M:%S"),
+        }
 
 
 # 日报模板表
