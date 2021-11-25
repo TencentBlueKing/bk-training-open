@@ -601,14 +601,12 @@
                     if (res.result) {
                         // 申请成功，重新获取（未申请、未在）的组列表
                         config.theme = 'success'
-                        const vm = this
-                        for (let i = 0; i < vm.availableApplyGroups.length; i++) {
-                            if (vm.availableApplyGroups[i].id === this.applyForGroup.groupId) {
-                                vm.availableApplyGroups.splice(i)
+                        for (const i in this.availableApplyGroups) {
+                            if (this.availableApplyGroups[i].id === this.applyForGroup.groupId) {
+                                this.availableApplyGroups.splice(i)
                                 break
                             }
                         }
-                        console.log(this.availableApplyGroups)
                         this.applyForGroup.dialogVisible = false
                     } else {
                         config.theme = 'error'
