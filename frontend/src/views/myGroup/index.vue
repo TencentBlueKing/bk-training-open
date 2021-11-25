@@ -90,7 +90,6 @@
                 <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="showApplyForGroup()">
                     请求入组
                 </bk-button>
-                
                 <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
                     <div class="test-dom" v-show="availableGroupsIsLoding" v-bkloading="{ isLoading: availableGroupsIsLoding, theme: 'primary', zIndex: 10 }">
                         内容
