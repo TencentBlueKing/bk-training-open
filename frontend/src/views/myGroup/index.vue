@@ -93,7 +93,7 @@
                 <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
                     <bk-form label-width="80">
                         <bk-form-item label="组" required="true">
-                            <bk-select :disabled="false" v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
+                            <bk-select v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
                                 searchable>
                                 <bk-option v-for="group in availableApplyGroups"
                                     :key="group.id"
