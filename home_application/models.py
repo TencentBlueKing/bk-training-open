@@ -37,7 +37,13 @@ class Group(TimeBasic):
         return self.name
 
     def to_json(self):
-        return {"name": self.name, "admin": self.admin, "create_by": self.create_by, "create_name": self.create_name}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "admin": self.admin,
+            "create_by": self.create_by,
+            "create_name": self.create_name,
+        }
 
 
 # 组中的日报通知人
@@ -73,6 +79,17 @@ class GroupUser(models.Model):
 
     class Meta:
         unique_together = ("group_id", "user_id")
+
+
+# 申请入组表
+class ApplyForGroup(TimeBasic):
+    group_id = models.IntegerField(verbose_name="组id")
+    user_id = models.IntegerField(verbose_name="用户id")
+    operator = models.IntegerField(null=True, verbose_name="处理人id")
+    status = models.SmallIntegerField(verbose_name="申请状态")
+
+    def __str__(self):
+        return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
 
 
 # 日报模板表

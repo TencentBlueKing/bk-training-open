@@ -14,6 +14,7 @@ import json
 import math
 
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import JsonResponse
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
@@ -24,7 +25,14 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.celery_task import send_daily_immediately
-from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
+from home_application.models import (
+    ApplyForGroup,
+    Daily,
+    DailyReportTemplate,
+    Group,
+    GroupUser,
+    User,
+)
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
 from home_application.utils.tools import check_param
@@ -328,6 +336,44 @@ def update_user(request):
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，用户名已存在"})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
+
+
+def get_available_apply_groups(request):
+    """获取所有(未在、未申请)组信息"""
+    # 获取用户已经在的组
+    user_groups = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
+    # 获取用户已经申请的组
+    apply_groups = ApplyForGroup.objects.filter(user_id=request.user.id, status=0).values_list("group_id", flat=True)
+    available_groups = Group.objects.filter(Q(~Q(id__in=user_groups) & ~Q(id__in=apply_groups)))
+    group_list = [group.to_json() for group in available_groups]
+    return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": group_list})
+
+
+def apply_for_group(request):
+    """用户申请入组"""
+    req = json.loads(request.body)
+    params = {"group_id": "组id"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    group_id = req.get("group_id")
+    user_id = request.user.id
+    group_name = Group.objects.get(id=group_id).name
+    # 检查是否已在组中
+    try:
+        GroupUser.objects.get(group_id=group_id, user_id=user_id)
+        # 用户已在组中
+        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
+    except GroupUser.DoesNotExist:
+        # 用户不在组中
+        try:
+            ApplyForGroup.objects.get(group_id=group_id, user_id=user_id, status=0)
+            # 用户已申请过入组
+            return JsonResponse({"result": False, "code": 0, "message": u"已申请过入组-{}".format(group_name), "data": []})
+        except ApplyForGroup.DoesNotExist:
+            # 用户未申请入组
+            ApplyForGroup.objects.create(group_id=group_id, user_id=user_id, status=0)
+            return JsonResponse({"result": True, "code": 0, "message": u"申请入组-{}成功".format(group_name), "data": []})
 
 
 def get_user_groups(request):
