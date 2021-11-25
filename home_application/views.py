@@ -27,7 +27,7 @@ from home_application.celery_task import send_daily_immediately
 from home_application.models import Daily, DailyReportTemplate, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import check_param
+from home_application.utils.tools import check_param, get_paginator
 
 
 def home(request):
@@ -462,6 +462,9 @@ def daily_report(request):
 def report_filter(request, group_id):
     # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
     member_id = request.GET.get("member_id")
+    pages = request.GET.get("page")
+    # 每一页显示 8 份日报
+    nums = 8
     if member_id:
         # 如果有该参数则说明是根据成员id获取日报，
         # 没有则直接跳到下边根据组和日期获取所有成员对应日期的日报
@@ -483,6 +486,9 @@ def report_filter(request, group_id):
         total_report_num = member_report.count()
         if report_num > 0:
             member_report = member_report[:report_num]
+
+        # 分页
+        member_report = get_paginator(member_report, pages, nums)
         # 查询完毕返回数据
         res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
@@ -499,4 +505,6 @@ def report_filter(request, group_id):
     member_in_group = User.objects.filter(id__in=member_in_group).values_list("username", flat=True)
     # 查询所有人的日报
     member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group)
+    # 分页
+    member_report = get_paginator(member_report, pages, nums)
     return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": content_format_as_json(member_report)})
