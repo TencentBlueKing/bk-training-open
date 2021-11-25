@@ -108,11 +108,16 @@
                             url: 'groupDailys',
                             show: true
                         },
-                        
                         {
                             name: '我的组',
                             id: 3,
                             url: 'myGroup',
+                            show: true
+                        },
+                        {
+                            name: '管理组员',
+                            id: 4,
+                            url: 'manageGroup',
                             show: true
                         }
                     ],
@@ -128,6 +133,10 @@
             curHeaderNav () {
                 return this.header.list[this.header.active] || {}
             }
+        },
+        created () {
+            // TODO => 把当前用户发给后端，后端返回该用户是不是管理员,如果是，把该用户管理的组员全返回前端
+            // alert(this.$store.state.user.username)
         },
         methods: {
             changeHead (index) {
