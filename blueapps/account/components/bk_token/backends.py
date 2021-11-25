@@ -24,6 +24,7 @@ from blueapps.account.conf import ConfFixture
 from blueapps.account.utils.http import send
 from blueapps.utils import client
 from blueking.component.shortcuts import get_client_by_user
+from home_application.models import User as GUser
 
 logger = logging.getLogger("component")
 
@@ -46,13 +47,16 @@ class TokenBackend(ModelBackend):
         try:
             user = os.environ.get("BKAPP_API_INVOKE_USER")
             bk_client = get_client_by_user(user=user)
-            kwargs = {"id": username, "fields": "username,id"}
+            kwargs = {"id": username}
             user_info = bk_client.usermanage.retrieve_user(kwargs)
             user, _ = user_model.objects.get_or_create(id=user_info["data"]["id"], username=username)
             get_user_info_result, user_info = self.get_user_info(bk_token)
             # 判断是否获取到用户信息,获取不到则返回None
             if not get_user_info_result:
                 return None
+
+            user.nickname = user_info.get("chname", "")
+            user.save()
             user.set_property(key="qq", value=user_info.get("qq", ""))
             user.set_property(key="language", value=user_info.get("language", ""))
             user.set_property(key="time_zone", value=user_info.get("time_zone", ""))
@@ -61,6 +65,12 @@ class TokenBackend(ModelBackend):
             user.set_property(key="email", value=user_info.get("email", ""))
             user.set_property(key="wx_userid", value=user_info.get("wx_userid", ""))
             user.set_property(key="chname", value=user_info.get("chname", ""))
+
+            g_user, _ = GUser.objects.get_or_create(id=user.id, username=user.username)
+            g_user.name = user.nickname
+            g_user.phone = user.get_property("phone")
+            g_user.email = user.get_property("email")
+            g_user.save()
 
             # 用户如果不是管理员，则需要判断是否存在平台权限，如果有则需要加上
             if not user.is_superuser and not user.is_staff:
