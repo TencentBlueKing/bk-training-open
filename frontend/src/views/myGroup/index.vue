@@ -602,11 +602,13 @@
                         // 申请成功，重新获取（未申请、未在）的组列表
                         config.theme = 'success'
                         const vm = this
-                        this.availableApplyGroups.forEach(function (group) {
-                            if (vm.applyForGroup.groupId === group.id) {
-                                this.availableApplyGroups.remove(group)
+                        for (let i = 0; i < vm.availableApplyGroups.length; i++) {
+                            if (vm.availableApplyGroups[i].id === this.applyForGroup.groupId) {
+                                vm.availableApplyGroups.splice(i)
+                                break
                             }
-                        })
+                        }
+                        console.log(this.availableApplyGroups)
                         this.applyForGroup.dialogVisible = false
                     } else {
                         config.theme = 'error'
@@ -756,6 +758,9 @@
     .line-container .container-label{
         font-size: 22px;
         font-weight: 700;
+    }
+    .add-group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content{
+        width: 480px !important;
     }
     .add-group-dialog /deep/ .bk-dialog-body .bk-form-content{
         margin-left: 120px !important;
