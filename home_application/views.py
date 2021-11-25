@@ -364,18 +364,18 @@ def apply_for_group(request):
     # 检查是否已在组中
     try:
         GroupUser.objects.get(group_id=group_id, user_id=user_id)
+        # 用户已在组中
+        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
     except GroupUser.DoesNotExist:
         # 用户不在组中
         try:
             ApplyForGroup.objects.get(group_id=group_id, user_id=user_id, status=0)
+            # 用户已申请过入组
+            return JsonResponse({"result": False, "code": 0, "message": u"已申请过入组-{}".format(group_name), "data": []})
         except ApplyForGroup.DoesNotExist:
             # 用户未申请入组
             ApplyForGroup.objects.create(group_id=group_id, user_id=user_id, status=0)
             return JsonResponse({"result": True, "code": 0, "message": u"申请入组-{}成功".format(group_name), "data": []})
-        # 用户已申请过入组
-        return JsonResponse({"result": False, "code": 0, "message": u"已申请过入组-{}".format(group_name), "data": []})
-    # 用户已在组中
-    return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
 
 
 def get_user_groups(request):

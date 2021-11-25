@@ -87,13 +87,17 @@
                         </bk-form-item>
                     </bk-form>
                 </bk-dialog>
-                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="applyJoinGroup.dialogVisible = true">
+                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="showApplyForGroup()">
                     请求入组
                 </bk-button>
-                <bk-dialog v-model="applyJoinGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
-                    <bk-form label-width="80">
+                
+                <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
+                    <div class="test-dom" v-show="availableGroupsIsLoding" v-bkloading="{ isLoading: availableGroupsIsLoding, theme: 'primary', zIndex: 10 }">
+                        内容
+                    </div>
+                    <bk-form v-show="!availableGroupsIsLoding" label-width="80">
                         <bk-form-item label="组" required="true">
-                            <bk-select :disabled="false" v-model="applyJoinGroup.groupId" style="width: 250px;"
+                            <bk-select :disabled="false" v-model="applyForGroup.groupId" style="width: 250px;"
                                 searchable>
                                 <bk-option v-for="group in availableApplyGroups"
                                     :key="group.id"
@@ -103,12 +107,11 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyJoinGroup.groupId == null" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyForGroup.groupId === ''" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
                             <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
                         </bk-form-item>
                     </bk-form>
                 </bk-dialog>
-
                 <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：<span v-if="curGroupId !== null ">{{curGroup.create_by}}({{curGroup.create_name}})</span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
@@ -283,9 +286,10 @@
                     visible: false
                 },
                 availableApplyGroups: [],
-                applyJoinGroup: {
+                availableGroupsIsLoding: true,
+                applyForGroup: {
                     dialogVisible: false,
-                    groupId: null
+                    groupId: ''
                 },
                 addDailyTemplateDialog: {
                     visible: false
@@ -360,13 +364,16 @@
             },
             // 获取所有组信息
             getAvailableApplyGroups () {
+                this.availableGroupsIsLoding = true
                 this.$http.get(
                     '/get_available_apply_groups/'
                 ).then(res => {
                     this.availableApplyGroups = res.data
                     if (this.availableApplyGroups.length > 0) {
-                        this.applyJoinGroup.groupId = this.availableApplyGroups[0].id
+                        this.applyForGroup.groupId = this.availableApplyGroups[0].id
                     }
+                }).finally(() => {
+                    this.availableGroupsIsLoding = false
                 })
             },
             // 获取组模板
@@ -426,6 +433,11 @@
                 this.editGroupData.adminIds = adminIds
                 console.log('curGroupAdminIds', this.editGroupData.adminIds)
             },
+            showApplyForGroup () {
+                this.applyForGroup.dialogVisible = true
+                // 获取用户（未在、未申请）组
+                this.getAvailableApplyGroups()
+            },
             clickEditDailyTemplate (row) {
                 // console.log('当前日报模板信息', row)
                 this.editDailyTemplateDialog.visible = true
@@ -452,8 +464,6 @@
                         }
                     })
                 })
-                // 获取用户（未在、未申请）组
-                this.getAvailableApplyGroups()
             },
             // 新增组
             addGroup () {
@@ -588,19 +598,24 @@
                 this.$http.post(
                     '/apply_for_group/',
                     {
-                        group_id: this.applyJoinGroup.groupId
+                        group_id: this.applyForGroup.groupId
                     }
                 ).then(res => {
                     config.message = res.message
                     if (res.result) {
+                        // 申请成功，重新获取（未申请、未在）的组列表
                         config.theme = 'success'
+                        const vm = this
+                        this.availableApplyGroups.forEach(function (group) {
+                            if (vm.applyForGroup.groupId === group.id) {
+                                this.availableApplyGroups.remove(group)
+                            }
+                        })
+                        this.applyForGroup.dialogVisible = false
                     } else {
                         config.theme = 'error'
                     }
                     this.$bkMessage(config)
-                    this.applyJoinGroup.dialogVisible = false
-                    // 重新获取（未申请、未在）的组列表
-                    this.getAvailableApplyGroups()
                 })
             },
             // 新增日报模板
