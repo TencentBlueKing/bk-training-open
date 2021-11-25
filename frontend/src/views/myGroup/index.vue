@@ -603,7 +603,7 @@
                         config.theme = 'success'
                         for (const i in this.availableApplyGroups) {
                             if (this.availableApplyGroups[i].id === this.applyForGroup.groupId) {
-                                this.availableApplyGroups.splice(i)
+                                this.availableApplyGroups.splice(i, 1)
                                 break
                             }
                         }
