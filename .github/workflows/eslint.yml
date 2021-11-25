@@ -15,8 +15,7 @@ jobs:
       run: |
         cd frontend
         npm install
-        npm install -g eslint
     - name: Run ESLint
       run: |
         cd frontend
-        eslint --ext .js,.vue src
+        npx eslint --ext .vue,.js src
