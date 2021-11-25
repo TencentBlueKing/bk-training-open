@@ -91,12 +91,11 @@
                     请求入组
                 </bk-button>
                 <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
-                    <div class="test-dom" v-show="availableGroupsIsLoding" v-bkloading="{ isLoading: availableGroupsIsLoding, theme: 'primary', zIndex: 10 }">
-                        内容
-                    </div>
-                    <bk-form v-show="!availableGroupsIsLoding" label-width="80">
+                    <!-- <div class="test-dom" v-show="availableGroupsIsLoding" v-bkloading="{ isLoading: availableGroupsIsLoding, theme: 'primary', zIndex: 10 }">
+                    </div> -->
+                    <bk-form label-width="80">
                         <bk-form-item label="组" required="true">
-                            <bk-select :disabled="false" v-model="applyForGroup.groupId" style="width: 250px;"
+                            <bk-select :disabled="false" v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
                                 searchable>
                                 <bk-option v-for="group in availableApplyGroups"
                                     :key="group.id"

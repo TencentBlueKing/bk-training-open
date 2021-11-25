@@ -345,9 +345,7 @@ def get_available_apply_groups(request):
     # 获取用户已经申请的组
     apply_groups = ApplyForGroup.objects.filter(user_id=request.user.id, status=0).values_list("group_id", flat=True)
     available_groups = Group.objects.filter(Q(~Q(id__in=user_groups) & ~Q(id__in=apply_groups)))
-    group_list = []
-    for group in available_groups:
-        group_list.append(group.to_json())
+    group_list = [group.to_json() for group in available_groups]
     return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": group_list})
 
 
