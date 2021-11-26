@@ -9,15 +9,14 @@ from celery.schedules import crontab
 from celery.task import periodic_task, task
 from django.template.loader import get_template
 
-from home_application.models import Daily
+from home_application.models import Daily, Group
 from home_application.utils.get_people_for_mail_notify import (
     get_people_not_reported,
-    get_yesterday_not_report_user,
-    get_yesterday_reports,
+    get_report_info_by_group_and_date,
 )
-from home_application.utils.mail_operation import send_mail
+from home_application.utils.mail_operation import send_mail, yesterday_report_notify
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("celery")
 
 
 @periodic_task(run_every=crontab(minute=0, hour=20))
@@ -42,68 +41,65 @@ def remind_to_write_daily():
     send_mail(receiver__username=user_to_notified, title="日报提醒助手", content=mail_content, body_format="Html")
 
 
-def notify_admin_who_not_reported():
+def send_yesterday_report():
     """
-    告知管理员组内哪些人没写日报
+    发送昨天的日报邮件
     """
-    logger.info("定时任务：每早10点告知管理员昨天没写日报的用户")
-    not_reported = get_yesterday_not_report_user()
-    for mail_info in not_reported:
-        html_template = get_template("simple_notify.html")
-        notify_content = "您所管理的组『{}』内以下成员昨天没写日报，请留意：\n\n{}".format(
-            mail_info["group_name"], ", ".join(mail_info["user_not_reported"])
+    yesterday_date_str = str((datetime.datetime.today() - datetime.timedelta(days=1)).date())
+    # 遍历所有组发邮件
+    all_groups = Group.objects.all()
+
+    for group in all_groups:
+        # 获取组内日报信息
+        group_report_info = get_report_info_by_group_and_date(group.id)
+        # 组员=写日报的+没写日报的-管理员
+        report_user_username = set(group_report_info["report_users"].values_list("username", flat=True))
+        member_username = ",".join(
+            report_user_username.union(
+                set(group_report_info["none_report_users"].values_list("username", flat=True))
+            ).difference(set(group_report_info["admin"]))
         )
-        mail_content = html_template.render(
-            {"notify_title": "日报提醒", "notify_content": notify_content, "button_text": None, "button_link": None}
+        notify_title = "{}『{}』日报一览：".format(yesterday_date_str, group_report_info["name"])
+        notify_detail = []
+
+        # 发送组员的日报邮件
+        if len(group_report_info["report_users"]) != 0:
+            notify_detail.append(
+                {"detail": "已完成：", "users": {item.username: item.name for item in group_report_info["report_users"]}}
+            )
+            yesterday_report_notify(
+                notify_title=notify_title,
+                notify_detail=notify_detail,
+                button_text="点击查看详情",
+                button_link="https://paas-edu.bktencent.com/t/train-test/groupDailys?date=%s&group=%s"
+                % (yesterday_date_str, group_report_info["id"]),
+                receiver=member_username,
+            )
+
+        # 发送管理员的日报邮件
+        notify_detail.append(
+            {"detail": "未完成：", "users": {item.username: item.name for item in group_report_info["none_report_users"]}}
         )
-        mail_title = "昨日未写日报用户(%s)" % mail_info["group_name"]
-        send_mail(receiver__username=mail_info["admins"], title=mail_title, content=mail_content, body_format="Html")
+        send_res = yesterday_report_notify(
+            notify_title=notify_title,
+            notify_detail=notify_detail,
+            button_text="点击查看详情",
+            button_link="https://paas-edu.bktencent.com/t/train-test/manageGroup?date=%s&group=%s"
+            % (yesterday_date_str, group_report_info["id"]),
+            receiver=",".join(group_report_info["admin"]),
+        )
+        # 更新日报状态为已发送
+        if send_res["result"]:
+            Daily.objects.filter(date=yesterday_date_str, create_by__in=report_user_username).update(send_status=True)
 
 
 @periodic_task(run_every=crontab(minute=0, hour=10))
-def send_yesterday_report():
+def morning_task():
     """
-    每天早上10点发送前一天日报，同时告知管理员组内那些同学没交日报
+    每天早上10点发送前一天日报
     """
     logger.info("定时任务：每早10点发送前一天所有人的日报")
-    yesterday_date = datetime.datetime.today() - datetime.timedelta(days=1)
-    notify_info = get_yesterday_reports()
-
-    # 分组发送各组的日报
-    for group_info in notify_info:
-        group_name = group_info["group_name"]
-        group_username = group_info["group_username"]
-
-        if len(group_info["group_reports"]) != 0:
-            html_template = get_template("daily_report.html")
-            mail_content = html_template.render(
-                {
-                    "mail_title": "昨天日报信息速览",
-                    "mail_subhead": "『%s』昨天的日报情况如下:" % group_name,
-                    "group_reports": group_info["group_reports"],
-                }
-            )
-        else:
-            html_template = get_template("simple_notify.html")
-            mail_content = html_template.render(
-                {
-                    "notify_title": "昨天日报信息",
-                    "notify_content": "你所在组『%s』，昨天没人写日报，今天要加油啊！" % group_name,
-                    "button_text": None,
-                    "button_link": None,
-                }
-            )
-        send_res = send_mail(
-            receiver__username=group_username,
-            title="{}的日报({})".format(str(yesterday_date.date()), group_name),
-            content=mail_content,
-            body_format="Html",
-        )
-        if send_res["result"]:
-            ids = group_info["group_reports_id"]
-            Daily.objects.filter(id__in=ids).update(send_status=True)
-    # 然后告知管理员昨天没写日报的用户
-    notify_admin_who_not_reported()
+    send_yesterday_report()
 
 
 @task()
