@@ -36,6 +36,10 @@ class Group(TimeBasic):
     def __str__(self):
         return self.name
 
+    @property
+    def admin_list(self):
+        return self.admin.split(",")
+
     def to_json(self):
         return {
             "id": self.id,
