@@ -55,12 +55,6 @@
 
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
-                <!--                <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px">-->
-                <!--                    <div @click="changeDailyPage(dailysData.curPage - 1)" :class="['arrow', 'arrow-left', { 'vh': dailysData.curPage === 1 }]"></div>-->
-                <!--                    <div class="pagination" v-for="index in Math.floor( dailysData.count / dailysData.pageSize + 1)" :key="index"> <div @click="changeDailyPage(index)" :class="['pagination-item', { 'pagination-item-activate': index === dailysData.curPage }]">  {{index}}</div> </div>-->
-                <!--                    <div @click="changeDailyPage(dailysData.curPage + 1)" :class="['arrow', 'arrow-right', { 'vh': dailysData.curPage === Math.floor( dailysData.count / dailysData.pageSize + 1) }]"></div>-->
-                <!--    纪念旺哥            </div>-->
-
                 <bk-pagination
                     @change="getUserDailys"
                     @limit-change="changeLimit"
