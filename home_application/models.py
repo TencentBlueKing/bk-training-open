@@ -38,15 +38,7 @@ class Group(TimeBasic):
 
     @property
     def admin_list(self):
-        # 适配旧的存储
-        if self.admin.startswith("[") and self.admin.endswith("]"):
-            admins = self.admin[1:-1].replace("'", "").split(",")
-            self.admin = ",".join(admins)
-            self.save()
-            return admins
-        # 默认使用逗号分割
-        else:
-            return self.admin.split(",")
+        return self.admin.split(",")
 
     def to_json(self):
         return {
