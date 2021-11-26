@@ -115,7 +115,7 @@
                             show: true
                         },
                         {
-                            name: '管理组员',
+                            name: 'Admin',
                             id: 4,
                             url: 'manageGroup',
                             show: true
@@ -135,8 +135,12 @@
             }
         },
         created () {
-            // TODO => 把当前用户发给后端，后端返回该用户是不是管理员,如果是，把该用户管理的组员全返回前端
-            // alert(this.$store.state.user.username)
+            // 判断是否为管理员
+            // this.$http.get('/judgeIsAdmin/', { params: { userID: this.$store.state.user.id } }).then(res => {
+            //     if (res.message === false) {
+            //         this.header.list[3].show = false
+            //     }
+            // })
         },
         methods: {
             changeHead (index) {

@@ -1,64 +1,17 @@
 <template>
     <div class="body">
         <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">管理组员</div>
+            <div class="container_title">Admin</div>
         </bk-divider>
         <div class="container">
-            <div class="left_container">
-                <div>
-                    <bk-badge class="mr15" :theme="'danger'" :max="99" :val="5">
-                        <bk-dropdown-menu ref="dropdown" style="width: 261px;display: inline-block;">
-                            <div class="dropdown-trigger-btn" style="padding-left: 19px;" slot="dropdown-trigger">
-                                <span>处理新的申请</span>
-                                <i :class="['bk-icon icon-angle-down', { 'icon-flip': false }]"></i>
-                            </div>
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
-                                <li>
-                                    <div class="content">newperson 申请加入组 group1</div>
-                                    <div style="margin-top: 5px">
-                                        <bk-container :col="24" :margin="6">
-                                            <bk-row>
-                                                <bk-col :span="5" :offset="10">
-                                                    <bk-button :theme="'primary'" :title="'主要按钮'" size="small">
-                                                        同意
-                                                    </bk-button>
-                                                </bk-col>
-                                                <bk-col :span="8" :offset="1">
-                                                    <bk-button :theme="'danger'" :title="'主要按钮'" size="small">
-                                                        拒绝
-                                                    </bk-button>
-                                                </bk-col>
-                                            </bk-row>
-                                        </bk-container>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="content">newperson2 申请加入组 group1</div>
-                                    <div style="margin-top: 5px">
-                                        <bk-container :col="24" :margin="6">
-                                            <bk-row>
-                                                <bk-col :span="5" :offset="10">
-                                                    <bk-button :theme="'primary'" :title="'主要按钮'" size="small">
-                                                        同意
-                                                    </bk-button>
-                                                </bk-col>
-                                                <bk-col :span="8" :offset="1">
-                                                    <bk-button :theme="'danger'" :title="'主要按钮'" size="small">
-                                                        拒绝
-                                                    </bk-button>
-                                                </bk-col>
-                                            </bk-row>
-                                        </bk-container>
-                                    </div>
-                                </li>
-                            </ul>
-                        </bk-dropdown-menu>
+            <div class="top_container">
+                <div style="margin-left:0.5%">
+                    <bk-badge class="mr15" :theme="'danger'" :max="99" :val="newApplyData.length">
+                        <bk-button :theme="'primary'" class="mr10" @click="newApplyDialog.visible = true">查看新的申请入组</bk-button>
                     </bk-badge>
                 </div>
-                <div style="margin-top: 18px">
+                <div>
                     <bk-select :disabled="false" v-model="selectGroupId" style="width: 261px;display: inline-block;"
-                        ext-cls="select-custom"
-                        ext-popover-cls="select-popover-custom"
                         @change="changeGroup(selectGroupId)"
                         placeholder="选择组"
                         searchable>
@@ -69,39 +22,28 @@
                         </bk-option>
                     </bk-select>
                 </div>
-                <div style="margin-top:18px;height: 600px">
+                <div>
                     <div class="date_picker">
-                        <bk-date-picker class="mr15" style="position:relative;" v-model="curDate"
-                            :placeholder="'选择日期'"
-                            open="true"
+                        <bk-date-picker style="position:relative;" v-model="curDate"
+                            placeholder="选择日期"
                             @change="changeDate(curDate)"
-                            :ext-popover-cls="'custom-popover-cls'"
                             :options="customOption">
                         </bk-date-picker>
                     </div>
                 </div>
+                <div>
+                    <bk-badge class="mr15" :theme="'danger'" :max="99" :val="hasNotSubmitMember.length">
+                        <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" class="mr10" @click="hasNotSubmitDialog.visible = true">
+                            今日未提交报告名单
+                        </bk-button>
+                    </bk-badge>
+                </div>
             </div>
-            <div class="right_container">
+            <div class="bottom_container">
                 <div v-if="!currentGroupDaily.length" style="margin: 200px auto;width:140px;">
                     没有日报内容哟~
                 </div>
                 <div v-else>
-                    <div style="display: flex;justify-content: flex-end">
-                        <bk-badge class="mr15" :theme="'danger'" :max="99" :val="hasNotSubmitMember.length">
-                            <bk-dropdown-menu ref="dropdown" style="width: 190px;display: inline-block;">
-                                <div class="dropdown-trigger-btn" style="padding-left: 19px;" slot="dropdown-trigger">
-                                    <span>今日未提交报告名单</span>
-                                    <i :class="['bk-icon icon-angle-down', { 'icon-flip': false }]"></i>
-                                </div>
-                                <ul class="bk-dropdown-list" slot="dropdown-content">
-                                    <li v-for="member in hasNotSubmitMember" :key="member.id"><a href="javascript:;">{{ member.name }}</a></li>
-                                </ul>
-                            </bk-dropdown-menu>
-                        </bk-badge>
-                        <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" class="mr10" @click="remindAll">
-                            一键提醒
-                        </bk-button>
-                    </div>
                     <div class="cards">
                         <div v-for="daliy in hasSubmitDaily" :key="daliy.user.id" class="flexcard">
                             <bk-card class="card" :show-head="true" :show-foot="true">
@@ -109,12 +51,12 @@
                                     {{daliy.user.name}}的日报
                                 </div>
                                 <div>
-                                    <h3 style="height: 25px;overflow: hidden">日报状态：<span v-if="daliy.evaluate.length" style="color: #42b983;font-size: 18px;">已点评</span><span v-else style="color: #ea3636;font-size: 18px;">未点评</span></h3>
+                                    <h3 style="height: 25px;overflow: hidden">日报状态：<span v-if="daliy.evaluate.length" style="color: #3A84FF;font-size: 18px;">已点评</span><span v-else style="color: #63656E;font-size: 18px;">未点评</span></h3>
                                 </div>
                                 <div slot="footer" class="foot-main">
                                     <div class="noComment">
                                         <div>
-                                            <bk-button :theme="'primary'" :title="'发送提醒'" class="mr10" @click="openDialog(daliy)">
+                                            <bk-button :theme="'primary'" :title="'查看日报'" class="mr10" @click="openDialog(daliy)">
                                                 查看他(她)的日报
                                             </bk-button>
                                         </div>
@@ -131,11 +73,13 @@
                                     :rows="10" style="margin-bottom: 15px; color: #000000" :readonly="true">
                                 </bk-input>
                             </div>
-                            <div>
-                                <h2 v-if="dialogMember.evaluate.length">点评情况</h2>
-                                <bk-input v-for="evaluate in dialogMember.evaluate" :key="evaluate" :placeholder="evaluate" :type="'textarea'" font-size="large"
-                                    :rows="3" style="margin: 5px 0;" :readonly="true">
-                                </bk-input>
+                            <div v-if="dialogMember.evaluate.length">
+                                <h2>点评情况</h2>
+                                <div style="height: 190px; overflow: scroll">
+                                    <bk-input v-for="evaluate in dialogMember.evaluate" :key="evaluate" :placeholder="evaluate" :type="'textarea'" font-size="large"
+                                        :rows="3" style="margin: 5px 0;" :readonly="true">
+                                    </bk-input>
+                                </div>
                             </div>
                             <div>
                                 <h2>点评一下</h2>
@@ -145,8 +89,43 @@
                             </div>
                             <div slot="footer" class="dialog-foot">
                                 <div>
-                                    <bk-button :theme="'primary'" :title="'提交'" class="mr10" size="large" @click="submitMyComment(dialogMember)">
-                                        {{ !!myComment.length ? '提交' : '确认'}}
+                                    <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="submitMyComment(dialogMember)">
+                                        {{ myComment.length ? '提交' : '确认' }}
+                                    </bk-button>
+                                </div>
+                            </div>
+                        </bk-dialog>
+                        <bk-dialog v-model="newApplyDialog.visible" title="新人入组请求"
+                            :header-position="newApplyDialog.headerPosition"
+                            :width="newApplyDialog.width"
+                            :position="{ top: 20, left: 100 }">
+                            <bk-table style="margin-top: 15px;"
+                                :virtual-render="true"
+                                :data="newApplyData"
+                                height="200px">
+                                <bk-table-column prop="applier" label="申请人"></bk-table-column>
+                                <bk-table-column prop="targetgroup" label="目标组"></bk-table-column>
+                                <bk-table-column label="操作" width="150">
+                                    <template slot-scope="props">
+                                        <bk-button class="mr10" theme="primary" text @click="agreeApply(props.row)">同意</bk-button>
+                                        <bk-button class="mr10" theme="primary" text @click="denyApply(props.row)">拒绝</bk-button>
+                                    </template>
+                                </bk-table-column>
+                            </bk-table>
+                        </bk-dialog>
+                        <bk-dialog v-model="hasNotSubmitDialog.visible" title="今日未提交报告名单"
+                            :header-position="hasNotSubmitDialog.headerPosition"
+                            :width="hasNotSubmitDialog.width"
+                            :position="{ top: 20, left: 100 }">
+                            <div>
+                                <bk-button v-for="user in hasNotSubmitMember" :key="user.id" :theme="'primary'" style="width:130px;" class="mr10">
+                                    {{user.name}}
+                                </bk-button>
+                            </div>
+                            <div slot="footer" class="dialog-foot">
+                                <div>
+                                    <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll">
+                                        一键提醒
                                     </bk-button>
                                 </div>
                             </div>
@@ -154,30 +133,41 @@
                     </div>
                 </div>
             </div>
-            <!-- 清除浮动，撑开盒子 -->
-            <div style="clear:both;"></div>
         </div>
     </div>
 </template>
 
 <script>
+    import moment from 'moment'
     export default {
         components: {},
         data () {
             return {
                 groupList: [{ id: 1, name: 'group1' }, { id: 0, name: 'group0' }],
-                currentGroup: [{ id: 0, name: 'cyb' }, { id: 1, name: 'yjc' }, { id: 2, name: 'zkw' }, { id: 3, name: 'djf' }, { id: 4, name: 'ylh' }],
-                currentGroupDaily: [{ content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [], star_level: 0 },
-                                    { content: '', evaluate: [], star_level: 0 },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: ['可以', '很好', '很好', '很好', '很好', '很好'], star_level: 4 },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [], star_level: 0 },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [], star_level: 0 }],
+                currentGroup: [{ id: 0, name: 'cyb' }, { id: 1, name: 'yjc' }, { id: 2, name: 'zkw' }, { id: 3, name: 'djf' }, { id: 4, name: 'ylh' }, { id: 5, name: 'lx' }],
+                currentGroupDaily: [{ content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                                    { content: '', evaluate: [] },
+                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: ['可以', '很好', '很好', '很好', '很好', '很好'] },
+                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] }],
                 // 日报详细dialog参数
                 daliyDetialDialog: {
                     visible: false,
                     width: 600,
                     headerPosition: 'left'
                 },
+                newApplyDialog: {
+                    visible: false,
+                    width: 600,
+                    headerPosition: 'left'
+                },
+                hasNotSubmitDialog: {
+                    visible: false,
+                    width: 600,
+                    headerPosition: 'left'
+                },
+                newApplyData: [{ applier: 'cj', targetgroup: 'group0' }, { applier: 'lyz', targetgroup: 'group0' }],
                 // 当前打开的日报是哪个组员
                 dialogMember: { user: { id: 0, name: 'cyb' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [], star_level: 0 },
                 // 我的评分和评论信息
@@ -207,9 +197,7 @@
 
         methods: {
             init () {
-                const date = new Date()
-                const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                this.formatDate = paramDate
+                this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
                 // TODO => 发送请求，获取所有用户的信息
                 // this.$http.get('/get_groups/').then(res => {
                 //     this.groupList = res.data.group_name
@@ -220,10 +208,6 @@
                 // })
                 this.judgeSubmit()
             },
-            // 判断当前用户有没有交日报
-            // hasNotSubmit (member) {
-            //     return Object.keys(member.content).length === 0
-            // },
             // 提醒用户写日报
             remindAll () {
                 // TODO => 发出提醒
@@ -263,8 +247,8 @@
             },
             // 改变日历的日期
             changeDate (date) {
-                const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                this.formatDate = paramDate
+                this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+                // TODO => 发送请求，获取选定日期的信息
                 // this.$http.get('/get_chosen_groups/',{params:{group_name:selectGroupName,time:this.formatDate}).then(res => {
                 //     this.currentGroup = res.user_name
                 //     this.currentGroupDaily = res.user_dairy
@@ -301,16 +285,20 @@
                 }
                 this.hasSubmitDaily = temyes
                 this.hasNotSubmitMember = temno
+            },
+            agreeApply (row) {
+                // TODO => 同意入组
+            },
+            denyApply (row) {
+                // TODO => 拒绝入组
             }
         }
     }
 </script>
 
 <style scoped>
-/*@import "./index.css";*/
 .body{
     border: 2px solid #EAEBF0 ;
-    /* border-radius: 4px; */
     margin:0px 100px;
     padding: 20px 50px;
 
@@ -319,20 +307,15 @@
     font-size: 22px;
     font-weight: 700;
 }
-.left_container{
-    float: left;
-    width: 360px;
-    padding-left: 20px;
-    border-right: 1px solid #EAEBF0;
+.top_container{
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
 }
-.users_list >>> .bk-button{
-    margin-bottom: 10px;
-
-}
-.right_container{
-    float: right;
-    min-width: 380px;
-    width: calc(100% - 380px);
+.bottom_container{
+    width: 100%;
+    padding: 20px;
 }
 .head-main{
     height: 100%;
@@ -349,13 +332,10 @@
     margin: 10px 0.5%;
 }
 .card >>> .bk-card-body{
-    height: 200px;
+    height: 150px;
     padding: 0 20px;
     background-color: #eeeeee;
     overflow: hidden;
-}
-.date_picker >>>.bk-date-picker-dropdown{
-    top: 32px !important;
 }
 .foot-main {
     width: 100%;
@@ -366,38 +346,7 @@
     font-size: 28px;
     overflow: hidden;
 }
-.noSubmitDiv{
-    font-size: 20px;
-    padding-top: 5px;
-}
-.hasComment{
-    display: flex;
-    justify-content: center;
-    padding: 10px 0;
-}
-.hasComment >>> .bk-score-group{
-    margin: 0;
-}
-/*下拉菜单*/
-.dropdown-trigger-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #c4c6cc;
-    height: 32px;
-    min-width: 68px;
-    border-radius: 2px;
-    padding: 0 15px;
-    color: #63656E;
-}
-.dropdown-trigger-btn.bk-icon {
-    font-size: 18px;
-}
-.dropdown-trigger-btn .bk-icon {
-    font-size: 22px;
-}
-.dropdown-trigger-btn:hover {
-    cursor: pointer;
-    border-color: #979ba5;
+::-webkit-scrollbar{
+    display: none;
 }
 </style>
