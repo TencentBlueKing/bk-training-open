@@ -69,6 +69,15 @@
                             <p>{{value}}</p>
                         </div>
                     </bk-card>
+
+                </div>
+
+                <!-- 清除浮动，撑开盒子 -->
+                <div style="clear:both;"></div>
+                <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px">
+                    <div @click="changeDailyPage(dailysData.curPage - 1)" :class="['arrow', 'arrow-left', { 'vh': dailysData.curPage === 1 }]"></div>
+                    <div class="pagination" v-for="index in Math.floor( dailysData.count / dailysData.pageSize + 1)" :key="index"> <div @click="changeDailyPage(index)" :class="['pagination-item', { 'pagination-item-activate': index === dailysData.curPage }]">  {{index}}</div> </div>
+                    <div @click="changeDailyPage(dailysData.curPage + 1)" :class="['arrow', 'arrow-right', { 'vh': dailysData.curPage === Math.floor( dailysData.count / dailysData.pageSize + 1) }]"></div>
                 </div>
             </div>
 
@@ -108,7 +117,9 @@
                 // 日报数据
                 dailysData: {
                     count: 100,
-                    dailys: []
+                    dailys: [],
+                    pageSize: 8,
+                    curPage: 1
                 },
                 // 用户列表
                 groupUsers: [],
@@ -137,9 +148,9 @@
                 })
             },
             // 根据成员获取对应日报
-            getUserDailys (userId) {
+            getUserDailys (userId, page = 1) {
                 // 获取日报
-                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&report_num=' + this.curDailyNum).then((res) => {
+                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&report_num=' + this.curDailyNum + '&page=' + page).then((res) => {
                     if (res.result) {
                         // 更新daily
                         console.log('dailys', res.data)
@@ -165,6 +176,12 @@
                     this.curDailyNum = 0
                 }
                 this.getUserDailys(this.curUserId)
+            },
+            // 改变页数渲染出日历数据
+            changeDailyPage (index) {
+                this.dailysData.curPage = index
+                this.getUserDailys(this.curUserId, index)
+                console.log(index)
             },
             init () {
                 const str = "{'感想':'测试1','内容':'测试内容'}"

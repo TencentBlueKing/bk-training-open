@@ -1,0 +1,41 @@
+.pagination-item {
+    width: 25px;
+    height: 25px;
+    border: 1px solid black;
+    text-align: center;
+    line-height: 25px;
+    font-size: 14px;
+    font-weight: 400;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.pagination-item:first-child {
+    margin-left: 5px;
+}
+
+.pagination-item-activate {
+    background: black;
+    color: white;
+}
+
+.vh {
+    visibility: hidden;
+}
+
+.arrow {
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    border-top: 1.5px solid black;
+    border-right: 1.5px solid black;
+    cursor: pointer;
+}
+
+.arrow-left {
+    transform: rotate(225deg);
+}
+
+.arrow-right {
+    transform: rotate(45deg);
+}
