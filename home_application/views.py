@@ -171,28 +171,11 @@ def add_group(request):
         return JsonResponse({"result": False, "code": 1, "message": "创建人未在管理员中"})
     try:
         group = Group.objects.create(
-            name=name, admin=admin_names, create_by=request.user.username, create_name=create_name
+            name=name, admin=",".join(admin_names), create_by=request.user.username, create_name=create_name
         )
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     else:
-        # 批量新传来的用户信息
-        # 查询已经存在的用户信息
-        exist_users = User.objects.filter(username__in=admin_names).values("username")
-        admin_list = []
-        for admin in admins:
-            if not {"username": admin.get("username")} in exist_users:
-                # 除去已经存在的用户，添加新用户
-                admin_list.append(
-                    User(
-                        id=admin.get("id"),
-                        username=admin.get("username"),
-                        name=admin.get("display_name"),
-                        phone=admin.get("phone"),
-                        email=admin.get("email"),
-                    )
-                )
-        User.objects.bulk_create(admin_list)  # 注册未曾注册的管理员用户
         # 添加组-用户信息
         group_user_list = []
         for admin in admins:
