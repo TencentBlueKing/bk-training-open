@@ -463,8 +463,8 @@ def report_filter(request, group_id):
     # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
     member_id = request.GET.get("member_id")
     page = request.GET.get("page")
-    # 每一页显示 8 份日报
-    page_size = 8
+    # 每一页显示日报数量
+    page_size = request.GET.get("size", 8)
     if member_id:
         # 如果有该参数则说明是根据成员id获取日报，
         # 没有则直接跳到下边根据组和日期获取所有成员对应日期的日报
@@ -472,8 +472,6 @@ def report_filter(request, group_id):
             # 安全校验，查看目标对象是否为同组成员
             GroupUser.objects.get(group_id=group_id, user_id=member_id)
             member_name = User.objects.get(id=member_id).username
-            # 参数校验
-            # report_num = int(request.GET.get("report_num", 7))
         except GroupUser.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "与目标用户非同组成员，查询被拒绝", "data": []})
         except User.DoesNotExist:

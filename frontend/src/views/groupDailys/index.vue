@@ -38,25 +38,6 @@
                 </div>
             </div>
             <div class="right_container">
-                <!-- 显示筛选日报个数等 -->
-                <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
-                    <div style="float:left;">
-                        <span>显示日报个数：</span>
-                        <bk-select :disabled="false" v-model="curDailyNum"
-                            style="display:inline-block; width:80px;"
-                            ext-cls="select-custom"
-                            ext-popover-cls="select-popover-custom"
-                            @change="changeDailyNum()"
-                        >
-                            <bk-option v-for="num in numlist"
-                                :key="num.value"
-                                :id="num.value"
-                                :name="num.name">
-                            </bk-option>
-                        </bk-select>
-                    </div>
-                    <span style="float:right;">日报总数：{{dailysData.count}}</span>
-                </div>
                 <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
                     没有日报内容哟~
                 </div>
@@ -74,11 +55,20 @@
 
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
-                <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px">
-                    <div @click="changeDailyPage(dailysData.curPage - 1)" :class="['arrow', 'arrow-left', { 'vh': dailysData.curPage === 1 }]"></div>
-                    <div class="pagination" v-for="index in Math.floor( dailysData.count / dailysData.pageSize + 1)" :key="index"> <div @click="changeDailyPage(index)" :class="['pagination-item', { 'pagination-item-activate': index === dailysData.curPage }]">  {{index}}</div> </div>
-                    <div @click="changeDailyPage(dailysData.curPage + 1)" :class="['arrow', 'arrow-right', { 'vh': dailysData.curPage === Math.floor( dailysData.count / dailysData.pageSize + 1) }]"></div>
-                </div>
+                <!--                <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px">-->
+                <!--                    <div @click="changeDailyPage(dailysData.curPage - 1)" :class="['arrow', 'arrow-left', { 'vh': dailysData.curPage === 1 }]"></div>-->
+                <!--                    <div class="pagination" v-for="index in Math.floor( dailysData.count / dailysData.pageSize + 1)" :key="index"> <div @click="changeDailyPage(index)" :class="['pagination-item', { 'pagination-item-activate': index === dailysData.curPage }]">  {{index}}</div> </div>-->
+                <!--                    <div @click="changeDailyPage(dailysData.curPage + 1)" :class="['arrow', 'arrow-right', { 'vh': dailysData.curPage === Math.floor( dailysData.count / dailysData.pageSize + 1) }]"></div>-->
+                <!--    纪念旺哥            </div>-->
+
+                <bk-pagination
+                    @change="getUserDailys"
+                    @limit-change="changeLimit"
+                    :current.sync="defaultPaging.current"
+                    :count.sync="defaultPaging.count"
+                    :limit="defaultPaging.limit"
+                    :limit-list="defaultPaging.limitList">
+                </bk-pagination>
             </div>
 
             <!-- 清除浮动，撑开盒子 -->
@@ -88,10 +78,20 @@
 </template>
 
 <script>
+    import { bkPagination } from 'bk-magic-vue'
+
     export default {
-        components: {},
+        components: {
+            bkPagination
+        },
         data () {
             return {
+                defaultPaging: {
+                    current: 1,
+                    limit: 8,
+                    count: 300,
+                    limitList: [8, 16, 32]
+                },
                 groupsData: [],
                 curGroupId: null,
                 curGroup: {
@@ -124,14 +124,18 @@
                 // 用户列表
                 groupUsers: [],
                 curUserId: null,
-                curDailyNum: 7,
-                numlist: [{ 'name': 7, 'value': 7 }, { 'name': 14, 'value': 14 }, { 'name': 30, 'value': 30 }, { 'name': '全部', 'value': 0 }]
+                curDailyNum: 8
             }
         },
         created () {
             this.init()
         },
         methods: {
+            // 每页日报数量
+            changeLimit (pageSize) {
+                this.defaultPaging.limit = pageSize
+                this.getUserDailys(this.defaultPaging.current, this.curUserId)
+            },
             // 点击切换显示类型的按钮
             changeType () {
                 this.isUser = !this.isUser
@@ -148,13 +152,18 @@
                 })
             },
             // 根据成员获取对应日报
-            getUserDailys (userId, page = 1) {
+            getUserDailys (page = 1, userId) {
                 // 获取日报
-                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&report_num=' + this.curDailyNum + '&page=' + page).then((res) => {
+                if (userId == null) {
+                    userId = this.curUserId
+                }
+                this.defaultPaging.current = page
+                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&size=' + this.defaultPaging.limit + '&page=' + page).then((res) => {
                     if (res.result) {
                         // 更新daily
                         console.log('dailys', res.data)
                         this.dailysData.count = res.data.total_report_num
+                        this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
                     } else {
                         const config = {}
@@ -168,20 +177,12 @@
             clickUser (userId) {
                 this.curUserId = userId
                 this.rightIsUser = true
-                this.getUserDailys(userId)
-            },
-            // 切换获取日报数量
-            changeDailyNum () {
-                if (this.curDailyNum === '全部') {
-                    this.curDailyNum = 0
-                }
-                this.getUserDailys(this.curUserId)
+                this.getUserDailys(this.defaultPaging.current, userId)
             },
             // 改变页数渲染出日历数据
             changeDailyPage (index) {
                 this.dailysData.curPage = index
                 this.getUserDailys(this.curUserId, index)
-                console.log(index)
             },
             init () {
                 const str = "{'感想':'测试1','内容':'测试内容'}"

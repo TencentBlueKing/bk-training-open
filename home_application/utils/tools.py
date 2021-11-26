@@ -9,13 +9,12 @@ def check_param(params, kwargs: dict):
     return True, None
 
 
-def get_paginator(content, page, size):
+def get_paginator(objects, page, size):
     """生成分页器"""
-    lists = Paginator(content, size)
+    p = Paginator(objects, size)
     try:
-        ansPage = lists.page(page)
+        return p.page(page)
     except EmptyPage:
-        ansPage = lists.page(lists.num_pages)
+        return p.page(p.num_pages)
     except Exception:
-        ansPage = lists.page(1)
-    return ansPage
+        return p.page(1)
