@@ -424,7 +424,12 @@ def deal_join_group(request, group_id):
     user_id = req.get("user_id")
     # 操作 status = 1(同意), status = 2(拒绝)
     status = req.get("status")
-    status_message = "同意" if status == 1 else "拒绝"
+    if status == 1:
+        status_message = "同意"
+    elif status == 2:
+        status_message = "拒绝"
+    else:
+        return JsonResponse({"result": False, "code": 0, "message": "参数status传值不合法", "data": []})
     try:
         # 获取用户信息
         user = User.objects.get(id=user_id)
