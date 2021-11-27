@@ -198,6 +198,8 @@ git pull blueking-train
 
 ## 2. 开发流程
 
+![](static/images/tapd20211127140124.png)
+
 ```mermaid
     graph TB
         classDef style1 fill:none, stroke:#5aa7ff, stroke-width:2px
@@ -212,7 +214,6 @@ git pull blueking-train
         G1{{流水线自动检查}}
         G2{{"Code Review"}}
         H((合并代码))
-
 
         B1 --> C1_1
         C1_1 -->|是| D1_1
