@@ -1,4 +1,4 @@
-from django.core.paginator import EmptyPage, Paginator
+from django.core.paginator import Paginator
 
 
 def check_param(params, kwargs: dict):
@@ -14,7 +14,5 @@ def get_paginator(objects, page, size):
     p = Paginator(objects, size)
     try:
         return p.page(page)
-    except EmptyPage:
-        return p.page(p.num_pages)
     except Exception:
         return p.page(1)
