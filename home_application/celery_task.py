@@ -142,31 +142,17 @@ def send_daily_immediately(user_name, group_admins, daily_content, report_date, 
 
 
 @task()
-def send_dairy_cml(user_name):
+def send_unfinished_dairy(user_name, date):
     """
-    用户补写日报后立刻发送给管理员
-    :param user_name:       用户名：username(name)
-    :param group_admins:    用户所在组的所有管理员
-    :param daily_content:   日报内容，json数据
-    :param report_date:     日报日期，str
-    :param report_id:       日报id，用于发送后更新状态
+    未完成日报提醒
+    :param user_name: 用户名：username string(多人以逗号连接)
+    :param date: 日期
     """
-    mail_title = "日报提醒"
-    mail_subhead = "Hi,你今天还写日报，是不是忘记？快来写吧"
 
-    html_template = get_template("daily_report.html")
-    mail_content = html_template.render(
-        {
-            "mail_title": mail_title,
-            "mail_subhead": mail_subhead,
-        }
-    )
-    send_mail(
-        receiver__username=user_name,
-        title=mail_title,
-        content=mail_content,
-        body_format="Html",
-    )
+    mail_title = "{} 日报提醒".format(date)
+    mail_content = "Hi，你还未完成{}的日报".format(date)
+
+    send_mail(user_name, mail_title, mail_content)
 
 
 @task()

@@ -109,6 +109,10 @@ class DailyReportTemplate(models.Model):
         return self.name
 
 
+def daily_evaluate_default():
+    return []
+
+
 # 日报表
 class Daily(TimeBasic):
     content = models.TextField(verbose_name="日报内容")
@@ -117,7 +121,7 @@ class Daily(TimeBasic):
     date = models.DateField(verbose_name="日报日期")
     send_status = models.BooleanField(verbose_name="发送状态")
     template_id = models.IntegerField(verbose_name="模板id")
-    evaluate = JSONField()  # 评价
+    evaluate = JSONField(verbose_name="评价", default=daily_evaluate_default)
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)

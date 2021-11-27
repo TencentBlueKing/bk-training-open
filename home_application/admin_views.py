@@ -1,9 +1,9 @@
 import json
 
-from celery_task import send_dairy_cml
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
+from home_application.celery_task import send_unfinished_dairy
 from home_application.models import Daily, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 
@@ -48,7 +48,7 @@ def list_member_daily(request, group_id):
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
 
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def evaluate_daily(request):
     """
     评价组员日报
@@ -64,8 +64,8 @@ def evaluate_daily(request):
     return JsonResponse({"result": True, "code": 0, "message": "评价成功"})
 
 
-@require_http_methods(["POST"])
-@is_group_member(admin_needed=["POST"])
+@require_http_methods(["GET"])
+@is_group_member(admin_needed=["GET"])
 def notice_non_report_users(request, group_id):
     """
     提醒未写日报成员写日报
@@ -84,24 +84,5 @@ def notice_non_report_users(request, group_id):
     # 发送邮件
     if non_report_users.exists():
         # 放进celery里
-        send_dairy_cml(
-            username_str,
-        )
+        send_unfinished_dairy.delay(username_str, date)
     return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功"})
-
-
-@require_http_methods(["POST"])
-def judge_admin(request):
-    """
-    判断登陆是否为管理员
-    前端要求
-    """
-    if request.method == "GET":
-        username = request.GET.get("username")
-        all_admin = Group.objects.values_list("admin", flat=True)
-        for admin in all_admin:
-            admin = admin.split("'")
-            for admin1 in admin:
-                if username == admin1:
-                    return JsonResponse({"result": True, "code": 0, "message": ""})
-        return JsonResponse({"result": False, "code": 0, "message": ""})

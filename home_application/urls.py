@@ -37,7 +37,6 @@ urlpatterns = (
     path("list_member_daily/<int:group_id>/", admin_views.list_member_daily),
     path("evaluate_daily/", admin_views.evaluate_daily),  # 评价
     path("notice_non_report_users/<int:group_id>", admin_views.notice_non_report_users),  # 给未写日报人发送邮件
-    path("judge_admin/", admin_views.judge_admin),
     url(r"^get_available_apply_groups/$", views.get_available_apply_groups),
     url(r"^apply_for_group/$", views.apply_for_group),
     path("get_apply_for_group_users/<int:group_id>/", views.get_apply_for_group_users),
