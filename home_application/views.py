@@ -24,7 +24,10 @@ from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_GET, require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
-from home_application.celery_task import send_daily_immediately
+from home_application.celery_task import (
+    send_apply_for_group_to_manager,
+    send_daily_immediately,
+)
 from home_application.models import (
     ApplyForGroup,
     Daily,
@@ -35,7 +38,7 @@ from home_application.models import (
 )
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import check_param
+from home_application.utils.tools import apply_info_to_json, check_param
 
 
 def home(request):
@@ -363,22 +366,98 @@ def apply_for_group(request):
         return JsonResponse({"result": False, "code": 1, "message": message})
     group_id = req.get("group_id")
     user_id = request.user.id
-    group_name = Group.objects.get(id=group_id).name
+    # 获取组信息
+    try:
+        group = Group.objects.get(id=group_id)
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": "组不存在", "data": []})
     # 检查是否已在组中
     try:
         GroupUser.objects.get(group_id=group_id, user_id=user_id)
         # 用户已在组中
-        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
+        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group.name), "data": []})
     except GroupUser.DoesNotExist:
         # 用户不在组中
         try:
             ApplyForGroup.objects.get(group_id=group_id, user_id=user_id, status=0)
             # 用户已申请过入组
-            return JsonResponse({"result": False, "code": 0, "message": u"已申请过入组-{}".format(group_name), "data": []})
+            return JsonResponse({"result": False, "code": 0, "message": u"已申请过入组-{}".format(group.name), "data": []})
         except ApplyForGroup.DoesNotExist:
             # 用户未申请入组
             ApplyForGroup.objects.create(group_id=group_id, user_id=user_id, status=0)
-            return JsonResponse({"result": True, "code": 0, "message": u"申请入组-{}成功".format(group_name), "data": []})
+            # 给管理员发送邮件
+            # 获取用户信息
+            user = User.objects.get(id=user_id)
+            send_apply_for_group_to_manager.apply_async(
+                kwargs={
+                    "group_name": group.name,
+                    "group_admins": group.admin,
+                    "user_name": "{}({})".format(user.username, user.name),
+                }
+            )
+            return JsonResponse({"result": True, "code": 0, "message": u"申请入组-{}成功".format(group.name), "data": []})
+
+
+@is_group_member(admin_needed=["GET"])
+def get_apply_for_group_users(request, group_id):
+    """ "获取申请入组列表"""
+    # 获取所有申请人id和申请时间
+    sql_str = (
+        "select user.id, user.username, user.name,apply.update_time "
+        "from home_application_applyforgroup apply, home_application_user user "
+        "where apply.user_id = user.id and apply.status = 0 and apply.group_id = %s"
+    )
+    apply_infos = ApplyForGroup.objects.raw(sql_str, [group_id])
+    apply_info_list = [apply_info_to_json(info) for info in apply_infos]
+    return JsonResponse({"result": True, "code": 0, "message": "获取申请人列表成功", "data": apply_info_list})
+
+
+@is_group_member(admin_needed=["POST"])
+def deal_join_group(request, group_id):
+    """管理员同意用户入组"""
+    # 校验参数
+    req = json.loads(request.body)
+    params = {"user_id": "用户id", "status": "处理操作"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    user_id = req.get("user_id")
+    # 操作 status = 1(同意), status = 2(拒绝)
+    status = req.get("status")
+    if status == 1:
+        status_message = "同意"
+    elif status == 2:
+        status_message = "拒绝"
+    else:
+        return JsonResponse({"result": False, "code": 0, "message": "参数status传值不合法", "data": []})
+    try:
+        # 获取用户信息
+        user = User.objects.get(id=user_id)
+        # 前端显示用户信息username(name)
+        user_name = u"{}({})".format(user.username, user.name)
+        # 前端显示组名
+        group_name = Group.objects.get(id=group_id).name
+        # 如果允许入组，添加组-用户信息（入组）
+        if status == 1:
+            GroupUser.objects.create(group_id=group_id, user_id=user_id)
+        # 更改申请入组状态
+        ApplyForGroup.objects.filter(group_id=group_id, user_id=user_id).update(
+            status=status, operator=request.user.id, update_time=datetime.now()
+        )
+    except User.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": u"用户(id={})不存在".format(user_id), "data": []})
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": u"组（id={}）不存在".format(group_id), "data": []})
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
+    return JsonResponse(
+        {
+            "result": True,
+            "code": 0,
+            "message": u"{}{}入组({})成功".format(status_message, user_name, group_name),
+            "data": [],
+        }
+    )
 
 
 def get_user_groups(request):
