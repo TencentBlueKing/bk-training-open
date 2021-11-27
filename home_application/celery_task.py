@@ -135,3 +135,19 @@ def send_daily_immediately(user_name, group_admins, daily_content, report_date, 
         target_report = Daily.objects.get(id=report_id)
         target_report.send_status = True
         target_report.save()
+
+
+@task()
+def send_apply_for_group_to_manager(user_name, group_admins, group_name):
+    """
+    将申请入组请求发送给管理员
+    :param user_name:       用户名：username(name)
+    :param group_admins:    用户申请入组的所有管理员
+    :param group_name:   组名
+    """
+    logger.info(
+        "将申请入组请求发送给管理员 \n username: %s \n group_admins: %s \n group_name: %s", user_name, group_admins, group_name
+    )
+    mail_title = "申请入组请求"
+    mail_content = "{}申请加入，您管理的组『{}』，快去处理吧~".format(user_name, group_name)
+    send_mail(receiver__username=group_admins, title=mail_title, content=mail_content)

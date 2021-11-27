@@ -88,7 +88,7 @@
                     </bk-form>
                 </bk-dialog>
                 <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="showApplyForGroup()">
-                    请求入组
+                    申请入组
                 </bk-button>
                 <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
                     <bk-form label-width="80">
@@ -104,7 +104,7 @@
                         </bk-form-item>
                         <bk-form-item>
                             <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyForGroup.groupId === ''" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
-                            <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                            <bk-button ext-cls="mr5" @click="applyForGroup.dialogVisible = false" theme="default" title="取消">取消</bk-button>
                         </bk-form-item>
                     </bk-form>
                 </bk-dialog>
