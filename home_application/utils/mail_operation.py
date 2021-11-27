@@ -15,7 +15,7 @@ logger = logging.getLogger("celery")
 def send_mail(receiver__username, title, content, body_format="Text", attachments=None):
     """
     发邮件功能封装
-    :param receiver__username:  接受用户的username
+    :param receiver__username:  接受用户的username，多个用户就以","连接 e.g. 123Q,456Q,789Q
     :param title:               邮件标题
     :param content:             邮件内容
     :param body_format:         邮件格式，默认Text，也可选Html

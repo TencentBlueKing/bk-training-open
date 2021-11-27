@@ -15,6 +15,7 @@ from home_application.utils.get_people_for_mail_notify import (
     get_report_info_by_group_and_date,
 )
 from home_application.utils.mail_operation import send_mail, yesterday_report_notify
+from home_application.utils.report_operation import data_to_table
 
 logger = logging.getLogger("celery")
 
@@ -47,45 +48,58 @@ def send_yesterday_report():
     """
     yesterday_date_str = str((datetime.datetime.today() - datetime.timedelta(days=1)).date())
     # 遍历所有组发邮件
-    all_groups = Group.objects.all()
+    all_group_ids = Group.objects.values_list("id", flat=True)
 
-    for group in all_groups:
+    for group_id in all_group_ids:
         # 获取组内日报信息
-        group_report_info = get_report_info_by_group_and_date(group.id)
+        group_report_info = get_report_info_by_group_and_date(group_id)
+
         # 组员=写日报的+没写日报的-管理员
         report_user_username = set(group_report_info["report_users"].values_list("username", flat=True))
-        member_username = ",".join(
-            report_user_username.union(
-                set(group_report_info["none_report_users"].values_list("username", flat=True))
-            ).difference(set(group_report_info["admin"]))
-        )
+        none_report_username = set(group_report_info["none_report_users"].values_list("username", flat=True))
+        admin_username = set(group_report_info["admin"])
+        member_username = ",".join((report_user_username | none_report_username) - admin_username)
+
         notify_title = "{}『{}』日报一览：".format(yesterday_date_str, group_report_info["name"])
         notify_detail = []
 
         # 发送组员的日报邮件
         if len(group_report_info["report_users"]) != 0:
+            users_html_table = data_to_table(
+                table_style="mail_body",
+                data_style="center_style",
+                data_list=["{}({})".format(user.username, user.name) for user in group_report_info["report_users"]],
+            )
             notify_detail.append(
-                {"detail": "已完成：", "users": {item.username: item.name for item in group_report_info["report_users"]}}
+                {
+                    "detail": "已完成：",
+                    "users_table": users_html_table,
+                }
             )
             yesterday_report_notify(
                 notify_title=notify_title,
                 notify_detail=notify_detail,
                 button_text="点击查看详情",
-                button_link="https://paas-edu.bktencent.com/t/train-test/groupDailys?date=%s&group=%s"
-                % (yesterday_date_str, group_report_info["id"]),
+                button_link="https://paas-edu.bktencent.com/t/train-test/groupDailys?date={}&group={}".format(
+                    yesterday_date_str, group_report_info["id"]
+                ),
                 receiver=member_username,
             )
 
         # 发送管理员的日报邮件
-        notify_detail.append(
-            {"detail": "未完成：", "users": {item.username: item.name for item in group_report_info["none_report_users"]}}
+        users_html_table = data_to_table(
+            table_style="mail_body",
+            data_style="center_style",
+            data_list=["{}({})".format(user.username, user.name) for user in group_report_info["none_report_users"]],
         )
+        notify_detail.append({"detail": "未完成：", "users_table": users_html_table})
         send_res = yesterday_report_notify(
             notify_title=notify_title,
             notify_detail=notify_detail,
             button_text="点击查看详情",
-            button_link="https://paas-edu.bktencent.com/t/train-test/manageGroup?date=%s&group=%s"
-            % (yesterday_date_str, group_report_info["id"]),
+            button_link="https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
+                yesterday_date_str, group_report_info["id"]
+            ),
             receiver=",".join(group_report_info["admin"]),
         )
         # 更新日报状态为已发送
