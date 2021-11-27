@@ -42,6 +42,16 @@ def home(request):
     """
     首页
     """
+    from django.db import connection
+
+    sql = (
+        "UPDATE `home_application_group` g "
+        "SET g.admin=REPLACE(REPLACE(REPLACE(g.admin, '\\'', ''), '[', ''), ']', '') "
+        "WHERE INSTR(g.admin, '[') = 1 "
+        "AND INSTR(g.admin, ']') = LENGTH(g.admin);"
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
     return render(request, "index.html")
 
 
@@ -151,6 +161,29 @@ def get_group_info(request, group_id):
     return JsonResponse({"result": True, "code": 0, "message": "获取组信息成功", "data": data})
 
 
+def auto_sign_users(usernames: list, user_infos: list):
+    """
+    注册不存在的用户信息
+    :param usernames: 用户名数组
+    :param user_infos: 用户信息数组
+    """
+    exist_users = User.objects.filter(username__in=usernames).values_list("username", flat=True)
+    user_list = []
+    for user in user_infos:
+        username = user.get("username")
+        if username not in exist_users:
+            user_list.append(
+                User(
+                    id=user.get("id"),
+                    username=user.get("username"),
+                    name=user.get("display_name"),
+                    phone=user.get("phone"),
+                    email=user.get("email"),
+                )
+            )
+    User.objects.bulk_create(user_list, ignore_conflicts=True)
+
+
 def add_group(request):
     """添加组"""
     req = json.loads(request.body)
@@ -171,28 +204,13 @@ def add_group(request):
         return JsonResponse({"result": False, "code": 1, "message": "创建人未在管理员中"})
     try:
         group = Group.objects.create(
-            name=name, admin=admin_names, create_by=request.user.username, create_name=create_name
+            name=name, admin=",".join(admin_names), create_by=request.user.username, create_name=create_name
         )
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     else:
-        # 批量新传来的用户信息
-        # 查询已经存在的用户信息
-        exist_users = User.objects.filter(username__in=admin_names).values("username")
-        admin_list = []
-        for admin in admins:
-            if not {"username": admin.get("username")} in exist_users:
-                # 除去已经存在的用户，添加新用户
-                admin_list.append(
-                    User(
-                        id=admin.get("id"),
-                        username=admin.get("username"),
-                        name=admin.get("display_name"),
-                        phone=admin.get("phone"),
-                        email=admin.get("email"),
-                    )
-                )
-        User.objects.bulk_create(admin_list)  # 注册未曾注册的管理员用户
+        # 添加未注册的用户信息
+        auto_sign_users(admin_names, admins)
         # 添加组-用户信息
         group_user_list = []
         for admin in admins:
@@ -228,20 +246,7 @@ def update_group(request, group_id):
         admin_ids.append(admin.get("id"))
         admin_names.append(admin.get("username"))
     # 添加未注册的用户信息
-    exist_users = User.objects.filter(username__in=admin_names).values("username")
-    admin_list = []
-    for admin in admins:
-        if not {"username": admin.get("username")} in exist_users:
-            admin_list.append(
-                User(
-                    id=admin.get("id"),
-                    username=admin.get("username"),
-                    name=admin.get("display_name"),
-                    phone=admin.get("phone"),
-                    email=admin.get("email"),
-                )
-            )
-    User.objects.bulk_create(admin_list)  # 注册未曾注册的管理员用户
+    auto_sign_users(admin_names, admins)
     # 批量添加用户-组信息
     exist_user_ids = GroupUser.objects.filter(group_id=group_id, user_id__in=admin_ids).values("user_id")
     group_user_list = []
@@ -250,7 +255,7 @@ def update_group(request, group_id):
             group_user_list.append(GroupUser(group_id=group_id, user_id=admin_id))
     GroupUser.objects.bulk_create(group_user_list)
     try:
-        Group.objects.filter(id=group_id).update(name=name, admin=admin_names, update_time=datetime.now())
+        Group.objects.filter(id=group_id).update(name=name, admin=",".join(admin_names), update_time=datetime.now())
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
     else:
