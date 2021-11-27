@@ -134,14 +134,6 @@
                 return this.header.list[this.header.active] || {}
             }
         },
-        created () {
-            // TODO => 判断当前用户是不是管理员
-            // this.$http.get('/judge_admin/', { params: { username: this.$store.state.user.username } }).then(res => {
-            //     if (!res.result) {
-            //         this.header.list[3].show = false
-            //     }
-            // })
-        },
         methods: {
             changeHead (index) {
                 console.log('当前点击', index)
