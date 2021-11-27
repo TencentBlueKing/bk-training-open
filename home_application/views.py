@@ -462,6 +462,8 @@ def daily_report(request):
 def report_filter(request, group_id):
     # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
     member_id = request.GET.get("member_id")
+    if member_id == "null":
+        member_id = None
     page = request.GET.get("page")
     # 每一页显示日报数量
     page_size = request.GET.get("size", 8)
@@ -482,8 +484,6 @@ def report_filter(request, group_id):
         # 查询当前成员的日报，按照日期降序
         member_report = Daily.objects.filter(create_by=member_name).order_by("-date")
         total_report_num = member_report.count()
-        # if report_num > 0:
-        #     member_report = member_report[:report_num]
 
         # 分页
         member_report = get_paginator(member_report, page, page_size)

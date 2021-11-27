@@ -55,8 +55,9 @@
 
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
+
                 <bk-pagination
-                    @change="getUserDailys"
+                    @change="changePage"
                     @limit-change="changeLimit"
                     :current.sync="defaultPaging.current"
                     :count.sync="defaultPaging.count"
@@ -83,7 +84,7 @@
                 defaultPaging: {
                     current: 1,
                     limit: 8,
-                    count: 300,
+                    count: 0,
                     limitList: [8, 16, 32]
                 },
                 groupsData: [],
@@ -106,29 +107,39 @@
                 // 控制显示日期还是显示成员
                 isUser: false,
                 rightIsUser: false,
-                // 日期选择（当前正常，get时需要再次转化）
+                // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
                 curDate: new Date(),
                 // 日报数据
                 dailysData: {
-                    count: 100,
-                    dailys: [],
-                    pageSize: 8,
-                    curPage: 1
+                    dailys: []
                 },
                 // 用户列表
                 groupUsers: [],
-                curUserId: null,
-                curDailyNum: 8
+                curUserId: null
             }
         },
         created () {
             this.init()
         },
         methods: {
+            
             // 每页日报数量
             changeLimit (pageSize) {
                 this.defaultPaging.limit = pageSize
-                this.getUserDailys(this.defaultPaging.current, this.curUserId)
+                if (this.curDate === '') {
+                    this.getUserDailys(this.curUserId)
+                } else {
+                    this.changeDate(this.curDate)
+                }
+            },
+            // 切换页面
+            changePage (page) {
+                this.defaultPaging.current = page
+                if (this.curDate === '') {
+                    this.getUserDailys(this.curUserId)
+                } else {
+                    this.changeDate(this.curDate)
+                }
             },
             // 点击切换显示类型的按钮
             changeType () {
@@ -146,17 +157,15 @@
                 })
             },
             // 根据成员获取对应日报
-            getUserDailys (page = 1, userId) {
+            getUserDailys (userId) {
                 // 获取日报
                 if (userId == null) {
                     userId = this.curUserId
                 }
-                this.defaultPaging.current = page
-                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&size=' + this.defaultPaging.limit + '&page=' + page).then((res) => {
+                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then((res) => {
                     if (res.result) {
                         // 更新daily
                         console.log('dailys', res.data)
-                        this.dailysData.count = res.data.total_report_num
                         this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
                     } else {
@@ -169,14 +178,10 @@
                 })
             },
             clickUser (userId) {
+                this.curDate = ''
                 this.curUserId = userId
                 this.rightIsUser = true
-                this.getUserDailys(this.defaultPaging.current, userId)
-            },
-            // 改变页数渲染出日历数据
-            changeDailyPage (index) {
-                this.dailysData.curPage = index
-                this.getUserDailys(this.curUserId, index)
+                this.getUserDailys(userId)
             },
             init () {
                 const str = "{'感想':'测试1','内容':'测试内容'}"
@@ -244,11 +249,11 @@
                     console.log('month', date.getMonth())
                     const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
                     console.log('paramDate', paramDate)
-                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate).then(res => {
+                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate + '&page=' + this.defaultPaging.current).then(res => {
                         // this.rightIsUser = false
                         if (res.result) {
                             console.log('groupDailys', res.data)
-                            this.dailysData.count = res.data.length
+                            this.defaultPaging.count = res.data.length
                             this.dailysData.dailys = res.data
                         } else {
                             const config = {}
