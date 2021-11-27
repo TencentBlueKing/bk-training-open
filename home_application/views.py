@@ -150,7 +150,7 @@ def report_template(request, group_id):
 @is_group_member()
 def get_group_info(request, group_id):
     group = Group.objects.get(id=group_id)
-    admin_usernames = group.admin.strip("[").rstrip("]").replace("'", "").split(", ")
+    admin_usernames = group.admin_list
     admin_list = User.objects.filter(username__in=admin_usernames).values("id", "username", "name")
     data = {
         "id": group.id,
@@ -467,7 +467,7 @@ def get_user_groups(request):
     groups = Group.objects.in_bulk(list(group_ids))
     group_list = []
     for group in groups.values():
-        admin = group.admin.strip("[").rstrip("]").replace("'", "").split(", ")
+        admin = group.admin_list
         group_list.append(
             {
                 "id": group.id,
@@ -572,7 +572,7 @@ def daily_report(request):
             group_admins = set()
             for g in user_groups:
                 # 获取admin的list
-                g_admin = g.admin.strip("[").rstrip("]").replace("'", "").split(", ")
+                g_admin = g.admin_list
                 group_admins.update(g_admin)
             user_name = User.objects.get(id=request.user.id).name
             send_daily_immediately.apply_async(

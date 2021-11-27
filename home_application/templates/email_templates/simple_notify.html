@@ -1,14 +1,66 @@
 <html lang="zh">
-    <head>
-        <title>简单通知</title>
-        <meta charset="utf-8" />
-    </head>
- <body>
-<table class="content-wrap" style="margin: auto; max-width: 600px;">
+<head>
+    <title>通知</title>
+    <meta charset="utf-8" />
+    <style>
+        .mail_body{
+            margin: auto;
+            max-width: 600px;
+        }
+        .notify_title{
+            overflow-wrap: break-word;
+            margin: 30px;
+            text-align: center;
+            line-height: 20px;
+            color: rgb(0, 0, 0);
+            font-size: 30px;
+            font-weight: normal;
+        }
+        .notify_content{
+            text-align: center;
+            color: #222222;
+            word-break: break-word;
+            line-height: 20px;
+            font-size: 17px;
+            margin: 20px;
+        }
+        .center_style{
+            text-align: center;
+        }
+        .button_style{
+            padding: 10px 30px;
+            font-size: 15px;
+            height: auto;
+            border-radius: 10px;
+            color: #FFFFFF!important;
+            background: #0092FE;
+            border: none;
+            outline: transparent;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .divide_line{
+            border: #CCCCCC 1px solid;
+            margin: 5px
+        }
+        .home_page_link{
+            text-align:center;
+            text-decoration: underline;
+            font-weight: normal;
+            color: rgb(136, 136, 136);
+            word-break: break-word;
+            line-height: 20px;
+            font-size: 12px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <table class="mail_body">
     <!--标题-->
     <tr>
         <td>
-            <div class="text" style="overflow-wrap: break-word; margin: 30px; text-align: center; line-height: 20px; color: rgb(0, 0, 0); font-size: 30px; font-weight: normal;">
+            <div class="notify_title">
                 {{ notify_title }}
             </div>
         </td>
@@ -17,7 +69,7 @@
     <tr>
         <td>
 
-            <div style="text-align: center; color: #222222; word-break: break-word; line-height: 20px; font-size: 17px; margin: 20px;">
+            <div class="notify_content">
                 {{ notify_content }}
             </div>
         </td>
@@ -26,11 +78,11 @@
         <!--按钮-->
         <tr>
             <td>
-                <div style="text-align: center">
+                <div class="center_style">
                     {% if button_link %}
                     <a href="{{ button_link }}">
                     {% endif %}
-                    <button style="padding: 10px 30px; font-size: 15px; height: auto; border-radius: 10px; color: #FFFFFF!important; background: #0092FE; border: none; outline: transparent; cursor: pointer;">
+                    <button class="button_style">
                         {{ button_text }}
                     </button>
                     {% if button_link %}
@@ -44,14 +96,14 @@
     <!--分隔线-->
     <tr>
         <td>
-            <div style="border: #CCCCCC 1px solid; margin: 5px"></div>
+            <div class="divide_line"></div>
         </td>
     </tr>
     <!--蓝鲸智云-->
     <tr>
         <td>
-            <div style="text-align:center; word-break: break-word; line-height: 20px; font-size: 12px; margin: 10px;">
-                <a style="color: rgb(136, 136, 136); text-decoration: underline; font-weight: normal;"
+            <div class="home_page_link">
+                <a class="home_page_link"
                    href="https://bk.tencent.com/" target="_blank" rel="noopener noreferrer">
                     &nbsp蓝鲸智云 — 开创运维新局面&nbsp
                 </a>
