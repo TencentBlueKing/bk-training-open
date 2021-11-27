@@ -152,6 +152,20 @@ def send_daily_immediately(user_name, group_admins, daily_content, report_date, 
 
 
 @task()
+def send_unfinished_dairy(user_name, date):
+    """
+    未完成日报提醒
+    :param user_name: 用户名：username string(多人以逗号连接)
+    :param date: 日期
+    """
+
+    mail_title = "{} 日报提醒".format(date)
+    mail_content = "Hi，你还未完成{}的日报".format(date)
+
+    send_mail(user_name, mail_title, mail_content)
+
+
+@task()
 def send_apply_for_group_to_manager(user_name, group_admins, group_name):
     """
     将申请入组请求发送给管理员
