@@ -135,12 +135,12 @@
             }
         },
         created () {
-            // 判断当前用户是不是管理员
-            this.$http.get('/judge_admin/', { params: { username: this.$store.state.user.username } }).then(res => {
-                if (!res.result) {
-                    this.header.list[3].show = false
-                }
-            })
+            // TODO => 判断当前用户是不是管理员
+            // this.$http.get('/judge_admin/', { params: { username: this.$store.state.user.username } }).then(res => {
+            //     if (!res.result) {
+            //         this.header.list[3].show = false
+            //     }
+            // })
         },
         methods: {
             changeHead (index) {

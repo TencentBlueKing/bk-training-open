@@ -196,30 +196,30 @@
         methods: {
             init () {
                 this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
-                // 发送请求，获取所有用户的信息
-                this.$http.get('/list_admin_group/').then(res => {
-                    this.groupList = res.data
-                    this.selectGroupId = res.data[0].id
-                    this.getdata({ params: { group_id: res.data[0].id, date: this.formatDate } })
-                })
+                // TODO => 发送请求，获取所有用户的信息
+                // this.$http.get('/list_admin_group/').then(res => {
+                //     this.groupList = res.data
+                //     this.selectGroupId = res.data[0].id
+                //     this.getdata({ params: { group_id: res.data[0].id, date: this.formatDate } })
+                // })
             },
             // 提醒用户写日报
             remindAll () {
-                // 发出一键提醒
-                this.$http.post('/notice_non_report_users/', { group_id: this.selectGroupId, date: this.formatDate }).then(res => {
-                    if (res.message) {
-                        this.hasRemindAll = true
-                        this.hasNotSubmitDialog.visible = false
-                        const alertDialog = this.$bkInfo({
-                            type: 'success',
-                            title: res.message,
-                            showFooter: false
-                        })
-                        setTimeout(() => {
-                            alertDialog.close()
-                        }, 500)
-                    }
-                })
+                // TODO => 发出一键提醒
+                // this.$http.post('/notice_non_report_users/', { group_id: this.selectGroupId, date: this.formatDate }).then(res => {
+                //     if (res.message) {
+                //         this.hasRemindAll = true
+                //         this.hasNotSubmitDialog.visible = false
+                //         const alertDialog = this.$bkInfo({
+                //             type: 'success',
+                //             title: res.message,
+                //             showFooter: false
+                //         })
+                //         setTimeout(() => {
+                //             alertDialog.close()
+                //         }, 500)
+                //     }
+                // })
             },
             // 打开日报详情
             openDialog (daily) {
@@ -234,17 +234,17 @@
                         title: '点评成功',
                         showFooter: false
                     })
-                    // 发送请求，将我的点评提交给后台
-                    this.$http.post('/evaluate_daliy/', { daily_id: dialogMember.id, evaluate_content: this.myComment }).then(res => {
-                        if (res.message) {
-                            setTimeout(() => {
-                                alertDialog.close()
-                            }, 500)
-                            this.daliyDetailDialog.visible = false
-                        } else {
-                            return false
-                        }
-                    })
+                    // TODO => 发送请求，将我的点评提交给后台
+                    // this.$http.post('/evaluate_daily/', { daily_id: dialogMember.id, evaluate_content: this.myComment }).then(res => {
+                    //     if (res.message) {
+                    //         setTimeout(() => {
+                    //             alertDialog.close()
+                    //         }, 500)
+                    //         this.daliyDetailDialog.visible = false
+                    //     } else {
+                    //         return false
+                    //     }
+                    // })
                     setTimeout(() => {
                         alertDialog.close()
                     }, 500)
@@ -261,14 +261,14 @@
             // 改变日历的日期
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
-                // 发送请求，获取选定日期的信息
-                this.getdata({ params: { group_id: this.selectGroupId, time: this.formatDate } })
+                // TODO => 发送请求，获取选定日期的信息
+                // this.getdata({ params: { group_id: this.selectGroupId, time: this.formatDate } })
             },
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
-                // 发送请求，获取选定组的信息
-                this.getdata({ params: { group_id: this.selectGroupId, time: this.formatDate } })
+                // TODO => 发送请求，获取选定组的信息
+                // this.getdata({ params: { group_id: this.selectGroupId, time: this.formatDate } })
             },
             agreeApply (row) {
                 // TODO => 同意入组
