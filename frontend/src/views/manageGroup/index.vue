@@ -103,12 +103,12 @@
                                 :virtual-render="true"
                                 :data="newApplyData"
                                 height="200px">
-                                <bk-table-column prop="applier" label="申请人"></bk-table-column>
-                                <bk-table-column prop="targetgroup" label="目标组"></bk-table-column>
+                                <bk-table-column prop="username" label="用户id"></bk-table-column>
+                                <bk-table-column prop="name" label="姓名"></bk-table-column>
                                 <bk-table-column label="操作" width="150">
                                     <template slot-scope="props">
-                                        <bk-button class="mr10" theme="primary" text @click="agreeApply(props.row)">同意</bk-button>
-                                        <bk-button class="mr10" theme="primary" text @click="denyApply(props.row)">拒绝</bk-button>
+                                        <bk-button class="mr10" theme="primary" text @click="dealNewApply(props.row,1)">同意</bk-button>
+                                        <bk-button class="mr10" theme="primary" text @click="dealNewApply(props.row,2)">拒绝</bk-button>
                                     </template>
                                 </bk-table-column>
                             </bk-table>
@@ -166,7 +166,7 @@
                     width: 600,
                     headerPosition: 'left'
                 },
-                newApplyData: [{ applier: 'cj', targetgroup: 'group0' }, { applier: 'lyz', targetgroup: 'group0' }],
+                newApplyData: [],
                 // 当前打开的日报是哪个组员
                 dialogMember: { id: 0, user: { id: 0, name: 'cyb' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
                 // 我评论信息
@@ -183,7 +183,7 @@
                 curDate: new Date(),
                 formatDate: '',
                 // 选择的组
-                selectGroupId: 0,
+                selectGroupId: 2,
                 hasNotSubmitMember: [{ id: 0, name: 'yjc' }],
                 hasRemindAll: false
             }
@@ -195,13 +195,16 @@
 
         methods: {
             init () {
-                this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
                 // TODO => 发送请求，获取所有用户的信息
                 // this.$http.get('/list_admin_group/').then(res => {
                 //     this.groupList = res.data
                 //     this.selectGroupId = res.data[0].id
                 //     this.getdata({ params: { group_id: res.data[0].id, date: this.formatDate } })
                 // })
+                // TODO => 获取申请该组的列表
+                this.$http.get('/get_apply_for_group_users/' + this.selectGroupId + '/').then(res => {
+                    this.newApplyData = res.data
+                })
             },
             // 提醒用户写日报
             remindAll () {
@@ -269,12 +272,22 @@
                 this.selectGroupId = selectGroupId
                 // TODO => 发送请求，获取选定组的信息
                 // this.getdata({ params: { group_id: this.selectGroupId, time: this.formatDate } })
+                // TODO => 获取申请该组的列表
+                // this.$http.get('/get_apply_for_group_users/', { params: { group_id: this.selectGroupId } }).then(res => {
+                //     this.newApplydata = res.data
+                // })
             },
-            agreeApply (row) {
-                // TODO => 同意入组
-            },
-            denyApply (row) {
-                // TODO => 拒绝入组
+            // 处理新的入组申请
+            dealNewApply (row, status) {
+                this.$http.post('/deal_join_group/' + this.selectGroupId + '/', { user_id: row.user_id, status: status }).then(res => {
+                    if (res.message) {
+                        for (const i in this.newApplyData) {
+                            if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
+                                this.newApplyData.splice(i, 1)
+                            }
+                        }
+                    }
+                })
             }
         }
     }
