@@ -1,7 +1,7 @@
 <template>
     <div class="body">
         <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">Admin</div>
+            <div class="container_title">管理组</div>
         </bk-divider>
         <div class="container">
             <div class="top_container">
@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div class="bottom_container">
-                <div v-if="!currentGroupDaily.length" style="margin: 200px auto;width:140px;">
+                <div v-if="!hasSubmitDaily.length" style="margin: 200px auto;width:140px;">
                     没有日报内容哟~
                 </div>
                 <div v-else>
@@ -64,9 +64,9 @@
                                 </div>
                             </bk-card>
                         </div>
-                        <bk-dialog v-model="daliyDetialDialog.visible" title="日报内容"
-                            :header-position="daliyDetialDialog.headerPosition"
-                            :width="daliyDetialDialog.width"
+                        <bk-dialog v-model="daliyDetailDialog.visible" title="日报内容"
+                            :header-position="daliyDetailDialog.headerPosition"
+                            :width="daliyDetailDialog.width"
                             :position="{ top: 20, left: 100 }">
                             <div>
                                 <bk-input :placeholder="dialogMember.content" :type="'textarea'" font-size="large"
@@ -124,8 +124,8 @@
                             </div>
                             <div slot="footer" class="dialog-foot">
                                 <div>
-                                    <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll">
-                                        一键提醒
+                                    <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll" :disabled="hasRemindAll">
+                                        {{ hasRemindAll ? '已提醒' : '一键提醒' }}
                                     </bk-button>
                                 </div>
                             </div>
@@ -144,15 +144,14 @@
         data () {
             return {
                 groupList: [{ id: 1, name: 'group1' }, { id: 0, name: 'group0' }],
-                currentGroup: [{ id: 0, name: 'cyb' }, { id: 1, name: 'yjc' }, { id: 2, name: 'zkw' }, { id: 3, name: 'djf' }, { id: 4, name: 'ylh' }, { id: 5, name: 'lx' }],
-                currentGroupDaily: [{ content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
-                                    { content: '', evaluate: [] },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: ['可以', '很好', '很好', '很好', '很好', '很好'] },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
-                                    { content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] }],
+                // currentGroup: [{ id: 0, name: 'cyb' }, { id: 1, name: 'yjc' }, { id: 2, name: 'zkw' }, { id: 3, name: 'djf' }, { id: 4, name: 'ylh' }, { id: 5, name: 'lx' }],
+                hasSubmitDaily: [{ id: 0, user: { id: 0, name: 'cyb' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                                 { id: 1, user: { id: 1, name: 'ylh' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: ['可以', '很好', '很好', '很好', '很好', '很好'] },
+                                 { id: 2, user: { id: 2, name: 'djf' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                                 { id: 3, user: { id: 3, name: 'lx' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                                 { id: 4, user: { id: 4, name: 'zkw' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] }],
                 // 日报详细dialog参数
-                daliyDetialDialog: {
+                daliyDetailDialog: {
                     visible: false,
                     width: 600,
                     headerPosition: 'left'
@@ -169,9 +168,8 @@
                 },
                 newApplyData: [{ applier: 'cj', targetgroup: 'group0' }, { applier: 'lyz', targetgroup: 'group0' }],
                 // 当前打开的日报是哪个组员
-                dialogMember: { user: { id: 0, name: 'cyb' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [], star_level: 0 },
-                // 我的评分和评论信息
-                judgeRate: 5,
+                dialogMember: { id: 0, user: { id: 0, name: 'cyb' }, content: '今日任务: 今天干了一些啥事, 明日任务: xxxx, 感想: 继续加油', evaluate: [] },
+                // 我评论信息
                 myComment: '',
                 // 日历样式
                 customOption: {
@@ -184,14 +182,14 @@
                 // 当天日期
                 curDate: new Date(),
                 formatDate: '',
-                // 选择的组名
-                selectGroupName: '',
+                // 选择的组
                 selectGroupId: 0,
-                hasSubmitDaily: [],
-                hasNotSubmitMember: []
+                hasNotSubmitMember: [{ id: 0, name: 'yjc' }],
+                hasRemindAll: false
             }
         },
         created () {
+            this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
             this.init()
         },
 
@@ -200,91 +198,75 @@
                 this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
                 // TODO => 发送请求，获取所有用户的信息
                 // this.$http.get('/get_groups/').then(res => {
-                //     this.groupList = res.data.group_name
-                //     this.currentGroup = res.user_name
-                //     this.currentGroupDaily = res.user_dairy
-                //     this.selectGroupId = res.group_name[0].id
-                //     this.selectGroupName = res.group_name[0].name
+                //     this.groupList = res.data
+                //     this.selectGroupId = res.data[0].id
+                //     this.getdata({ params: { group_id: res.data[0].id, time: this.formatDate } })
                 // })
-                this.judgeSubmit()
             },
             // 提醒用户写日报
             remindAll () {
                 // TODO => 发出提醒
-                // this.$http.get('/remind_all/',{params:{group_id:selectGroupId,time:this.formatDate}).then(res => {
-                //     this.currentGroup = res.user_name
-                //     this.currentGroupDaily = res.user_dairy
-                //     this.selectGroupName = selectGroupName
+                // this.$http.post('/remind_all/', { group_id: this.selectGroupId, time: this.formatDate } ).then(res => {
+                //     if(res.message){
+                //         this.hasRemindAll = true
+                //         this.hasNotSubmitDialog.visible = false
+                //         const alertDialog = this.$bkInfo({
+                //             type: 'success',
+                //             title: res.message,
+                //             showFooter: false
+                //         })
+                //         setTimeout(() => {
+                //             alertDialog.close()
+                //         }, 500)
+                //     }
                 // })
             },
             // 打开日报详情
             openDialog (daily) {
                 this.dialogMember = daily
-                this.daliyDetialDialog.visible = true
+                this.daliyDetailDialog.visible = true
             },
             // 提交我的点评信息
             submitMyComment (dialogMember) {
                 if (this.myComment.length) {
                     const alertDialog = this.$bkInfo({
                         type: 'success',
-                        title: '点评成功！+ comment = ' + this.myComment,
+                        title: '点评成功',
                         showFooter: false
                     })
-                    // TODO => 发送请求，将我的点评和评星提交给后台(评论是否要匿名呢？)
-                    // this.$http.get('/send_comment/',{params:{time:this.formatDate,name:dialogMember.user.name,evaluate:this.myComment}).then(res => {
+                    // TODO => 发送请求，将我的点评提交给后台
+                    // this.$http.post('/send_comment/', { daily_id: dialogMember.id, evaluate_content: this.myComment}).then(res => {
                     //     if(res.message){
                     //         setTimeout(() => {
                     //             alertDialog.close()
                     //         }, 500)
-                    //         this.daliyDetialDialog.visible = false
+                    //         this.daliyDetailDialog.visible = false
                     //     }else{return false}
                     // })
                     setTimeout(() => {
                         alertDialog.close()
                     }, 500)
                 }
-                this.daliyDetialDialog.visible = false
+                this.daliyDetailDialog.visible = false
+            },
+            // 封装getdata请求
+            getdata (params) {
+                this.$http.get('/get_chosen_groups/', params).then(res => {
+                    //  this.hasSubmitDaily = res.hasdaliy
+                    //  this.hasNotSubmitMember = res.nodaliy
+                })
             },
             // 改变日历的日期
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
                 // TODO => 发送请求，获取选定日期的信息
-                // this.$http.get('/get_chosen_groups/',{params:{group_name:selectGroupName,time:this.formatDate}).then(res => {
-                //     this.currentGroup = res.user_name
-                //     this.currentGroupDaily = res.user_dairy
-                //     this.selectGroupName = selectGroupName
-                //     this.selectGroupId = res.group_name[0].id
-                //     this.selectGroupName = res.group_name[0].name
-                // })
-                this.judgeSubmit()
+                // this.getdata({params:{group_id:this.selectGroupId,time:this.formatDate})
             },
-            // 改变当前查看组名
-            changeGroup (selectGroupName) {
+            // 改变当前查看组
+            changeGroup (selectGroupId) {
+                this.selectGroupId = selectGroupId
                 // TODO => 发送请求，获取选定组的信息
-                // this.$http.get('/get_chosen_groups/',{params:{group_id:selectGroupId,time:this.formatDate}).then(res => {
-                //     this.currentGroup = res.user_name
-                //     this.currentGroupDaily = res.user_dairy
-                //     this.selectGroupName = selectGroupName
-                //     this.selectGroupId = res.group_name[0].id
-                //     this.selectGroupName = res.group_name[0].name
-                // })
-                this.judgeSubmit()
-            },
-            // 可以复用，等接收到参数，将所有逻辑放这里面
-            judgeSubmit () {
-                const temyes = []
-                const temno = []
-                for (let i = 0; i < this.currentGroupDaily.length; i++) {
-                    if (this.currentGroupDaily[i].content.length === 0) {
-                        temno.push(this.currentGroup[i])
-                    } else {
-                        const tem = this.currentGroupDaily[i]
-                        tem.user = this.currentGroup[i]
-                        temyes.push(tem)
-                    }
-                }
-                this.hasSubmitDaily = temyes
-                this.hasNotSubmitMember = temno
+                // this.getdata({params:{group_id:this.selectGroupId,time:this.formatDate})
             },
             agreeApply (row) {
                 // TODO => 同意入组

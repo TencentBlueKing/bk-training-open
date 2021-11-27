@@ -109,13 +109,13 @@
                             show: true
                         },
                         {
-                            name: '我的组',
+                            name: '我的小组',
                             id: 3,
                             url: 'myGroup',
                             show: true
                         },
                         {
-                            name: 'Admin',
+                            name: '管理组',
                             id: 4,
                             url: 'manageGroup',
                             show: true
@@ -135,9 +135,9 @@
             }
         },
         created () {
-            // 判断是否为管理员
-            // this.$http.get('/judgeIsAdmin/', { params: { userID: this.$store.state.user.id } }).then(res => {
-            //     if (res.message === false) {
+            // TODO=>判断是否为管理员
+            // this.$http.get('/judge_admin/', { params: { username: this.$store.state.user.username } }).then(res => {
+            //     if (!res.result) {
             //         this.header.list[3].show = false
             //     }
             // })
