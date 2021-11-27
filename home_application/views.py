@@ -388,11 +388,10 @@ def apply_for_group(request):
             # 给管理员发送邮件
             # 获取用户信息
             user = User.objects.get(id=user_id)
-            group_admins = group.admin.strip("[").rstrip("]").replace("'", "").split(", ")
             send_apply_for_group_to_manager.apply_async(
                 kwargs={
                     "group_name": group.name,
-                    "group_admins": ",".join(group_admins),
+                    "group_admins": group.admin,
                     "user_name": "{}({})".format(user.username, user.name),
                 }
             )
@@ -404,81 +403,55 @@ def get_apply_for_group_users(request, group_id):
     """ "获取申请入组列表"""
     # 获取所有申请人id和申请时间
     sql_str = (
-        "select `user`.id,`user`.username,`user`.`name`,apply.update_time "
-        "from home_application_applyforgroup apply "
-        "left join home_application_user `user` "
-        "on apply.user_id = `user`.id "
-        "where apply.status = 0 and apply.group_id = {}".format(group_id)
+        "select user.id, user.username, user.name,apply.update_time "
+        "from home_application_applyforgroup apply, home_application_user user "
+        "where apply.user_id = user.id and apply.status = 0 and apply.group_id = %s"
     )
-    apply_infos = ApplyForGroup.objects.raw(sql_str)
+    apply_infos = ApplyForGroup.objects.raw(sql_str, [group_id])
     apply_info_list = [apply_info_to_json(info) for info in apply_infos]
     return JsonResponse({"result": True, "code": 0, "message": "获取申请人列表成功", "data": apply_info_list})
 
 
 @is_group_member(admin_needed=["POST"])
-def agree_join_group(request, group_id):
+def deal_join_group(request, group_id):
     """管理员同意用户入组"""
     # 校验参数
     req = json.loads(request.body)
-    params = {"user_id": "用户id"}
+    params = {"user_id": "用户id", "status": "处理操作"}
     check_result, message = check_param(params, req)
     if not check_result:
         return JsonResponse({"result": False, "code": 1, "message": message})
     user_id = req.get("user_id")
-    # 获取用户信息
+    # 操作 status = 1(同意), status = 2(拒绝)
+    status = req.get("status")
+    status_message = "同意" if status == 1 else "拒绝"
     try:
+        # 获取用户信息
         user = User.objects.get(id=user_id)
-        # 前端显示用户信息
+        # 前端显示用户信息username(name)
         user_name = u"{}({})".format(user.username, user.name)
+        # 前端显示组名
+        group_name = Group.objects.get(id=group_id).name
+        # 如果允许入组，添加组-用户信息（入组）
+        if status == 1:
+            GroupUser.objects.create(group_id=group_id, user_id=user_id)
+        # 更改申请入组状态
+        ApplyForGroup.objects.filter(group_id=group_id, user_id=user_id).update(
+            status=status, operator=request.user.id, update_time=datetime.now()
+        )
     except User.DoesNotExist:
         return JsonResponse({"result": False, "code": 0, "message": u"用户(id={})不存在".format(user_id), "data": []})
-    # 获取组信息
-    try:
-        group_name = Group.objects.get(id=group_id).name
     except Group.DoesNotExist:
         return JsonResponse({"result": False, "code": 0, "message": u"组（id={}）不存在".format(group_id), "data": []})
-    # 添加组-用户信息（入组）
-    try:
-        GroupUser.objects.create(group_id=group_id, user_id=user_id)
     except IntegrityError:
         return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
-    # 更改申请入组状态 status = 1(同意)
-    ApplyForGroup.objects.filter(group_id=group_id, user_id=user_id).update(
-        status=1, operator=request.user.id, update_time=datetime.now()
-    )
     return JsonResponse(
-        {"result": True, "code": 0, "message": "同意{}入组({})成功".format(user_name, group_name), "data": []}
-    )
-
-
-@is_group_member(admin_needed=["POST"])
-def reject_join_group(request, group_id):
-    """管理员拒绝用户入组"""
-    # 校验参数
-    req = json.loads(request.body)
-    params = {"user_id": "用户id"}
-    check_result, message = check_param(params, req)
-    if not check_result:
-        return JsonResponse({"result": False, "code": 1, "message": message})
-    user_id = req.get("user_id")
-    # 获取用户信息
-    try:
-        user = User.objects.get(id=user_id)
-        # 前端显示用户信息，用户之后返回信息
-        user_name = u"{}({})".format(user.username, user.name)
-    except User.DoesNotExist:
-        return JsonResponse({"result": False, "code": 0, "message": u"用户{}不存在".format(user_name), "data": []})
-    # 获取组信息
-    try:
-        group_name = Group.objects.get(id=group_id).name
-    except Group.DoesNotExist:
-        return JsonResponse({"result": False, "code": 0, "message": u"组（id={}）不存在".format(group_id), "data": []})
-    # 更改申请入组状态 status = 2(拒绝)
-    ApplyForGroup.objects.filter(group_id=group_id, user_id=user_id).update(
-        status=2, operator=request.user.id, update_time=datetime.now()
-    )
-    return JsonResponse(
-        {"result": True, "code": 0, "message": "拒绝{}入组（{}）成功".format(user_name, group_name), "data": []}
+        {
+            "result": True,
+            "code": 0,
+            "message": u"{}{}入组({})成功".format(status_message, user_name, group_name),
+            "data": [],
+        }
     )
 
 
