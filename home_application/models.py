@@ -13,6 +13,7 @@ specific language governing permissions and limitations under the License.
 import ast
 
 from django.db import models
+from django_mysql.models import JSONField
 
 
 # Create your models here.
@@ -116,6 +117,7 @@ class Daily(TimeBasic):
     date = models.DateField(verbose_name="日报日期")
     send_status = models.BooleanField(verbose_name="发送状态")
     template_id = models.IntegerField(verbose_name="模板id")
+    evaluate = JSONField()  # 评价
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
