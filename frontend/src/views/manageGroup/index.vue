@@ -56,6 +56,23 @@
                         </bk-button>
                     </bk-badge>
                 </div>
+                <bk-dialog v-model="hasNotSubmitDialog.visible" title="今日未提交报告名单"
+                    :header-position="hasNotSubmitDialog.headerPosition"
+                    :width="hasNotSubmitDialog.width"
+                    :position="{ top: 20, left: 100 }">
+                    <div>
+                        <bk-button v-for="daily in hasNotSubmitMember" :key="daily.create_name" :theme="'primary'" style="width:130px;" class="mr10">
+                            {{daily.create_name}}
+                        </bk-button>
+                    </div>
+                    <div slot="footer" class="dialog-foot">
+                        <div>
+                            <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll" :disabled="hasRemindAll">
+                                {{ hasRemindAll ? '已提醒' : '一键提醒' }}
+                            </bk-button>
+                        </div>
+                    </div>
+                </bk-dialog>
             </div>
             <div class="bottom_container">
                 <div v-if="!hasSubmitDaily.length" style="margin: 200px auto;width:140px;">
@@ -94,7 +111,7 @@
                             </div>
                             <div v-if="dialogMember.evaluate.length">
                                 <h2>点评情况</h2>
-                                <div style="height: 190px; overflow: scroll">
+                                <div style="max-height: 190px; overflow: scroll">
                                     <bk-input v-for="evaluate in dialogMember.evaluate" :key="evaluate" :placeholder="evaluate.name + '说：' + evaluate.evaluate" :type="'textarea'" font-size="large"
                                         :rows="3" style="margin: 5px 0;" :readonly="true">
                                     </bk-input>
@@ -110,23 +127,6 @@
                                 <div>
                                     <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="submitMyComment">
                                         {{ myComment.length ? '提交' : '确认' }}
-                                    </bk-button>
-                                </div>
-                            </div>
-                        </bk-dialog>
-                        <bk-dialog v-model="hasNotSubmitDialog.visible" title="今日未提交报告名单"
-                            :header-position="hasNotSubmitDialog.headerPosition"
-                            :width="hasNotSubmitDialog.width"
-                            :position="{ top: 20, left: 100 }">
-                            <div>
-                                <bk-button v-for="daily in hasNotSubmitMember" :key="daily" :theme="'primary'" style="width:130px;" class="mr10">
-                                    {{daily.create_name}}
-                                </bk-button>
-                            </div>
-                            <div slot="footer" class="dialog-foot">
-                                <div>
-                                    <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll" :disabled="hasRemindAll">
-                                        {{ hasRemindAll ? '已提醒' : '一键提醒' }}
                                     </bk-button>
                                 </div>
                             </div>
@@ -205,39 +205,30 @@
             init () {
                 // 发送请求，获取所有用户的信息
                 this.$http.get(
-                    '/list_admin_group/')
-                    .then(res => {
-                        this.groupList = res.data
-                        if (this.groupList.length > 0) {
-                            this.selectGroupId = this.groupList[0].id
-                            this.loadApply()
-                        }
-                    })
+                    '/list_admin_group/'
+                ).then(res => {
+                    this.groupList = res.data
+                    if (this.groupList.length > 0) {
+                        this.selectGroupId = this.groupList[0].id
+                        this.loadApply()
+                    }
+                })
             },
             loadApply () {
                 //  获取申请该组的列表
                 this.$http.get(
-                    '/get_apply_for_group_users/' + this.selectGroupId + '/')
-                    .then(res => {
-                        this.newApplyData = res.data
-                    })
+                    '/get_apply_for_group_users/' + this.selectGroupId + '/'
+                ).then(res => {
+                    this.newApplyData = res.data
+                })
             },
             // 提醒用户写日报
             remindAll () {
                 // 发出一键提醒
-                this.$http.get(
-                    '/notice_non_report_users/' + this.selectGroupId + '/',
-                    { params: { date: this.formatDate } })
+                this.$http.get('/notice_non_report_users/' + this.selectGroupId + '/?date=' + this.formatDate)
                 this.hasRemindAll = true
                 this.hasNotSubmitDialog.visible = false
-                const alertDialog = this.$bkInfo({
-                    type: 'success',
-                    title: '发送成功',
-                    showFooter: false
-                })
-                setTimeout(() => {
-                    alertDialog.close()
-                }, 500)
+                this.$bkMessage({ theme: 'success', message: '发送成功' })
             },
             // 打开日报详情
             openDialog (daily) {
@@ -247,49 +238,44 @@
             // 提交我的点评信息
             submitMyComment () {
                 if (this.myComment.length) {
-                    const alertDialog = this.$bkInfo({
-                        type: 'success',
-                        title: '点评成功',
-                        showFooter: false
-                    })
                     // 发送请求，将我的点评提交给后台
                     this.$http.post(
                         '/evaluate_daily/',
-                        { daily_id: this.dialogMember.id, evaluate: this.myComment })
-                        .then(res => {
-                            if (res.message) {
-                                setTimeout(() => {
-                                    alertDialog.close()
-                                }, 500)
-                                this.dailyDetailDialog.visible = false
+                        { daily_id: this.dialogMember.id, evaluate: this.myComment }
+                    ).then(res => {
+                        if (res.message) {
+                            for (const daily of this.memberDaily) {
+                                if (daily.id === this.dialogMember.id) {
+                                    this.daily.evaluate.push({ 'name': this.$store.state.user.username, evaluate: this.myComment })
+                                }
                             }
-                        })
-                    setTimeout(() => {
-                        alertDialog.close()
-                    }, 500)
+                            this.dailyDetailDialog.visible = false
+                        }
+                    })
+                    this.$bkMessage({ theme: 'success', message: '点评成功' })
                 }
                 this.myComment = ''
+                this.getDaily(this.selectGroupId, this.formatDate)
                 this.dailyDetailDialog.visible = false
             },
             // 封装getDaily请求
-            getDaily (id, params) {
+            getDaily (id, date) {
                 this.$http.get(
-                    '/list_member_daily/' + id + '/',
-                    params)
-                    .then(res => {
-                        this.memberDaily = res.data
-                    })
+                    '/list_member_daily/' + id + '/?date=' + date
+                ).then(res => {
+                    this.memberDaily = res.data
+                })
             },
             // 改变日历的日期
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
-                this.getDaily(this.selectGroupId, { params: { date: this.formatDate } })
+                this.getDaily(this.selectGroupId, this.formatDate)
             },
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
                 // 发送请求，获取选定组的信息
-                this.getDaily(this.selectGroupId, { params: { date: this.formatDate } })
+                this.getDaily(this.selectGroupId, this.formatDate)
                 // 获取申请该组的列表
                 this.loadApply()
             },
@@ -297,16 +283,16 @@
             dealNewApply (row, status) {
                 this.$http.post(
                     '/deal_join_group/' + this.selectGroupId + '/',
-                    { user_id: row.user_id, status: status })
-                    .then(res => {
-                        if (res.message) {
-                            for (const i in this.newApplyData) {
-                                if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
-                                    this.newApplyData.splice(i, 1)
-                                }
+                    { user_id: row.user_id, status: status }
+                ).then(res => {
+                    if (res.message) {
+                        for (const i in this.newApplyData) {
+                            if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
+                                this.newApplyData.splice(i, 1)
                             }
                         }
-                    })
+                    }
+                })
             }
         }
     }
