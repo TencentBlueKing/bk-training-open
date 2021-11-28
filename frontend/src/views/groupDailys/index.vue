@@ -1,88 +1,99 @@
 <template>
-    <div class="body">
-        <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">日报查看</div>
-        </bk-divider>
-        <div class="container">
-            <div class="left_container">
-                <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
-                    @change="changeGroup(curGroupId)"
-                    searchable>
-                    <bk-option v-for="group in groupsData"
-                        :key="group.id"
-                        :id="group.id"
-                        :name="group.name">
-                    </bk-option>
-                </bk-select>
-                <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" style="margin-top:-21px;margin-left:5px;" @click="changeType" class="mr10">
-                    {{isUser ? '日期' : '成员'}}
-                </bk-button>
-                <div style="margin-top:18px;height:707px;">
+    <contentWapper :pageid="pageId" :minheight="pageMinHeight">
+        <div class="left_container">
+            <div class="select-bar">
+                <div class="member-select">
+                    <bk-select :disabled="false" v-model="curGroupId"
+                        ext-cls="select-custom"
+                        ext-popover-cls="select-popover-custom"
+                        transfer="true"
+                        @change="changeGroup(curGroupId)"
+                        searchable>
+                        <bk-option v-for="group in groupsData"
+                            :key="group.id"
+                            :id="group.id"
+                            :name="group.name">
+                        </bk-option>
+                    </bk-select>
+                    <bk-button :theme="'primary'" type="submit" @click="changeType" style="margin-left:14px;">
+                        {{isUser ? '日期' : '成员'}}
+                    </bk-button>
+                </div>
+                <div class="date-select">
                     <div v-if="isUser" class="users_list">
-                        <div>
-                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
-                                {{user.name}}
-                            </bk-button>
+                        <div class="users_list_title">
+                            请选择成员：
                         </div>
+                        <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
+                            {{user.name}}
+                        </bk-button>
                     </div>
-                    <div class="date_picker" style="margin-left:0px;" v-else>
+                    <div class="date_picker" v-else>
                         <bk-date-picker class="mr15" @change="changeDate(curDate)" style="position:relative;" v-model="curDate"
+                            placement="bottom-end"
                             :placeholder="'选择日期'"
-                            open="true"
+                            @open-change="datePickerOpenChange"
+                            :open="isDatePickerOpen"
                             :ext-popover-cls="'custom-popover-cls'"
                             :options="customOption">
                         </bk-date-picker>
                     </div>
                 </div>
             </div>
-            <div class="right_container">
-                <!-- 显示筛选日报个数等 -->
-                <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
-                    <div style="float:left;">
-                        <span>显示日报个数：</span>
-                        <bk-select :disabled="false" v-model="curDailyNum"
-                            style="display:inline-block; width:80px;"
-                            ext-cls="select-custom"
-                            ext-popover-cls="select-popover-custom"
-                            @change="changeDailyNum()"
-                        >
-                            <bk-option v-for="num in numlist"
-                                :key="num.value"
-                                :id="num.value"
-                                :name="num.name">
-                            </bk-option>
-                        </bk-select>
-                    </div>
-                    <span style="float:right;">日报总数：{{dailysData.count}}</span>
-                </div>
-                <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
-                    没有日报内容哟~
-                </div>
-                <div>
-                    <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
-                        <div>日期：{{daily.date}}</div>
-                        <div>日报状态：{{daily.send_describe}}</div>
-                        <div v-for="(value, key) in daily.content" :key="key">
-                            <p style="font-weight: 700;font-size:18px;">{{key}}</p>
-                            <p>{{value}}</p>
-                        </div>
-                    </bk-card>
-                </div>
-            </div>
-
-            <!-- 清除浮动，撑开盒子 -->
-            <div style="clear:both;"></div>
+                
         </div>
-    </div>
+        <div class="right_container">
+            <!-- 显示筛选日报个数等 -->
+            <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
+                <div style="float:left;">
+                    <span>显示日报个数：</span>
+                    <bk-select :disabled="false" v-model="curDailyNum"
+                        style="display:inline-block; width:80px;"
+                        ext-cls="select-custom"
+                        ext-popover-cls="select-popover-custom"
+                        @change="changeDailyNum()"
+                    >
+                        <bk-option v-for="num in numlist"
+                            :key="num.value"
+                            :id="num.value"
+                            :name="num.name">
+                        </bk-option>
+                    </bk-select>
+                </div>
+                <span style="float:right;">日报总数：{{dailysData.count}}</span>
+            </div>
+            <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
+                没有日报内容哟~
+            </div>
+            <div>
+                <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
+                    <div>日期：{{daily.date}}</div>
+                    <div>日报状态：{{daily.send_describe}}</div>
+                    <div v-for="(value, key) in daily.content" :key="key">
+                        <p style="font-weight: 700;font-size:18px;">{{key}}</p>
+                        <p>{{value}}</p>
+                    </div>
+                </bk-card>
+            </div>
+        </div>
+
+        <!-- 清除浮动，撑开盒子 -->
+        <div style="clear:both;"></div>
+    </contentWapper>
+
 </template>
 
 <script>
+    import contentWapper from '../components/content-wapper.vue'
     export default {
-        components: {},
+        components: {
+            contentWapper
+        },
         data () {
             return {
+                pageId: 'groupDailys',
+                pageMinHeight: 830,
+                isDatePickerOpen: false,
                 groupsData: [],
                 curGroupId: null,
                 curGroup: {
@@ -221,6 +232,9 @@
                     this.changeDate(this.curDate)
                 }
             },
+            datePickerOpenChange (state) {
+                this.isDatePickerOpen = state
+            },
             // 根据日期获取当前组日报
             changeDate (date) {
                 this.curUserId = null
@@ -254,29 +268,46 @@
 
 <style scoped>
 @import "./index.css";
-    .body{
-        border: 2px solid #EAEBF0 ;
-        /* border-radius: 4px; */
-        margin:0px 100px;
-        padding: 20px 50px;
-        
+    #groupDailys /deep/ .content{
+        display: flex;
     }
     .container_title {
         font-size: 22px;
         font-weight: 700;
     }
     .left_container{
-        float: left;
         width: 360px;
-        padding-left: 20px;
         border-right: 1px solid #EAEBF0 ;
+        padding-right: 10px;
     }
-    .users_list >>> .bk-button{
+    .select-bar{
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .member-select{
+        display: flex;
+        margin-right: 10px;
+    }
+    .member-select /deep/ .bk-select{
+        min-width: 110px;
+    }
+    .users_list{
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .users_list .users_list_title{
+        font-size: 16px;
+        width: 100%;
+        height: 32px;
+        line-height: 32px;
+    }
+    .users_list /deep/ .bk-button{
         margin-bottom: 10px;
         
     }
     .right_container{
-        float: right;
         min-width: 380px;
         width: calc(100% - 380px);
     }
@@ -285,12 +316,15 @@
         width: calc(46% - 5px);
         margin-right: 18px;
     }
-    .card >>> .bk-card-body{
+    .card /deep/ .bk-card-body{
         height: 280px;
         overflow-y: auto;
         padding-top: 10px;
     }
-    .date_picker >>>.bk-date-picker-dropdown{
+    .date_picker /deep/ .bk-date-picker-dropdown{
         top: 32px !important;
+    }
+    .date_picker /deep/ .bk-date-picker{
+        width: 120px;
     }
 </style>

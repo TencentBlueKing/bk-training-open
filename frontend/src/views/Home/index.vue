@@ -1,57 +1,67 @@
 <template>
-    <div id="myDaily">
-        <div class="body">
-            <bk-divider align="left" style="margin-bottom:30px;">
-                <div class="container_title">填写日报</div>
-            </bk-divider>
-            <div class="top_container" style="margin-top:50px;">
-                <span>选择模板：</span>
-                <bk-select :disabled="!writeFalg" v-model="curTemplateId" style="width: 250px; display: inline-block; vertical-align: bottom; "
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
-                    searchable
-                    @selected="selectTemplate()"
-                    @change="changeTemplate()"
-                    placeholder="请选择模板"
-                >
-                    <bk-option v-for="template in templateList"
-                        :key="template.id"
-                        :id="template.id"
-                        :name="template.name">
-                    </bk-option>
-                </bk-select>
-                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
-                <bk-date-picker class="mr15" v-model="reportDate"
-                    :clearable="false"
-                    :placeholder="'选择日期'"
-                    :ext-popover-cls="'custom-popover-cls'"
-                    :options="customOption"
-                    @change="getDailyByDate(reportDate)"
-                >
-                </bk-date-picker>
-                <bk-button :theme="'primary'"
-                    :disabled="!writeFalg"
-                    type="submit" :title="'保存'" @click="clickSaveDaily()" class="mr10" style="margin-left:40px;">
-                    保存
-                </bk-button>
-                <bk-dialog v-model="saveDailyDialog.visiable" theme="primary" class="save-daily-dialog" :show-footer="false">
-                    <bk-form label-width="80">
-                        <bk-form-item style="margin-left:60px;">
-                            请选择保存方式
-                        </bk-form-item>
-                        <bk-form-item>
-                            <bk-button style="margin-right: 20px;" theme="primary" title="保存并发送邮件" @click.stop.prevent="saveAndSend()">保存并发送邮件</bk-button>
-                            <bk-button ext-cls="mr5" @click="saveDaily()" theme="default" title="仅保存">仅保存</bk-button>
-                        </bk-form-item>
-                    </bk-form>
-                </bk-dialog>
-                <span class="tag-view" style="float:right;display:inline-block; width:120px;margin-top:16px;font-size:14px;">
-                    日报状态：{{saveText}}
-                </span>
+    <contentWapper :pageid="pageId" :minheight="pageMinHeight">
+        <div class="addReport-body">
+            <div class="top_container">
+                <div class="fun-bar">
+                    <div class="fun-item">
+                        <span style="line-height: 32px;">选择模板：</span>
+                        <bk-select :disabled="!writeFalg" v-model="curTemplateId"
+                            class="select-template"
+                            ext-cls="select-custom"
+                            ext-popover-cls="select-popover-custom"
+                            searchable
+                            @selected="selectTemplate()"
+                            @change="changeTemplate()"
+                            placeholder="请选择模板"
+                        >
+                            <bk-option v-for="template in templateList"
+                                :key="template.id"
+                                :id="template.id"
+                                :name="template.name">
+                            </bk-option>
+                        </bk-select>
+                    </div>
+                    <div class="fun-item">
+                        <span>选择日期：</span>
+                        <bk-date-picker class="mr15" v-model="reportDate"
+                            :clearable="false"
+                            :placeholder="'选择日期'"
+                            :ext-popover-cls="'custom-popover-cls'"
+                            :options="customOption"
+                            @change="getDailyByDate(reportDate)"
+                        >
+                        </bk-date-picker>
+                    </div>
+                    <bk-button :theme="'primary'"
+                        :disabled="!writeFalg"
+                        type="submit" :title="'保存'" @click="clickSaveDaily()">
+                        保存
+                    </bk-button>
+                </div>
+                
+                <div class="state-bar" style="justify-content: flex-end;">
+                    <bk-dialog v-model="saveDailyDialog.visiable" theme="primary" class="save-daily-dialog" :show-footer="false">
+                        <bk-form label-width="80">
+                            <bk-form-item style="margin-left:60px;">
+                                请选择保存方式
+                            </bk-form-item>
+                            <bk-form-item>
+                                <bk-button style="margin-right: 20px;" theme="primary" title="保存并发送邮件" @click.stop.prevent="saveAndSend()">保存并发送邮件</bk-button>
+                                <bk-button ext-cls="mr5" @click="saveDaily()" theme="default" title="仅保存">仅保存</bk-button>
+                            </bk-form-item>
+                        </bk-form>
+                    </bk-dialog>
+                    <span class="state-text">
+                        日报状态：{{saveText}}
+                    </span>
+                </div>
 
             </div>
+
+            <div v-show="reportIsLoading" class="test-dom" v-bkloading="{ isLoading: basicLoading, theme: 'primary', zIndex: 10 }">
+            </div>
             <!-- 写日报模块 -->
-            <div class="body_container">
+            <div v-show="!reportIsLoading" class="body-container">
                 <div v-for="(title,index) in curTemplate" :key="index" style="margin:50px 0px;">
                     <div style="font-size: 18px;font-weight: 700;">{{title}}</div>
                     <div class="input-demo">
@@ -70,15 +80,23 @@
             </div>
             
         </div>
-    </div>
+    </contentWapper>
 
 </template>
 
 <script>
+    import contentWapper from '../components/content-wapper.vue'
     export default {
         name: '',
+        components: {
+            contentWapper
+        },
         data () {
             return {
+                pageId: 'addReport',
+                pageMinHeight: 840,
+                reportIsLoading: true,
+                basicLoading: true,
                 templateList: [],
                 curTemplateId: null,
                 curTemplate: [],
@@ -109,9 +127,9 @@
             }
         },
         created () {
-            this.init()
+            const vm = this
+            vm.init()
         },
-        
         methods: {
             // 转化日期格式yyyy-MM-dd
             formateDate (date) {
@@ -126,7 +144,6 @@
             },
             // 切换模板
             selectTemplate () {
-                console.log('切换模板curTemplateId', this.curTemplateId)
                 this.dailyData = []
                 const vm = this
                 vm.templateList.forEach(function (template) {
@@ -134,20 +151,22 @@
                         vm.curTemplate = template.content.split(';')
                     }
                 })
-                console.log('templateList', this.templateList)
-                console.log('template', this.curTemplate)
             },
             // 界面初始化
             init () {
+                const vm = this
+                // 开始loading
+                vm.reportIsLoading = true
+                
                 this.$http.get('/get_all_report_template/').then(res => {
                     if (res.result) {
                         this.templateList = res.data
                         this.clearFlag = 1
-                        console.log('templateList', this.templateList)
                         // 获取用户今日的日报
                         this.getDailyByDate(this.reportDate)
                     } else {
                         // 调用获取日报模板接口失败
+                        vm.reportIsLoading = false
                         const config = {}
                         config.offsetY = 80
                         config.message = res.message
@@ -166,51 +185,56 @@
             },
             // 获取用户指定日期日报，如果没有写日报，则自动渲染第一个模板的内容
             getDailyByDate (date) {
+                const vm = this
                 this.writeFalg = true
                 const config = {}
                 config.offsetY = 80
                 console.log('templates', this.templateList)
-                this.$http.get('/daily_report/?date=' + this.formateDate(date)).then(res => {
-                    if (res.result) {
-                        console.log('daily', res.data)
-                        if (JSON.stringify(res.data) === '{}') {
-                            // 今天的日志还没写
-                            console.log(this.formateDate(date) + '天没写日报')
-                            if (this.templateList.length > 0) {
-                                // 默认选择第一个默认模板
-                                this.curTemplateId = this.templateList[0].id
-                                this.curTemplate = this.templateList[0].content.split(';')
-                                console.log('curTemplateId:', this.curTemplateId)
+                this.$http.get('/daily_report/?date=' + this.formateDate(date))
+                    .then(res => {
+                        if (res.result) {
+                            console.log('vm.reportIsLoading == ', vm.reportIsLoading)
+                            console.log('daily', res.data)
+                            if (JSON.stringify(res.data) === '{}') {
+                                // 今天的日志还没写
+                                if (this.templateList.length > 0) {
+                                    // 默认选择第一个默认模板
+                                    this.curTemplateId = this.templateList[0].id
+                                    this.curTemplate = this.templateList[0].content.split(';')
+                                    console.log('curTemplateId:', this.curTemplateId)
+                                    console.log('curTemplate', this.curTemplate)
+                                    this.dailyData = []
+                                    this.saveText = '未保存'
+                                }
+                            } else {
+                                // 写了日报，给日报注入内容
+                                const templateContent = []
+                                const daily = []
+                                for (const key in res.data.content) {
+                                    templateContent.push(key)
+                                    daily.push(res.data.content[key])
+                                }
+                                this.curTemplateId = res.data.template_id
+                                this.curTemplate = templateContent
+                                this.dailyData = daily
+                                console.log('curTemplateId', this.curTemplateId)
                                 console.log('curTemplate', this.curTemplate)
-                                this.dailyData = []
-                                this.saveText = '未保存'
+                                console.log('dailyData', this.dailyData)
+                                if (res.data.send_describe === '已发送') {
+                                    this.writeFalg = false
+                                }
+                                this.saveText = res.data.send_describe
                             }
                         } else {
-                            // 写了日报，给日报注入内容
-                            const templateContent = []
-                            const daily = []
-                            for (const key in res.data.content) {
-                                templateContent.push(key)
-                                daily.push(res.data.content[key])
-                            }
-                            this.curTemplateId = res.data.template_id
-                            this.curTemplate = templateContent
-                            this.dailyData = daily
-                            console.log('curTemplateId', this.curTemplateId)
-                            console.log('curTemplate', this.curTemplate)
-                            console.log('dailyData', this.dailyData)
-                            if (res.data.send_describe === '已发送') {
-                                this.writeFalg = false
-                            }
-                            this.saveText = res.data.send_describe
+                            // 调用获取当前日报接口失败
+                            vm.reportIsLoading = false
+                            config.message = res.message
+                            config.theme = 'error'
+                            this.$bkMessage(config)
                         }
-                    } else {
-                        // 调用获取当前日报接口失败
-                        config.message = res.message
-                        config.theme = 'error'
-                        this.$bkMessage(config)
-                    }
-                })
+                    }).finally(() => {
+                        vm.reportIsLoading = false
+                    })
             },
             saveAndSend () {
                 this.addDailyFormData.send_email = true
@@ -276,21 +300,63 @@
 </script>
 
 <style scoped>
-    .body {
-        border: 2px solid #EAEBF0 ;
-        width: 1649px;
-        margin:0px 100px;
-        padding: 20px 50px;
-        min-height: 831px;
+    .test-dom {
+        height: 300px;
+        line-height: 300px;
+        /* border: 1px solid #eee; */
+        text-align: center;
     }
-    .container_title {
+    .container-title {
         font-size: 22px;
         font-weight: 700;
     }
-    .body_container {
+    .body-container {
         margin-top:40px;
+    }
+    .top_container{
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .top_container /deep/ .bk-date-picker{
+        width: 50%;
+        position: relative;
+        width: 110px;
+    }
+    .fun-bar{
+        width: 700px;
+        display: flex;
+        justify-content: flex-start;
+        flex-flow: wrap;
+        flex-direction: row;
+    }
+    .fun-item{
+        display: flex;
+        height: 32px;
+        line-height: 32px;
+        margin-right: 20px;
+    }
+    .state-bar{
+        display: flex;
+        height: 32px;
+        line-height: 32px;
+    }
+    .mr15 /deep/ .bk-date-picker-dropdown{
+        top:32px !important;
     }
     .input-demo {
         margin-top:20px ;
+    }
+    .select-template{
+        width: 12%;
+        min-width: 100px;
+        display: inline-block;
+        vertical-align: bottom;
+    }
+    .state-text{
+        margin-top: 8px;
+        font-size: 16px;
     }
 </style>
