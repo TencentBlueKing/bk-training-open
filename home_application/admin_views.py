@@ -72,8 +72,6 @@ def notice_non_report_users(request, group_id):
     """
     提醒未写日报成员写日报
     """
-    # req = json.loads(request.body)
-    # date = req.get("date")
     date = request.GET.get("date")
     # 组内成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)

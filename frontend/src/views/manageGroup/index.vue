@@ -181,20 +181,18 @@
                 curDate: new Date(),
                 formatDate: '',
                 // 选择的组
-                selectGroupId: 2,
+                selectGroupId: 0,
                 hasRemindAll: false
             }
         },
         computed: {
             hasSubmitDaily () {
                 return this.memberDaily.filter((item) => {
-                    // return Object.keys(item.content).length
                     return item.write_status
                 })
             },
             hasNotSubmitMember () {
                 return this.memberDaily.filter((item) => {
-                    // return !Object.keys(item.content).length
                     return !item.write_status
                 })
             }
@@ -206,25 +204,30 @@
         methods: {
             init () {
                 // 发送请求，获取所有用户的信息
-                this.$http.get('/list_admin_group/').then(res => {
-                    this.groupList = res.data
-                    if (this.groupList.length > 0) {
-                        this.selectGroupId = this.groupList[0].id
-                        this.loadApply()
-                        this.getdata(this.selectGroupId, { params: { date: this.formatDate } })
-                    }
-                })
+                this.$http.get(
+                    '/list_admin_group/')
+                    .then(res => {
+                        this.groupList = res.data
+                        if (this.groupList.length > 0) {
+                            this.selectGroupId = this.groupList[0].id
+                            this.loadApply()
+                        }
+                    })
             },
             loadApply () {
                 //  获取申请该组的列表
-                this.$http.get('/get_apply_for_group_users/' + this.selectGroupId + '/').then(res => {
-                    this.newApplyData = res.data
-                })
+                this.$http.get(
+                    '/get_apply_for_group_users/' + this.selectGroupId + '/')
+                    .then(res => {
+                        this.newApplyData = res.data
+                    })
             },
             // 提醒用户写日报
             remindAll () {
                 // 发出一键提醒
-                this.$http.get('/notice_non_report_users/' + this.selectGroupId + '/', { params: { date: this.formatDate } })
+                this.$http.get(
+                    '/notice_non_report_users/' + this.selectGroupId + '/',
+                    { params: { date: this.formatDate } })
                 this.hasRemindAll = true
                 this.hasNotSubmitDialog.visible = false
                 const alertDialog = this.$bkInfo({
@@ -250,16 +253,17 @@
                         showFooter: false
                     })
                     // 发送请求，将我的点评提交给后台
-                    this.$http.post('/evaluate_daily/', { daily_id: this.dialogMember.id, evaluate: this.myComment }).then(res => {
-                        if (res.message) {
-                            setTimeout(() => {
-                                alertDialog.close()
-                            }, 500)
-                            this.dailyDetailDialog.visible = false
-                        } else {
-                            return false
-                        }
-                    })
+                    this.$http.post(
+                        '/evaluate_daily/',
+                        { daily_id: this.dialogMember.id, evaluate: this.myComment })
+                        .then(res => {
+                            if (res.message) {
+                                setTimeout(() => {
+                                    alertDialog.close()
+                                }, 500)
+                                this.dailyDetailDialog.visible = false
+                            }
+                        })
                     setTimeout(() => {
                         alertDialog.close()
                     }, 500)
@@ -267,38 +271,42 @@
                 this.myComment = ''
                 this.dailyDetailDialog.visible = false
             },
-            // 封装getdata请求
-            getdata (id, params) {
-                this.$http.get('/list_member_daily/' + id + '/', params).then(res => {
-                    this.memberDaily = res.data
-                })
+            // 封装getDaily请求
+            getDaily (id, params) {
+                this.$http.get(
+                    '/list_member_daily/' + id + '/',
+                    params)
+                    .then(res => {
+                        this.memberDaily = res.data
+                    })
             },
             // 改变日历的日期
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
-                this.getdata(this.selectGroupId, { params: { date: this.formatDate } })
+                this.getDaily(this.selectGroupId, { params: { date: this.formatDate } })
             },
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
                 // 发送请求，获取选定组的信息
-                this.getdata(this.selectGroupId, { params: { date: this.formatDate } })
+                this.getDaily(this.selectGroupId, { params: { date: this.formatDate } })
                 // 获取申请该组的列表
-                this.$http.get('/get_apply_for_group_users/', { params: { group_id: this.selectGroupId } }).then(res => {
-                    this.newApplyData = res.data
-                })
+                this.loadApply()
             },
             // 处理新的入组申请
             dealNewApply (row, status) {
-                this.$http.post('/deal_join_group/' + this.selectGroupId + '/', { user_id: row.user_id, status: status }).then(res => {
-                    if (res.message) {
-                        for (const i in this.newApplyData) {
-                            if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
-                                this.newApplyData.splice(i, 1)
+                this.$http.post(
+                    '/deal_join_group/' + this.selectGroupId + '/',
+                    { user_id: row.user_id, status: status })
+                    .then(res => {
+                        if (res.message) {
+                            for (const i in this.newApplyData) {
+                                if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
+                                    this.newApplyData.splice(i, 1)
+                                }
                             }
                         }
-                    }
-                })
+                    })
             }
         }
     }
