@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from django.http import JsonResponse
@@ -28,8 +29,8 @@ def list_member_daily(request, group_id):
     """
     获取成员的日报信息
     """
-    req = json.loads(request.body)
-    date = req.get("date")
+    today = datetime.datetime.now().date()
+    date = request.GET.get("date", today)
     # 组内成员
     group_members = GroupUser.objects.filter(group_id=group_id)
     users = User.objects.filter(id__in=group_members.values_list("user_id", flat=True))
@@ -42,7 +43,7 @@ def list_member_daily(request, group_id):
             daily = dailies.get(create_by=user.username).to_json()
             daily["write_status"] = True
         except Daily.DoesNotExist:
-            daily = Daily(date=date, create_by=user.username, create_name=user.name, content="").to_json()
+            daily = Daily(date=date, create_by=user.username, create_name=user.name, content="{}").to_json()
             daily["write_status"] = False
         data.append(daily)
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})

@@ -119,7 +119,7 @@ class Daily(TimeBasic):
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     date = models.DateField(verbose_name="日报日期")
-    send_status = models.BooleanField(verbose_name="发送状态")
+    send_status = models.BooleanField(verbose_name="发送状态", default=False)
     template_id = models.IntegerField(verbose_name="模板id")
     evaluate = JSONField(verbose_name="评价", default=daily_evaluate_default)
 
@@ -139,4 +139,5 @@ class Daily(TimeBasic):
             "create_name": self.create_name,
             "send_describe": send_describe,
             "template_id": self.template_id,
+            "evaluate": self.evaluate,
         }
