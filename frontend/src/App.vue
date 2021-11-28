@@ -402,8 +402,6 @@ html {
   color: #d3d9e4;
 }
 .monitor-navigation-content {
-  height: calc(100% - 84px);
-  /* overflow-y: auto; */
   background: #ffffff;
   -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);

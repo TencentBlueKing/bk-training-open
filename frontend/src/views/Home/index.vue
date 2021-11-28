@@ -106,9 +106,9 @@
                                     <bk-table-column label="人员信息" prop="info" min-width="150" show-overflow-tooltip="true"></bk-table-column>
                                     <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
                                     <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true"></bk-table-column>
-                                    <bk-table-column label="操作" width="80">
+                                    <bk-table-column label="操作">
                                         <template slot-scope="props">
-                                            <bk-button class="mr10" theme="primary" text :disabled="currentUserName !== props.row.usernmae" @click="cancelLeave(props.row)">取消</bk-button>
+                                            <bk-button class="mr10" theme="primary" text :disabled="currentUserName !== props.row.username" @click="cancelLeave(props.row)">取消</bk-button>
                                         </template>
                                     </bk-table-column>
                                 </bk-table>
@@ -387,12 +387,12 @@
                 const vm = this
                 // 获取当前用户组信息
                 vm.$http.get('/get_user_groups/').then((res) => {
-                    console.log('init_group, groupsData:', res.data)
                     vm.groupList = res.data
                     if (vm.groupList.length !== 0) {
                         vm.selectedGroup = vm.groupList[0].id
                     }
                 })
+                vm.currentUserName = sessionStorage.getItem('username')
             },
             getDailyReport () {
                 this.$http.get(
@@ -505,14 +505,14 @@
                     + '/?date=' + todayDate
                     + '&sign=' + sign
                 ).then(res => {
-                    if (res.data.off_day_list !== undefined) {
-                        res.data.off_day_list.map((item, index) => {
+                    if (res.data !== undefined && res.data.length !== 0) {
+                        res.data.map((item, index) => {
                             this.leaveTableData.data.push({
-                                'offdayId': item.id,
-                                'leaveDate': item.start_date + '  ~  ' + item.end_date,
-                                'reason': item.reason,
-                                'info': item.user + '(' + item.name + ')',
-                                'usernmae': item.user
+                                'offdayId': item.off_info.id,
+                                'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                'reason': item.off_info.reason,
+                                'info': item.username + '(' + item.name + ')',
+                                'username': item.username
                             })
                         })
                     }
@@ -540,7 +540,6 @@
             // 清空请假日期
             clearDate () {
                 this.leaveFormData.dateTimeRange = -1
-                console.log('this.leaveFormData.dateTimeRange == ', this.leaveFormData.dateTimeRange)
             },
             // 请假确认事件
             submitLeave () {
@@ -636,8 +635,13 @@
     .leave-slide .leave-manage .leave-load {
         height: 300px;
         line-height: 300px;
-        /* border: 1px solid #eee; */
         text-align: center;
+    }
+    .leave-slide .leave-manage /deep/ .bk-table .bk-table-header-wrapper .bk-table-header{
+        width: 100% !important;
+    }
+    .leave-slide .leave-manage /deep/ .bk-table .bk-table-body-wrapper .bk-table-body{
+        width: 100% !important;
     }
     .leave-slide .leave-manage .select-bar{
         display: flex;
