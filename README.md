@@ -12,7 +12,8 @@
   - [4. 定时任务](#4-定时任务)
 - [三、开发须知](#三开发须知)
   - [1. 开发模式----基于PR的开发模式](#1-开发模式----基于pr的开发模式)
-  - [2. 开发规范](#2-开发规范)
+  - [2. 开发流程](#2-开发流程)
+  - [3. 开发规范](#3-开发规范)
 - [四、学习资料](#四学习资料)
 
 <!-- /TOC -->
@@ -54,37 +55,54 @@ git pull blueking-train
    CREATE DATABASE `bk-training-open` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
    ```
 
-3. 配置环境变量
+3. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
 
-```
-# 项目 APP_CODE & APP_SECRET
-BKAPP_APP_CODE=xxxxxxxxxxxxx
-BKAPP_APP_SECRET=xxxxxxxxxxxxx
-
-# 自己的用户名
-BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
-```
-
-![](static/images/image-202111229321321908.png)
-
-4. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
-
-```
-from config import APP_CODE
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": APP_CODE,
-        "USER": "", #数据库用户名
-        "PASSWORD": "", #数据库密码
-        "HOST": "localhost",
-        "PORT": "3306",
-    },
-}
-```
+   ```python
+   from config import APP_CODE
+   
+   DATABASES = {
+       "default": {
+           "ENGINE": "django.db.backends.mysql",
+           "NAME": APP_CODE,
+           "USER": "", #数据库用户名
+           "PASSWORD": "", #数据库密码
+           "HOST": "localhost",
+           "PORT": "3306",
+       },
+   }
+   ```
 
    PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
+
+4. 配置环境变量
+
+   ```
+   # 项目 APP_CODE & APP_SECRET (找项目负责人获取)
+   BKAPP_APP_CODE=xxxxxxxxxxxxx
+   BKAPP_APP_SECRET=xxxxxxxxxxxxx
+   
+   # 自己的用户名（蓝鲸开发者账号）
+   BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
+   ```
+
+   + 在PyCharm中配置环境变量以及主机名
+
+   ![PyCharm配置环境变量](static/images/image-202111229321321908.png)
+
+   + 配置Terminal和Python Console的环境变量
+
+     只配置Django Server的环境变量的话，无法直接在Terminal中执行migrate命令，需要在执行前手动设置相关的环境变量
+
+     ```shell
+     CMD:
+     set BKAPP_APP_CODE=xxxx
+     
+     PowerShell:
+     $env:BKAPP_APP_CODE="xxx"
+     
+     macOS:
+     export BKAPP_APP_CODE=xxxx
+     ```
 
 5. 运行
 
@@ -178,7 +196,42 @@ DATABASES = {
 
    6. 没有通过，开发者则根据review的修改意见修改完善代码
 
-## 2. 开发规范
+## 2. 开发流程
+
+![](static/images/tapd20211127140124.png)
+
+```mermaid
+    graph TB
+        classDef style1 fill:none, stroke:#5aa7ff, stroke-width:2px
+        
+        B1((后端需求))
+        B2((前端需求))
+        C1_1{{涉及 Model 新增/改动?}}
+        D1_1[("设计 Model 并审核<br/>(提交到issue审核)")]
+        E1[["设计 API 接口并审核<br/>(提交到issue审核)"]]
+        F([代码实现])
+        C2[["设计页面并审核<br/>(提交到issue审核)"]]
+        G1{{流水线自动检查}}
+        G2{{"Code Review"}}
+        H((合并代码))
+
+        B1 --> C1_1
+        C1_1 -->|是| D1_1
+        D1_1 --> E1
+        C1_1 -->|否| E1
+        B2 ----> C2
+
+        E1 --> F
+        C2 --> F
+
+        F --> G1
+        G1 --> G2
+        G2 --> H
+
+        class A,B1,B2,C1_1,D1_1,E1,F,C2,F,G1,G2,H style1
+```
+
+## 3. 开发规范
 
 - 前端规范------[文档中心 | 蓝鲸 (tencent.com)](https://bk.tencent.com/docs/document/6.0/130/5882)
 

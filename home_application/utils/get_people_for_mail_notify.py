@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # @Time     : 2020-07-06 10:24:59
 # @Remarks  :
-import ast
 import datetime
 
 from home_application.models import Daily, Group, GroupUser, User
@@ -18,91 +17,29 @@ def get_people_not_reported():
     return list(User.objects.exclude(username__in=people_reported).values_list("username", flat=True))
 
 
-def get_yesterday_reports():
+def get_report_info_by_group_and_date(group_id: int, report_date=None):
     """
-    获取昨天的日报内容
+    获取指定日期指定组的日报信息
+    :param report_date: 日期，格式为2021-11-26，默认为昨天
+    :param group_id: 组id
     """
-    res = []
-
-    # 查询所有组
-    groups = Group.objects.all()
-    groups_id = groups.values_list("id", flat=True)
-    # 获取组相关的所有用户
-    group_user = GroupUser.objects.filter(group_id__in=groups_id)
-    # 获取这些用户的信息
-    users = User.objects.filter(id__in=group_user.values_list("user_id", flat=True))
-    # 获取日报信息
-    yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
-    yesterday_reports = Daily.objects.filter(date=yesterday)
-    # 按组获取各组日报内容
-    for g in groups:
-        # 存放组内用户的日报
-        report_info = []
-        # 组内成员信息
-        group_members_id = group_user.filter(group_id=g.id).values_list("user_id", flat=True)
-        group_members = users.filter(id__in=group_members_id)
-        group_members_username = group_members.values_list("username", flat=True)
-
-        # 循环获取组内日报信息
-        group_reports = yesterday_reports.filter(create_by__in=group_members_username)
-        # 存放日报id，用于在发送邮件后修改日报状态为已发送
-        group_reports_id = list(group_reports.values_list("id", flat=True))
-        for report in group_reports:
-            report_user = group_members.get(username=report.create_by).name
-            # 显示方式为 username(name)
-            # 如果用户没有补充自己的name，则只显示username
-            if report_user:
-                report_user = "{}({})".format(report.create_by, report_user)
-            else:
-                report_user = report.create_by
-
-            report_info.append({"report_user": report_user, "report_content": ast.literal_eval(report.content)})
-        # for循环结束
-
-        res.append(
-            {
-                "group_name": g.name,
-                "group_username": ",".join(list(group_members_username)),
-                "group_reports": report_info,
-                "group_reports_id": group_reports_id,
-            }
-        )
-    return res
-
-
-def get_yesterday_not_report_user():
-    """
-    获取昨天没写日报的成员，然后告知管理员
-    """
-    # 查询所有组
-    res = []
-    groups = Group.objects.all()
-    groups_id = groups.values_list("id", flat=True)
-    # 获取组相关的所有用户
-    group_user = GroupUser.objects.filter(group_id__in=groups_id)
-    # 获取这些用户的信息
-    users = User.objects.filter(id__in=group_user.values_list("user_id", flat=True))
-    # 获取写了日报的用户
-    yesterday = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
-    user_reported = Daily.objects.filter(date=yesterday).values_list("create_by")
-    user_not_reported = users.exclude(username__in=user_reported)
-    for g in groups:
-        gid = g.id
-        # 筛选组下没写日报的用户
-        g_user = user_not_reported.filter(id__in=group_user.filter(group_id=gid).values_list("user_id", flat=True))
-        if g_user.count() != 0:
-            # 将所有没写日报的用户名字放到一个list里边
-            username_not_reported = []
-            for u in g_user:
-                if u.name:
-                    username_not_reported.append("{}({})".format(u.username, u.name))
-                else:
-                    username_not_reported.append(u.username)
-            res.append(
-                {
-                    "admins": g.admin.strip("[").rstrip("]").replace("'", "").replace(" ", ""),
-                    "group_name": g.name,
-                    "user_not_reported": username_not_reported,
-                }
-            )
-    return res
+    if report_date is None:
+        report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
+    # 组
+    group = Group.objects.get(id=group_id)
+    # 组内用户
+    group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    group_users = User.objects.filter(id__in=group_user_ids)
+    # 日报信息
+    reports = Daily.objects.filter(date=report_date)
+    report_users = group_users.filter(username__in=reports.values_list("create_by", flat=True))
+    none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True))
+    # 返回数据
+    return {
+        "id": group.id,  # 组id
+        "name": group.name,  # 组名
+        "admin": group.admin_list,  # 组管理员数组
+        "report_users": report_users,  # 已完成日报成员 [User(0), User(1), ···]
+        "none_report_users": none_report_users,  # 未完成日报成员 [User(0), User(1), ···]
+        "reports": reports,  # 日报 [Daily(0), Daily(1), ···]
+    }
