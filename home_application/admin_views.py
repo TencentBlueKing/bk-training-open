@@ -49,13 +49,14 @@ def list_member_daily(request, group_id):
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 def evaluate_daily(request):
     """
     评价组员日报
     """
-    daily_id = request.POST.get("daily_id")
-    evaluate_content = request.POST.get("evaluate")
+    req = json.loads(request.body)
+    daily_id = req.get("daily_id")
+    evaluate_content = req.get("evaluate")
     try:
         evaluate = Daily.objects.get(id=daily_id).evaluate
     except Daily.DoesNotExist:
@@ -71,8 +72,9 @@ def notice_non_report_users(request, group_id):
     """
     提醒未写日报成员写日报
     """
-    req = json.loads(request.body)
-    date = req.get("date")
+    # req = json.loads(request.body)
+    # date = req.get("date")
+    date = request.GET.get("date")
     # 组内成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids).values_list("username", flat=True)

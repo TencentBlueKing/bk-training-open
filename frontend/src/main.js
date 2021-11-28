@@ -61,3 +61,5 @@ auth.requestCurrentUser().then(user => {
 
     document.write(content)
 })
+
+Vue.config.devtools = true
