@@ -86,9 +86,28 @@
                             <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
                         </bk-form-item>
                     </bk-form>
-                    
                 </bk-dialog>
-
+                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="showApplyForGroup()">
+                    申请入组
+                </bk-button>
+                <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
+                    <bk-form label-width="80">
+                        <bk-form-item label="组" required="true">
+                            <bk-select v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
+                                searchable>
+                                <bk-option v-for="group in availableApplyGroups"
+                                    :key="group.id"
+                                    :id="group.id"
+                                    :name="group.name">
+                                </bk-option>
+                            </bk-select>
+                        </bk-form-item>
+                        <bk-form-item>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyForGroup.groupId === ''" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
+                            <bk-button ext-cls="mr5" @click="applyForGroup.dialogVisible = false" theme="default" title="取消">取消</bk-button>
+                        </bk-form-item>
+                    </bk-form>
+                </bk-dialog>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：<span v-if="curGroupId !== null ">{{curGroup.create_by}}({{curGroup.create_name}})</span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
@@ -262,6 +281,12 @@
                 deleteGroupDialog: {
                     visible: false
                 },
+                availableApplyGroups: [],
+                availableGroupsIsLoding: true,
+                applyForGroup: {
+                    dialogVisible: false,
+                    groupId: ''
+                },
                 addDailyTemplateDialog: {
                     visible: false
                 },
@@ -333,6 +358,20 @@
                     console.log('get_group_users:', res.data)
                 })
             },
+            // 获取所有组信息
+            getAvailableApplyGroups () {
+                this.availableGroupsIsLoding = true
+                this.$http.get(
+                    '/get_available_apply_groups/'
+                ).then(res => {
+                    this.availableApplyGroups = res.data
+                    if (this.availableApplyGroups.length > 0) {
+                        this.applyForGroup.groupId = this.availableApplyGroups[0].id
+                    }
+                }).finally(() => {
+                    this.availableGroupsIsLoding = false
+                })
+            },
             // 获取组模板
             getGroupTemplates (groupId) {
                 this.$http.get('/report_template/' + groupId + '/').then(res => {
@@ -389,6 +428,11 @@
                 })
                 this.editGroupData.adminIds = adminIds
                 console.log('curGroupAdminIds', this.editGroupData.adminIds)
+            },
+            showApplyForGroup () {
+                this.applyForGroup.dialogVisible = true
+                // 获取用户（未在、未申请）组
+                this.getAvailableApplyGroups()
             },
             clickEditDailyTemplate (row) {
                 // console.log('当前日报模板信息', row)
@@ -541,6 +585,33 @@
                         config.theme = 'error'
                         this.$bkMessage(config)
                     }
+                })
+            },
+            doApplyforGroup () {
+                const config = {
+                    offsetY: 80
+                }
+                this.$http.post(
+                    '/apply_for_group/',
+                    {
+                        group_id: this.applyForGroup.groupId
+                    }
+                ).then(res => {
+                    config.message = res.message
+                    if (res.result) {
+                        // 申请成功，重新获取（未申请、未在）的组列表
+                        config.theme = 'success'
+                        for (const i in this.availableApplyGroups) {
+                            if (this.availableApplyGroups[i].id === this.applyForGroup.groupId) {
+                                this.availableApplyGroups.splice(i, 1)
+                                break
+                            }
+                        }
+                        this.applyForGroup.dialogVisible = false
+                    } else {
+                        config.theme = 'error'
+                    }
+                    this.$bkMessage(config)
                 })
             },
             // 新增日报模板
