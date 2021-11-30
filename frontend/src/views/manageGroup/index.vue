@@ -411,8 +411,9 @@
             },
             // 一键分享给所有组员
             shareAll () {
-                this.$http.get(
-                    '/send_evaluate_all/' + this.selectGroupId + '/?daily_id=' + this.shareAllIdList
+                this.$http.post(
+                    '/send_evaluate_all/' + this.selectGroupId + '/',
+                    { daily_id: this.shareAllIdList }
                 ).then(res => {
                     if (res.result) {
                         this.shareAllDialog.visible = false
