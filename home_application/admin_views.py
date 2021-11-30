@@ -78,8 +78,7 @@ def notice_non_report_users(request, group_id):
     report_user_usernames = Daily.objects.filter(create_by__in=group_users, date=date).values_list(
         "create_by", flat=True
     )
-    non_report_users = set(group_users) ^ set(report_user_usernames)
-
+    non_report_users = set(group_users) - set(report_user_usernames)
     username_str = ",".join([user for user in non_report_users])
     # 发送邮件
     if non_report_users:
