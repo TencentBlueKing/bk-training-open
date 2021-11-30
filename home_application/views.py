@@ -38,8 +38,7 @@ from home_application.models import (
 )
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import check_param, get_paginator
-from home_application.utils.tools import apply_info_to_json, check_param
+from home_application.utils.tools import apply_info_to_json, check_param, get_paginator
 
 
 def home(request):
@@ -593,8 +592,6 @@ def daily_report(request):
 def report_filter(request, group_id):
     # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
     member_id = request.GET.get("member_id")
-    if member_id == "null":
-        member_id = None
     page = request.GET.get("page")
     # 每一页显示日报数量
     page_size = request.GET.get("size", 8)

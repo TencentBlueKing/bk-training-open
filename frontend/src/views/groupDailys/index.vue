@@ -22,15 +22,15 @@
                 <div style="margin-top:18px;height:707px;">
                     <div v-if="isUser" class="users_list">
                         <div>
-                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="changeDateOrUser(user.id, null)" class="mr10">
+                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="changeDateOrUser(user.id, '')" class="mr10">
                                 {{user.name}}
                             </bk-button>
                         </div>
                     </div>
                     <div class="date_picker" style="margin-left:0px;" v-else>
-                        <bk-date-picker class="mr15" @change="changeDateOrUser(null, curDate)" style="position:relative;" v-model="curDate"
+                        <bk-date-picker class="mr15" @change="changeDateOrUser('', curDate)" style="position:relative;" v-model="curDate" format="yyyy-MM-dd"
                             :placeholder="'选择日期'"
-                            open="true"
+                            :open="true"
                             :ext-popover-cls="'custom-popover-cls'"
                             :options="customOption">
                         </bk-date-picker>
@@ -76,6 +76,7 @@
 
 <script>
     import { bkPagination } from 'bk-magic-vue'
+    import moment from 'moment'
 
     export default {
         components: {
@@ -108,9 +109,8 @@
                 },
                 // 控制显示日期还是显示成员
                 isUser: false,
-                rightIsUser: false,
                 // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
-                curDate: new Date(),
+                curDate: moment(new Date()).format('YYYY-MM-DD'),
                 // 日报数据
                 dailysData: {
                     dailys: []
@@ -124,16 +124,15 @@
             this.init()
         },
         methods: {
-            
             // 每页日报数量
             changeLimit (pageSize) {
                 this.defaultPaging.limit = pageSize
-                this.getDailys(this.curUserId, this.curDate)
+                this.getDailys()
             },
             // 切换页面
             changePage (page) {
                 this.defaultPaging.current = page
-                this.getDailys(this.curUserId, this.curDate)
+                this.getDailys()
             },
             // 点击切换显示类型的按钮
             changeType () {
@@ -153,29 +152,27 @@
             },
             // 修改日期或成员
             changeDateOrUser (userId, date) {
-                this.curDate = date
+                this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
                 this.curUserId = userId
-                this.rightIsUser = userId !== null
-                this.getDailys(this.curUserId, this.curDate)
+                this.getDailys()
             },
             // 获取当前组日报
-            getDailys (userId, date) {
+            getDailys () {
                 if (this.curGroupId === null || this.curGroupId === '') {
                     console.log('curGroupId为空')
                 } else {
-                    console.log('curDate：', date)
-                    const paramDate = date === null ? null : date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                    console.log('paramDate', date)
-                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate + '&member_id=' + userId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
+                    console.log('curDate：', this.curDate)
+                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
                         if (res.result) {
                             console.log('groupDailys', res.data)
                             this.defaultPaging.count = res.data.total_report_num
                             this.dailysData.dailys = res.data.reports
                         } else {
-                            const config = {}
-                            config.message = res.message
-                            config.offsetY = 80
-                            config.theme = 'error'
+                            const config = {
+                                message: res.message,
+                                offsetY: 80,
+                                theme: 'error'
+                            }
                             this.$bkMessage(config)
                         }
                     })
@@ -199,8 +196,7 @@
                         // 获取组内成员
                         this.getGroupUsers(this.curGroupId)
                         // 初始化组内所有日报（根据日期选择）
-                        console.log('my date: ' + this.curDate)
-                        this.changeDateOrUser(null, this.curDate)
+                        this.changeDateOrUser('', this.curDate)
                     }
                 })
             },
@@ -219,7 +215,6 @@
                     this.groupUsers = []
                     this.curUserId = null
                     this.dailysData.dailys = []
-                    this.rightIsUser = false
                 } else {
                     const vm = this
                     // 更改当前组信息
@@ -234,7 +229,7 @@
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
                     this.curDate = new Date()
-                    this.changeDateOrUser(null, this.curDate)
+                    this.changeDateOrUser('', this.curDate)
                 }
             }
         }
