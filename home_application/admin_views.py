@@ -69,8 +69,7 @@ def evaluate_daily(request):
 @require_http_methods(["GET"])
 @is_group_member(admin_needed=["GET"])
 def notice_non_report_users(request, group_id):
-    req = request.GET
-    date = req.get("date")
+    date = request.GET.get("date")
     # 组内成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids).values_list("username", flat=True)
@@ -85,6 +84,5 @@ def notice_non_report_users(request, group_id):
         # 放进celery里
         send_unfinished_dairy.delay(username_str, date)
         return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功", "data": []})
-
     else:
         return JsonResponse({"result": True, "code": 0, "message": "无未写日报成员", "data": []})
