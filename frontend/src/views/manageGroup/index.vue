@@ -117,14 +117,18 @@
                     :width="shareAllDialog.width"
                     :position="{ top: 20, left: 100 }">
                     <div>
-                        <bk-button
-                            v-for="(daily,index) in shareAllList"
-                            :key="index"
-                            style="width:130px;" class="mr10"
-                            hover-theme="danger"
-                            @click="removeFromShareList(index)">
-                            {{daily.create_name}}
-                        </bk-button>
+                        <template v-for="(daily,index) in shareAllList">
+                            <a :key="index" @click="removeFromShareList(index)" style="cursor:pointer">
+                                <bk-badge :theme="'danger'" :val="'X'" :key="index" class="mr15">
+                                    <bk-button
+                                        :key="index"
+                                        style="width:130px;"
+                                        hover-theme="danger">
+                                        {{daily.create_name}}
+                                    </bk-button>
+                                </bk-badge>
+                            </a>
+                        </template>
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
@@ -332,6 +336,7 @@
                 selectGroupId: 0,
                 hasRemindAll: false,
                 shareAllList: [],
+                shareAllIdList: [],
                 hasShareAll: false,
                 currentUserName: this.$store.state.user.username
             }
@@ -406,12 +411,8 @@
             },
             // 一键分享给所有组员
             shareAll () {
-                const dailyId = []
-                for (const daily of this.shareAllList) {
-                    dailyId.push(daily.id)
-                }
                 this.$http.get(
-                    '/send_evaluate_all/' + this.selectGroupId + '/?daily_id=' + dailyId
+                    '/send_evaluate_all/' + this.selectGroupId + '/?daily_id=' + this.shareAllIdList
                 ).then(res => {
                     if (res.result) {
                         this.shareAllDialog.visible = false
@@ -431,11 +432,19 @@
             },
             // 添加到待分享列表
             dealShareAll () {
-                this.shareAllList.push(this.dialogMember)
-                this.$bkMessage({
-                    theme: 'success',
-                    message: '加入成功'
-                })
+                if (this.shareAllIdList.indexOf(this.dialogMember.id) === -1) {
+                    this.shareAllList.push(this.dialogMember)
+                    this.shareAllIdList.push(this.dialogMember.id)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: '加入成功'
+                    })
+                } else {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '重复加入'
+                    })
+                }
             },
             // 从待分享列表中移除
             removeFromShareList (index) {
