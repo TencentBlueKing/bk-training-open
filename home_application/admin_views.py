@@ -78,7 +78,7 @@ def notice_non_report_users(request, group_id):
         "create_by", flat=True
     )
     non_report_users = set(group_users) - set(report_user_usernames)
-    username_str = ",".join([user for user in non_report_users])
+    username_str = ",".join(non_report_users)
     # 发送邮件
     if non_report_users:
         # 放进celery里
