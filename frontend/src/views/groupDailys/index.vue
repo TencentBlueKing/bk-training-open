@@ -87,7 +87,7 @@
                     current: 1,
                     limit: 8,
                     count: 0,
-                    limitList: [8, 16, 32]
+                    limitList: [8, 16, 32, 64]
                 },
                 groupsData: [],
                 curGroupId: null,

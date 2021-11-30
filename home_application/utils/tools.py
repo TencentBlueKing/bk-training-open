@@ -16,7 +16,8 @@ def get_paginator(objects, page, size):
         return p.page(page)
     except Exception:
         return p.page(1)
-      
+
+
 def apply_info_to_json(apply_info):
     """将申请入组信息进行json转化"""
     return {
