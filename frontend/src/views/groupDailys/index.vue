@@ -36,8 +36,19 @@
                         </bk-date-picker>
                     </div>
                 </div>
+
+                <!-- 清除浮动，撑开盒子 -->
+                <div style="clear:both;"></div>
             </div>
             <div class="right_container">
+                <bk-pagination style="margin-bottom: 10px;"
+                    @change="changePage"
+                    @limit-change="changeLimit"
+                    :current.sync="defaultPaging.current"
+                    :count.sync="defaultPaging.count"
+                    :limit="defaultPaging.limit"
+                    :limit-list="defaultPaging.limitList">
+                </bk-pagination>
                 <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
                     没有日报内容哟~
                 </div>
@@ -55,15 +66,6 @@
 
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
-
-                <bk-pagination
-                    @change="changePage"
-                    @limit-change="changeLimit"
-                    :current.sync="defaultPaging.current"
-                    :count.sync="defaultPaging.count"
-                    :limit="defaultPaging.limit"
-                    :limit-list="defaultPaging.limitList">
-                </bk-pagination>
             </div>
 
             <!-- 清除浮动，撑开盒子 -->
@@ -177,6 +179,33 @@
                     }
                 })
             },
+            // 根据日期获取当前组日报
+            changeDate (date) {
+                this.curUserId = null
+                this.rightIsUser = false
+                if (this.curGroupId === null || this.curGroupId === '') {
+                    console.log('curGroupId为空')
+                } else {
+                    console.log('curDate：', date)
+                    console.log('month', date.getMonth())
+                    const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
+                    console.log('paramDate', paramDate)
+                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate + '&page=' + this.defaultPaging.current).then(res => {
+                        // this.rightIsUser = false
+                        if (res.result) {
+                            console.log('groupDailys', res.data)
+                            this.defaultPaging.count = res.data.length
+                            this.dailysData.dailys = res.data
+                        } else {
+                            const config = {}
+                            config.message = res.message
+                            config.offsetY = 80
+                            config.theme = 'error'
+                            this.$bkMessage(config)
+                        }
+                    })
+                }
+            },
             clickUser (userId) {
                 this.curDate = ''
                 this.curUserId = userId
@@ -236,33 +265,6 @@
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
                     this.curDate = new Date()
                     this.changeDate(this.curDate)
-                }
-            },
-            // 根据日期获取当前组日报
-            changeDate (date) {
-                this.curUserId = null
-                this.rightIsUser = false
-                if (this.curGroupId === null || this.curGroupId === '') {
-                    console.log('curGroupId为空')
-                } else {
-                    console.log('curDate：', date)
-                    console.log('month', date.getMonth())
-                    const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                    console.log('paramDate', paramDate)
-                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate + '&page=' + this.defaultPaging.current).then(res => {
-                        // this.rightIsUser = false
-                        if (res.result) {
-                            console.log('groupDailys', res.data)
-                            this.defaultPaging.count = res.data.length
-                            this.dailysData.dailys = res.data
-                        } else {
-                            const config = {}
-                            config.message = res.message
-                            config.offsetY = 80
-                            config.theme = 'error'
-                            this.$bkMessage(config)
-                        }
-                    })
                 }
             }
         }
