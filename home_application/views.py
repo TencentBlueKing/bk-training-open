@@ -502,7 +502,11 @@ def report_filter(request, group_id):
     member_in_group = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     member_in_group = User.objects.filter(id__in=member_in_group).values_list("username", flat=True)
     # 查询所有人的日报
-    member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group)
+    member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group).order_by("-date")
+    total_report_num = member_report.count()
+
     # 分页
     member_report = get_paginator(member_report, page, page_size)
-    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": content_format_as_json(member_report)})
+    # 查询完毕返回数据
+    res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
+    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": res_data})
