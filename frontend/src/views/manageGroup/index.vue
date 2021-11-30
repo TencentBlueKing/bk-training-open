@@ -5,12 +5,43 @@
         </bk-divider>
         <div class="container">
             <div class="top_container">
-                <div style="margin-left:0.5%">
-                    <bk-badge class="mr15" :theme="'danger'" :max="99" :val="newApplyData.length">
-                        <bk-button :theme="'primary'" class="mr10" @click="newApplyDialog.visible = true">查看新的申请入组</bk-button>
+                <div style="width: 24%;max-width:261px">
+                    <bk-select
+                        :disabled="false"
+                        v-model="selectGroupId"
+                        style="width: 100%;display: inline-block;"
+                        @change="changeGroup(selectGroupId)"
+                        placeholder="选择组"
+                        searchable>
+                        <bk-option
+                            v-for="item in groupList"
+                            :key="item.id"
+                            :id="item.id"
+                            :name="item.name">
+                        </bk-option>
+                    </bk-select>
+                </div>
+                <div class="date_picker" style="width: 24%;max-width:261px">
+                    <bk-date-picker
+                        style="position:relative;width: 100%;"
+                        v-model="curDate"
+                        placeholder="选择日期"
+                        @change="changeDate(curDate)"
+                        :options="customOption">
+                    </bk-date-picker>
+                </div>
+                <div style="margin-left: 2%">
+                    <bk-badge :theme="'danger'" :max="99" :val="newApplyData.length">
+                        <bk-button
+                            :theme="'primary'"
+                            @click="newApplyDialog.visible = true">
+                            新的申请入组
+                        </bk-button>
                     </bk-badge>
                 </div>
-                <bk-dialog v-model="newApplyDialog.visible" title="新人入组请求"
+                <bk-dialog
+                    v-model="newApplyDialog.visible"
+                    title="新人入组请求"
                     :header-position="newApplyDialog.headerPosition"
                     :width="newApplyDialog.width"
                     :position="{ top: 20, left: 100 }">
@@ -22,46 +53,42 @@
                         <bk-table-column prop="name" label="姓名"></bk-table-column>
                         <bk-table-column label="操作" width="150">
                             <template slot-scope="props">
-                                <bk-button class="mr10" theme="primary" text @click="dealNewApply(props.row,1)">同意</bk-button>
-                                <bk-button class="mr10" theme="primary" text @click="dealNewApply(props.row,2)">拒绝</bk-button>
+                                <bk-button
+                                    class="mr10"
+                                    theme="primary"
+                                    text
+                                    @click="dealNewApply(props.row,1)">
+                                    同意
+                                </bk-button>
+                                <bk-button
+                                    class="mr10"
+                                    theme="primary"
+                                    text
+                                    @click="dealNewApply(props.row,2)">
+                                    拒绝
+                                </bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
                 </bk-dialog>
                 <div>
-                    <bk-select :disabled="false" v-model="selectGroupId" style="width: 261px;display: inline-block;"
-                        @change="changeGroup(selectGroupId)"
-                        placeholder="选择组"
-                        searchable>
-                        <bk-option v-for="item in groupList"
-                            :key="item.id"
-                            :id="item.id"
-                            :name="item.name">
-                        </bk-option>
-                    </bk-select>
-                </div>
-                <div>
-                    <div class="date_picker">
-                        <bk-date-picker style="position:relative;" v-model="curDate"
-                            placeholder="选择日期"
-                            @change="changeDate(curDate)"
-                            :options="customOption">
-                        </bk-date-picker>
-                    </div>
-                </div>
-                <div>
-                    <bk-badge class="mr15" :theme="'danger'" :max="99" :val="hasNotSubmitMember.length">
-                        <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" class="mr10" @click="hasNotSubmitDialog.visible = true">
-                            今日未提交报告名单
+                    <bk-badge :theme="'danger'" :max="99" :val="hasNotSubmitMember.length">
+                        <bk-button
+                            :theme="'primary'"
+                            :title="'未提交'"
+                            @click="hasNotSubmitDialog.visible = true">
+                            未提交日报
                         </bk-button>
                     </bk-badge>
                 </div>
-                <bk-dialog v-model="hasNotSubmitDialog.visible" title="今日未提交报告名单"
+                <bk-dialog
+                    v-model="hasNotSubmitDialog.visible"
+                    title="今日未提交报告名单"
                     :header-position="hasNotSubmitDialog.headerPosition"
                     :width="hasNotSubmitDialog.width"
                     :position="{ top: 20, left: 100 }">
                     <div>
-                        <bk-button v-for="daily in hasNotSubmitMember" :key="daily.create_name" :theme="'primary'" style="width:130px;" class="mr10">
+                        <bk-button v-for="daily in hasNotSubmitMember" :key="daily.id" :theme="'primary'" style="width:130px;" class="mr10">
                             {{daily.create_name}}
                         </bk-button>
                     </div>
@@ -69,6 +96,40 @@
                         <div>
                             <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll" :disabled="hasRemindAll">
                                 {{ hasRemindAll ? '已提醒' : '一键提醒' }}
+                            </bk-button>
+                        </div>
+                    </div>
+                </bk-dialog>
+                <div>
+                    <bk-badge :theme="'danger'" :max="99" :val="shareAllList.length">
+                        <bk-button
+                            :theme="'primary'"
+                            :title="'分享日报'"
+                            @click="shareAllDialog.visible = true">
+                            分享日报
+                        </bk-button>
+                    </bk-badge>
+                </div>
+                <bk-dialog
+                    v-model="shareAllDialog.visible"
+                    title="分享日报列表"
+                    :header-position="shareAllDialog.headerPosition"
+                    :width="shareAllDialog.width"
+                    :position="{ top: 20, left: 100 }">
+                    <div>
+                        <bk-button
+                            v-for="(daily,index) in shareAllList"
+                            :key="index"
+                            style="width:130px;" class="mr10"
+                            hover-theme="danger"
+                            @click="removeFromShareList(index)">
+                            {{daily.create_name}}
+                        </bk-button>
+                    </div>
+                    <div slot="footer" class="dialog-foot">
+                        <div>
+                            <bk-button :theme="'primary'" :title="'分享'" class="mr10" size="large" @click="shareAll" :disabled="hasShareAll || !shareAllList.length">
+                                {{ hasShareAll ? '已分享' : '一键分享' }}
                             </bk-button>
                         </div>
                     </div>
@@ -91,7 +152,11 @@
                                 <div slot="footer" class="foot-main">
                                     <div class="noComment">
                                         <div>
-                                            <bk-button :theme="'primary'" :title="'查看日报'" class="mr10" @click="openDialog(daily)">
+                                            <bk-button
+                                                :theme="'primary'"
+                                                :title="'查看日报'"
+                                                class="mr10"
+                                                @click="openDialog(daily)">
                                                 查看日报
                                             </bk-button>
                                         </div>
@@ -99,34 +164,108 @@
                                 </div>
                             </bk-card>
                         </div>
-                        <bk-dialog v-model="dailyDetailDialog.visible" title="日报内容"
+                        <bk-dialog
+                            v-model="dailyDetailDialog.visible"
+                            title="日报内容"
                             :header-position="dailyDetailDialog.headerPosition"
                             :width="dailyDetailDialog.width"
                             :position="{ top: 20, left: 100 }">
                             <div v-for="(val, key) in dialogMember.content" :key="key">
                                 <h3>{{key}}</h3>
-                                <bk-input :placeholder="val" :type="'textarea'" font-size="large"
-                                    :rows="2" style="margin-bottom: 15px; color: #000000" :readonly="true">
+                                <bk-input
+                                    :placeholder="val"
+                                    :type="'textarea'"
+                                    font-size="large"
+                                    :rows="2"
+                                    style="margin-bottom: 15px; color: #000000"
+                                    :readonly="true">
                                 </bk-input>
                             </div>
                             <div v-if="dialogMember.evaluate.length">
                                 <h2>点评情况</h2>
                                 <div style="max-height: 190px; overflow: scroll">
-                                    <bk-input v-for="evaluate in dialogMember.evaluate" :key="evaluate" :placeholder="evaluate.name + '说：' + evaluate.evaluate" :type="'textarea'" font-size="large"
-                                        :rows="3" style="margin: 5px 0;" :readonly="true">
+                                    <div class="singleComment" v-for="(evaluate,index) in dialogMember.evaluate" :key="index">
+                                        <bk-input
+                                            :type="'textarea'"
+                                            font-size="large"
+                                            :rows="3" style="margin: 5px 0;"
+                                            :placeholder="evaluate.name + '说：' + evaluate.evaluate"
+                                            :readonly="true">
+                                        </bk-input>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="dialogMember.hasComment">
+                                <h2>修改我的点评</h2>
+                                <div class="singleComment">
+                                    <bk-input
+                                        v-model="myNewComment"
+                                        :type="'textarea'"
+                                        font-size="large"
+                                        :clearable="true"
+                                        :rows="3"
+                                        style="margin: 15px 0;">
                                     </bk-input>
                                 </div>
                             </div>
-                            <div>
-                                <h2>点评一下</h2>
-                                <bk-input :placeholder="'请输入'" :type="'textarea'" font-size="large" v-model="myComment"
-                                    :rows="3" style="margin: 15px 0;">
+                            <div v-else>
+                                <h2>我的点评</h2>
+                                <bk-input
+                                    :placeholder="'请输入'"
+                                    :clearable="true"
+                                    :type="'textarea'"
+                                    font-size="large"
+                                    v-model="myComment"
+                                    :rows="3"
+                                    style="margin: 15px 0;">
                                 </bk-input>
                             </div>
                             <div slot="footer" class="dialog-foot">
                                 <div>
-                                    <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="submitMyComment">
-                                        {{ myComment.length ? '提交' : '确认' }}
+                                    <bk-button
+                                        :theme="'success'"
+                                        :title="'分享'"
+                                        class="mr10"
+                                        size="large"
+                                        @click="dealShareAll">
+                                        加入待分享
+                                    </bk-button>
+                                    <template v-if="dialogMember.hasComment">
+                                        <bk-button
+                                            :theme="'warning'"
+                                            :title="'确认修改'"
+                                            class="mr10"
+                                            size="large"
+                                            @click="operateMyComment(0)"
+                                            :disabled="myNewComment === myPastComment">
+                                            修改
+                                        </bk-button>
+                                        <bk-button
+                                            :theme="'danger'"
+                                            :title="'删除评论'"
+                                            class="mr10"
+                                            size="large"
+                                            @click="operateMyComment(1)">
+                                            删除
+                                        </bk-button>
+                                    </template>
+                                    <template v-else-if="myComment.length">
+                                        <bk-button
+                                            :theme="'primary'"
+                                            :title="'确认'"
+                                            class="mr10"
+                                            size="large"
+                                            @click="submitMyComment">
+                                            发送给他
+                                        </bk-button>
+                                    </template>
+                                    <bk-button
+                                        :theme="'default'"
+                                        :title="'关闭'"
+                                        class="mr10"
+                                        size="large"
+                                        @click="dailyDetailDialog.visible = false">
+                                        关闭
                                     </bk-button>
                                 </div>
                             </div>
@@ -162,13 +301,22 @@
                     width: 600,
                     headerPosition: 'left'
                 },
+                shareAllDialog: {
+                    visible: false,
+                    width: 600,
+                    headerPosition: 'left'
+                },
                 newApplyData: [],
                 // 当前打开的日报详情
                 dialogMember: {
                     evaluate: []
                 },
-                // 我评论信息
+                // 我正在评论的信息
                 myComment: '',
+                // 我之前评论的信息
+                myPastComment: '',
+                // 我修改的评论信息
+                myNewComment: '',
                 // 日历样式
                 customOption: {
                     disabledDate: function (date) {
@@ -182,7 +330,10 @@
                 formatDate: '',
                 // 选择的组
                 selectGroupId: 0,
-                hasRemindAll: false
+                hasRemindAll: false,
+                shareAllList: [],
+                hasShareAll: false,
+                currentUserName: this.$store.state.user.username
             }
         },
         computed: {
@@ -195,6 +346,16 @@
                 return this.memberDaily.filter((item) => {
                     return !item.write_status
                 })
+            }
+        },
+        watch: {
+            'dailyDetailDialog.visible': {
+                handler (newvalue, oldvalue) {
+                    if (newvalue === false) {
+                        this.myComment = ''
+                    }
+                },
+                deep: true
             }
         },
         created () {
@@ -225,15 +386,84 @@
             // 提醒用户写日报
             remindAll () {
                 // 发出一键提醒
-                this.$http.get('/notice_non_report_users/' + this.selectGroupId + '/?date=' + this.formatDate)
-                this.hasRemindAll = true
-                this.hasNotSubmitDialog.visible = false
-                this.$bkMessage({ theme: 'success', message: '发送成功' })
+                this.$http.get(
+                    '/notice_non_report_users/' + this.selectGroupId + '/?date=' + this.formatDate
+                ).then(res => {
+                    if (res.result) {
+                        this.hasRemindAll = true
+                        this.hasNotSubmitDialog.visible = false
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: res.message
+                        })
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
+                    }
+                })
+            },
+            // 一键分享给所有组员
+            shareAll () {
+                const dailyId = []
+                for (const daily of this.shareAllList) {
+                    dailyId.push(daily.id)
+                }
+                this.$http.get(
+                    '/send_evaluate_all/' + this.selectGroupId + '/?daily_id=' + dailyId
+                ).then(res => {
+                    if (res.result) {
+                        this.shareAllDialog.visible = false
+                        this.hasShareAll = true
+                        this.shareAllList = []
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: res.message
+                        })
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
+                    }
+                })
+            },
+            // 添加到待分享列表
+            dealShareAll () {
+                this.shareAllList.push(this.dialogMember)
+                this.$bkMessage({
+                    theme: 'success',
+                    message: '加入成功'
+                })
+            },
+            // 从待分享列表中移除
+            removeFromShareList (index) {
+                this.$bkInfo({
+                    title: '确认不再分享' + this.shareAllList[index].create_name + '的日报？',
+                    showFooter: true,
+                    confirmFn: () => {
+                        this.shareAllList.splice(index, 1)
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: '移除成功'
+                        })
+                    }
+                })
             },
             // 打开日报详情
             openDialog (daily) {
                 this.dialogMember = daily
+                this.dialogMember.hasComment = false
                 this.dailyDetailDialog.visible = true
+                for (const singleEvaluate of this.dialogMember.evaluate) {
+                    if (singleEvaluate.name === this.currentUserName) {
+                        this.myPastComment = singleEvaluate.evaluate
+                        this.myNewComment = singleEvaluate.evaluate
+                        this.dialogMember.hasComment = true
+                        break
+                    }
+                }
             },
             // 提交我的点评信息
             submitMyComment () {
@@ -243,24 +473,79 @@
                         '/evaluate_daily/',
                         { daily_id: this.dialogMember.id, evaluate: this.myComment }
                     ).then(res => {
-                        if (res.message) {
-                            for (const daily of this.memberDaily) {
-                                if (daily.id === this.dialogMember.id) {
-                                    this.daily.evaluate.push({ 'name': this.$store.state.user.username, evaluate: this.myComment })
-                                }
+                        this.getDaily(
+                            this.selectGroupId,
+                            this.formatDate
+                        ).then(result => {
+                            if (res.result) {
+                                this.dailyDetailDialog.visible = false
+                                this.$bkMessage({
+                                    theme: 'success',
+                                    message: res.message
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    theme: 'error',
+                                    message: res.message
+                                })
                             }
-                            this.dailyDetailDialog.visible = false
-                        }
+                        })
                     })
-                    this.$bkMessage({ theme: 'success', message: '点评成功' })
+                    this.myComment = ''
+                    this.dailyDetailDialog.visible = false
                 }
-                this.myComment = ''
-                this.getDaily(this.selectGroupId, this.formatDate)
-                this.dailyDetailDialog.visible = false
+            },
+            // 更新，删除评论
+            operateMyComment (status) {
+                if (status === 0) {
+                    this.$http.get(
+                        '/update_evaluate_daily/' + this.dialogMember.id + '/' + this.selectGroupId + '/?update_evaluate=' + this.myNewComment
+                    ).then(res => {
+                        this.getDaily(
+                            this.selectGroupId,
+                            this.formatDate
+                        ).then(result => {
+                            if (res.result) {
+                                this.dailyDetailDialog.visible = false
+                                this.$bkMessage({
+                                    theme: 'success',
+                                    message: res.message
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    theme: 'error',
+                                    message: res.message
+                                })
+                            }
+                        })
+                    })
+                } else {
+                    this.$http.delete(
+                        '/delete_evaluate_daily/' + this.dialogMember.id + '/' + this.selectGroupId + '/'
+                    ).then(res => {
+                        this.getDaily(
+                            this.selectGroupId,
+                            this.formatDate
+                        ).then(result => {
+                            if (res.result) {
+                                this.dailyDetailDialog.visible = false
+                                this.$bkMessage({
+                                    theme: 'success',
+                                    message: res.message
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    theme: 'error',
+                                    message: res.message
+                                })
+                            }
+                        })
+                    })
+                }
             },
             // 封装getDaily请求
             getDaily (id, date) {
-                this.$http.get(
+                return this.$http.get(
                     '/list_member_daily/' + id + '/?date=' + date
                 ).then(res => {
                     this.memberDaily = res.data
@@ -269,11 +554,13 @@
             // 改变日历的日期
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+                this.shareAllList = []
                 this.getDaily(this.selectGroupId, this.formatDate)
             },
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
+                this.shareAllList = []
                 // 发送请求，获取选定组的信息
                 this.getDaily(this.selectGroupId, this.formatDate)
                 // 获取申请该组的列表
@@ -285,12 +572,21 @@
                     '/deal_join_group/' + this.selectGroupId + '/',
                     { user_id: row.user_id, status: status }
                 ).then(res => {
-                    if (res.message) {
+                    if (res.result) {
                         for (const i in this.newApplyData) {
                             if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
                                 this.newApplyData.splice(i, 1)
                             }
                         }
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: res.message
+                        })
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
                     }
                 })
             }
@@ -311,13 +607,13 @@
 }
 .top_container{
     width: 100%;
-    padding: 20px;
+    padding: 20px 0.5%;
     display: flex;
     justify-content: space-between;
 }
 .bottom_container{
     width: 100%;
-    padding: 20px;
+    padding: 20px 0;
 }
 .head-main{
     height: 100%;
