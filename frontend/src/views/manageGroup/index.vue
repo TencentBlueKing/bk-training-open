@@ -413,7 +413,7 @@
             shareAll () {
                 this.$http.post(
                     '/send_evaluate_all/' + this.selectGroupId + '/',
-                    { daily_id: this.shareAllIdList }
+                    { daily_ids: this.shareAllIdList }
                 ).then(res => {
                     if (res.result) {
                         this.shareAllDialog.visible = false
