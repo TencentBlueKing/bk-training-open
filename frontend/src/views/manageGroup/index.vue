@@ -373,12 +373,10 @@
                 }
             }
             const dateInURL = this.$route.query.date
-            if (dateInURL !== undefined) {
-                if (isValidDate(dateInURL)) {
-                    this.curDate = new Date(dateInURL)
-                } else {
-                    this.curDate = new Date()
-                }
+            if (dateInURL !== undefined && isValidDate(dateInURL)) {
+                this.curDate = new Date(dateInURL)
+            } else {
+                this.curDate = new Date()
             }
 
             this.formatDate = moment(this.curDate).format(moment.HTML5_FMT.DATE)

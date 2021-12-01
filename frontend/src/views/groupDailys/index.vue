@@ -132,14 +132,11 @@
                 }
             }
             const dateInURL = this.$route.query.date
-            if (dateInURL !== undefined) {
-                if (isValidDate(dateInURL)) {
-                    this.curDate = new Date(dateInURL)
-                } else {
-                    this.curDate = new Date()
-                }
+            if (dateInURL !== undefined && isValidDate(dateInURL)) {
+                this.curDate = new Date(dateInURL)
+            } else {
+                this.curDate = new Date()
             }
-
             this.init()
         },
         methods: {
@@ -196,12 +193,6 @@
                     this.groupsData = res.data
                     // 初始化显示的组
                     if (this.groupsData.length !== 0) {
-                        this.curGroupId = this.groupsData[0].id
-                        this.curGroup = this.groupsData[0]
-                        // 获取组内成员
-                        this.getGroupUsers(this.curGroupId)
-                        // 初始化组内所有日报（根据日期选择）
-                        this.changeDateOrUser('', this.curDate)
                         if (this.curGroupId !== null) {
                             const vm = this
                             this.groupsData.forEach(function (group) {
@@ -213,7 +204,10 @@
                             this.curGroupId = this.groupsData[0].id
                             this.curGroup = this.groupsData[0]
                         }
-                        this.changeDate(this.curDate)
+                        // 获取组内成员
+                        this.getGroupUsers(this.curGroupId)
+                        // 初始化组内所有日报（根据日期选择）
+                        this.changeDateOrUser('', this.curDate)
                     }
                 })
             },
@@ -244,7 +238,6 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.curDate = new Date()
                     this.changeDateOrUser('', this.curDate)
                 }
             }
