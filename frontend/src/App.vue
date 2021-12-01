@@ -190,7 +190,9 @@ html {
     height: 100%;
     overflow-y: auto;
 }
-
+.bk-navigation .bk-navigation-header{
+  z-index: 100 !important;
+}
 .monitor-navigation-header {
   -webkit-box-flex: 1;
   -ms-flex: 1;
@@ -587,5 +589,8 @@ html {
   border-radius: 0;
   -webkit-box-shadow: none;
   box-shadow: none;
+}
+.tippy-popper{
+    z-index: 2910 !important;
 }
 </style>

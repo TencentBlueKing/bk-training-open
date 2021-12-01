@@ -9,6 +9,7 @@
                             class="select-template"
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom"
+                            z-index="99"
                             searchable
                             @selected="selectTemplate()"
                             @change="changeTemplate()"
@@ -55,7 +56,6 @@
                         日报状态：{{saveText}}
                     </span>
                 </div>
-
             </div>
 
             <div v-show="reportIsLoading" class="test-dom" v-bkloading="{ isLoading: basicLoading, theme: 'primary', zIndex: 10 }">

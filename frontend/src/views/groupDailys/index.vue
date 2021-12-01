@@ -6,8 +6,8 @@
                     <bk-select :disabled="false" v-model="curGroupId"
                         ext-cls="select-custom"
                         ext-popover-cls="select-popover-custom"
-                        transfer="true"
                         @change="changeGroup(curGroupId)"
+                        z-index="99"
                         searchable>
                         <bk-option v-for="group in groupsData"
                             :key="group.id"
@@ -24,8 +24,8 @@
                         <div class="users_list_title">
                             请选择成员：
                         </div>
-                        <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
-                            {{user.name}}
+                        <bk-button v-show="user.username !== 'admin'" v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" @click="clickUser(user.id)" class="mr10">
+                            {{user.username}}({{user.name}})
                         </bk-button>
                     </div>
                     <div class="date_picker" v-else>
@@ -44,8 +44,8 @@
         </div>
         <div class="right_container">
             <!-- 显示筛选日报个数等 -->
-            <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
-                <div style="float:left;">
+            <div v-show="rightIsUser" class="report-info">
+                <div class="report-num-select">
                     <span>显示日报个数：</span>
                     <bk-select :disabled="false" v-model="curDailyNum"
                         style="display:inline-block; width:80px;"
@@ -60,9 +60,9 @@
                         </bk-option>
                     </bk-select>
                 </div>
-                <span style="float:right;">日报总数：{{dailysData.count}}</span>
+                <span>日报总数：{{dailysData.count}}</span>
             </div>
-            <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
+            <div v-if="dailysData.dailys.length === 0" class="no-report">
                 没有日报内容哟~
             </div>
             <div>
@@ -137,6 +137,10 @@
                 this.isUser = !this.isUser
                 if (!this.isUser) {
                     this.changeGroup(this.curGroupId)
+                    document.querySelector('.left_container').style.minWidth = 290
+                    console.log('left_container == ', document.querySelector('.left_container').style.minWidth)
+                } else {
+                    document.querySelector('.left_container').style.minWidth = 350
                 }
             },
             // 获取组内成员
@@ -270,6 +274,7 @@
 @import "./index.css";
     #groupDailys /deep/ .content{
         display: flex;
+        min-width: 1000px;
     }
     .container_title {
         font-size: 22px;
@@ -277,6 +282,7 @@
     }
     .left_container{
         width: 360px;
+        min-width: 350px;
         border-right: 1px solid #EAEBF0 ;
         padding-right: 10px;
     }
@@ -309,7 +315,30 @@
     }
     .right_container{
         min-width: 380px;
-        width: calc(100% - 380px);
+        width: 100%;
+        padding-left: 20px;
+    }
+    .no-report{
+        width: 100%;
+        height: 600px;
+        line-height: 600px;
+        text-align: center;
+    }
+    .right_container .report-info{
+        height: 40px;
+        line-height: 40px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .report-num-select{
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+    .report-num-select span{
+        width: 112px;
+        margin-bottom: 10px;
     }
     .card{
         float: left;
@@ -325,6 +354,6 @@
         top: 32px !important;
     }
     .date_picker /deep/ .bk-date-picker{
-        width: 120px;
+        width: 124px;
     }
 </style>

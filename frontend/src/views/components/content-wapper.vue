@@ -48,5 +48,6 @@
     width: 90%;
     margin:0 auto;
     padding: 30px 50px 20px;
+    max-width: 1710px;
 }
 </style>
