@@ -13,6 +13,7 @@ specific language governing permissions and limitations under the License.
 import ast
 
 from django.db import models
+from django_mysql.models import JSONField
 
 
 # Create your models here.
@@ -36,8 +37,18 @@ class Group(TimeBasic):
     def __str__(self):
         return self.name
 
+    @property
+    def admin_list(self):
+        return self.admin.split(",")
+
     def to_json(self):
-        return {"name": self.name, "admin": self.admin, "create_by": self.create_by, "create_name": self.create_name}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "admin": self.admin,
+            "create_by": self.create_by,
+            "create_name": self.create_name,
+        }
 
 
 # 组中的日报通知人
@@ -75,6 +86,17 @@ class GroupUser(models.Model):
         unique_together = ("group_id", "user_id")
 
 
+# 申请入组表
+class ApplyForGroup(TimeBasic):
+    group_id = models.IntegerField(verbose_name="组id")
+    user_id = models.IntegerField(verbose_name="用户id")
+    operator = models.IntegerField(null=True, verbose_name="处理人id")
+    status = models.SmallIntegerField(verbose_name="申请状态")
+
+    def __str__(self):
+        return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
+
+
 # 日报模板表
 class DailyReportTemplate(models.Model):
     name = models.CharField(max_length=128, verbose_name="日报模板名字")
@@ -87,14 +109,19 @@ class DailyReportTemplate(models.Model):
         return self.name
 
 
+def daily_evaluate_default():
+    return []
+
+
 # 日报表
 class Daily(TimeBasic):
     content = models.TextField(verbose_name="日报内容")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     date = models.DateField(verbose_name="日报日期")
-    send_status = models.BooleanField(verbose_name="发送状态")
+    send_status = models.BooleanField(verbose_name="发送状态", default=False)
     template_id = models.IntegerField(verbose_name="模板id")
+    evaluate = JSONField(verbose_name="评价", default=daily_evaluate_default)
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
@@ -112,4 +139,5 @@ class Daily(TimeBasic):
             "create_name": self.create_name,
             "send_describe": send_describe,
             "template_id": self.template_id,
+            "evaluate": self.evaluate,
         }

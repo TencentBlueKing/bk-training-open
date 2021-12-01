@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 from django.conf.urls import url
 from django.urls import path
 
-from . import views
+from . import admin_views, views
 
 urlpatterns = (
     path("", views.home),
@@ -33,4 +33,12 @@ urlpatterns = (
     url(r"^get_user_groups/$", views.get_user_groups),
     path("get_group_users/<int:group_id>/", views.get_group_users),
     path("exit_group/<int:group_id>/", views.exit_group),
+    path("list_admin_group/", admin_views.list_admin_group),
+    path("list_member_daily/<int:group_id>/", admin_views.list_member_daily),
+    path("evaluate_daily/", admin_views.evaluate_daily),  # 评价
+    path("notice_non_report_users/<int:group_id>", admin_views.notice_non_report_users),  # 给未写日报人发送邮件
+    url(r"^get_available_apply_groups/$", views.get_available_apply_groups),
+    url(r"^apply_for_group/$", views.apply_for_group),
+    path("get_apply_for_group_users/<int:group_id>/", views.get_apply_for_group_users),
+    path("deal_join_group/<int:group_id>/", views.deal_join_group),
 )
