@@ -596,8 +596,7 @@ def report_filter(request, group_id):
     # 每一页显示日报数量
     page_size = request.GET.get("size", 8)
     if member_id:
-        # 如果有该参数则说明是根据成员id获取日报，
-        # 没有则直接跳到下边根据组和日期获取所有成员对应日期的日报
+        # 根据member_id参数判断是根据成员id还是日期获取日报，
         try:
             # 安全校验，查看目标对象是否为同组成员
             GroupUser.objects.get(group_id=group_id, user_id=member_id)

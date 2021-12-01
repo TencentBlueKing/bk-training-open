@@ -137,7 +137,6 @@
             // 点击切换显示类型的按钮
             changeType () {
                 this.isUser = !this.isUser
-                console.log('this.isUser:' + this.isUser)
                 if (!this.isUser) {
                     this.changeGroup(this.curGroupId)
                 }
@@ -147,7 +146,6 @@
                 // 根据组id获取组成员
                 this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
                     this.groupUsers = res.data
-                    console.log('curGroup-userlist', this.groupUsers)
                 })
             },
             // 修改日期或成员
@@ -161,10 +159,8 @@
                 if (this.curGroupId === null || this.curGroupId === '') {
                     console.log('curGroupId为空')
                 } else {
-                    console.log('curDate：', this.curDate)
                     this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
                         if (res.result) {
-                            console.log('groupDailys', res.data)
                             this.defaultPaging.count = res.data.total_report_num
                             this.dailysData.dailys = res.data.reports
                         } else {
@@ -179,20 +175,14 @@
                 }
             },
             init () {
-                const str = "{'感想':'测试1','内容':'测试内容'}"
-                const json1 = JSON.parse(str.replace(/'/g, '"'))
-                console.log('json', json1)
-                // console.log('beforeToday', new Date((new Date()).getTime() - 24 * 60 * 60 * 1000))
                 // 获取所有组列表
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
                     this.groupsData = res.data
-                    console.log('init_group, groups:', this.groupsData)
                     // 初始化组，选择第一个
                     if (this.groupsData.length !== 0) {
                         this.curGroupId = this.groupsData[0].id
                         this.curGroup = this.groupsData[0]
-                        console.log('curGroup', this.curGroup)
                         // 获取组内成员
                         this.getGroupUsers(this.curGroupId)
                         // 初始化组内所有日报（根据日期选择）
@@ -203,7 +193,6 @@
             // 点击切换组
             changeGroup (groupId) {
                 if (groupId === null || groupId === '') {
-                    console.log('x')
                     this.curGroup = {
                         id: '',
                         name: '',
