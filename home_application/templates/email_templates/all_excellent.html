@@ -1,0 +1,46 @@
+<meta charset="utf-8">
+<table class="content-wrap" style="margin: 0 auto; max-width: 600px;">
+    <tr>
+        <td style="margin: 0 auto; overflow: hidden; padding: 0; border: 0 dotted rgb(238, 238, 238);">
+            <!--logo图片-->
+            <div style="max-width: 600px">
+                <img height="auto" alt="蓝鲸logo" src="https://www.drageasy.com/3ce819f0afc48319ee1eebc433c8aae3.jpg?imageslim"
+                     style="box-sizing: border-box; border: 0; display: inline-block; max-width: 100%; padding: 0;">
+            </div>
+            <!--标题-->
+            <div style="margin: 30px; text-align: center; line-height: 20px; font-size: 30px; color: rgb(102, 102, 102); ">
+                {{ mail_title }}
+            </div>
+            <!--组信息-->
+            <div style="text-align: center">
+                <p style="word-break: break-word; line-height: 20px; font-size: 17px; margin: 0; color: #222222;">
+                    {{ mail_content}}
+                </p>
+            </div>
+            <!--用户日志-->
+            <div >
+                <p>
+                    {% for i,j in zip_data %}
+                        {% for n,m in i.items %}
+                            {{ n }}:{{ m }}<br>
+                        {% endfor %}
+                        {% for n in j.values %}
+                            {{ n }}:
+                        {% endfor %}
+                               <br><br>
+                    {% endfor %}
+                </p>
+            </div>
+
+            <!--分隔线-->
+            <div style="border: #CCCCCC 1px solid"></div>
+            <!--蓝鲸智云-->
+            <div style="text-align:center; word-break: break-word; line-height: 20px; font-size: 12px; margin: 0;">
+                <a style="color: rgb(136, 136, 136); text-decoration: underline; font-weight: normal;"
+                   href="https://bk.tencent.com/" target="_blank" rel="noopener noreferrer">
+                    &nbsp蓝鲸智云 — 开创运维新局面&nbsp;
+                </a>
+            </div>
+        </td>
+    </tr>
+</table>

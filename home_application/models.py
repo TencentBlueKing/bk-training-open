@@ -141,3 +141,38 @@ class Daily(TimeBasic):
             "template_id": self.template_id,
             "evaluate": self.evaluate,
         }
+
+    def add_evaluate(self, username, content):
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.evaluate.append({"name": username, "evaluate": content})
+        self.save()
+
+    def remove_evaluate(self, username):
+        sign = self.evaluate
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.save()
+        if self.evaluate == sign:
+            return False
+        else:
+            return True
+
+
+# 请假表
+class OffDay(TimeBasic):
+    off_date = models.DateField(verbose_name="请假日期")
+    reason = models.TextField(verbose_name="请假理由")
+    user = models.CharField(max_length=128, verbose_name="请假人用户名")
+
+    class Meta:
+        unique_together = (
+            "off_date",
+            "user",
+        )
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "off_date": self.off_date.strftime("%Y-%m-%d "),
+            "reason": self.reason,
+            "user": self.user,
+        }
