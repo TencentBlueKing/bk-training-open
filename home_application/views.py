@@ -38,7 +38,7 @@ from home_application.models import (
 )
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import apply_info_to_json, check_param
+from home_application.utils.tools import apply_info_to_json, check_param, get_paginator
 
 
 def home(request):
@@ -592,15 +592,15 @@ def daily_report(request):
 def report_filter(request, group_id):
     # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
     member_id = request.GET.get("member_id")
+    page = request.GET.get("page")
+    # 每一页显示日报数量
+    page_size = request.GET.get("size", 8)
     if member_id:
-        # 如果有该参数则说明是根据成员id获取日报，
-        # 没有则直接跳到下边根据组和日期获取所有成员对应日期的日报
+        # 根据member_id参数判断是根据成员id还是日期获取日报，
         try:
             # 安全校验，查看目标对象是否为同组成员
             GroupUser.objects.get(group_id=group_id, user_id=member_id)
             member_name = User.objects.get(id=member_id).username
-            # 参数校验
-            report_num = int(request.GET.get("report_num", 7))
         except GroupUser.DoesNotExist:
             return JsonResponse({"result": False, "code": -1, "message": "与目标用户非同组成员，查询被拒绝", "data": []})
         except User.DoesNotExist:
@@ -611,8 +611,9 @@ def report_filter(request, group_id):
         # 查询当前成员的日报，按照日期降序
         member_report = Daily.objects.filter(create_by=member_name).order_by("-date")
         total_report_num = member_report.count()
-        if report_num > 0:
-            member_report = member_report[:report_num]
+
+        # 分页
+        member_report = get_paginator(member_report, page, page_size)
         # 查询完毕返回数据
         res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
@@ -628,5 +629,11 @@ def report_filter(request, group_id):
     member_in_group = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     member_in_group = User.objects.filter(id__in=member_in_group).values_list("username", flat=True)
     # 查询所有人的日报
-    member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group)
-    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": content_format_as_json(member_report)})
+    member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group).order_by("-date")
+    total_report_num = member_report.count()
+
+    # 分页
+    member_report = get_paginator(member_report, page, page_size)
+    # 查询完毕返回数据
+    res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
+    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": res_data})
