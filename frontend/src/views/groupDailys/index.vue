@@ -291,11 +291,29 @@
         padding-left: 20px;
         border-right: 1px solid #EAEBF0 ;
     }
-    .users_list >>> .bk-button{
+    .member-select{
+        display: flex;
+        margin-right: 10px;
+    }
+    .member-select /deep/ .bk-select{
+        min-width: 110px;
+    }
+    .users_list{
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .users_list .users_list_title{
+        font-size: 16px;
+        width: 100%;
+        height: 32px;
+        line-height: 32px;
+    }
+    .users_list /deep/ .bk-button{
         margin-bottom: 10px;
+
     }
     .right_container{
-        float: right;
         min-width: 380px;
         width: calc(100% - 380px);
     }
@@ -304,15 +322,15 @@
         width: calc(46% - 5px);
         margin-right: 18px;
     }
-    .card >>> .bk-card-body{
+    .card /deep/ .bk-card-body{
         height: 280px;
         overflow-y: auto;
         padding-top: 10px;
     }
-    .date_picker >>>.bk-date-picker-dropdown{
+    .date_picker /deep/ .bk-date-picker-dropdown{
         top: 32px !important;
     }
-    .demo-block.demo-alert .bk-alert{
-        margin-bottom: 20px;
+    .date_picker /deep/ .bk-date-picker{
+        width: 120px;
     }
 </style>

@@ -75,7 +75,7 @@
                     删除组
                 </bk-button>
                 <bk-dialog v-model="deleteGroupDialog.visible" theme="primary" class="delete-group-dialog" :show-footer="false">
-                   
+
                     <bk-form label-width="80">
                         <bk-form-item style="margin-left:15px;">
                             确认删除{{curGroup.name}}吗？
@@ -348,14 +348,12 @@
                     if (this.curGroup.admin.indexOf(this.curUser.info.username) !== -1) {
                         this.curUser.isAdmin = true
                     }
-                    console.log('isAdmin', this.curUser.isAdmin)
                 })
             },
             // 获取组内成员
             getGroupUsers (groupId) {
                 this.$http.get('/get_group_users/' + groupId + '/').then(res => {
                     this.groupUsers = res.data
-                    console.log('get_group_users:', res.data)
                 })
             },
             // 获取所有组信息
@@ -751,7 +749,6 @@
     .line-container {
         margin: 20px 50px 0px 50px;
         padding-bottom: 10px;
-        
     }
     .line-container .container-label{
         font-size: 22px;
