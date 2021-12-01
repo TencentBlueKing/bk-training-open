@@ -133,7 +133,6 @@
                 // 根据组id获取组成员
                 this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
                     this.groupUsers = res.data
-                    console.log('curGroup-userlist', this.groupUsers)
                 })
             },
             // 根据成员获取对应日报
@@ -142,7 +141,6 @@
                 this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&report_num=' + this.curDailyNum).then((res) => {
                     if (res.result) {
                         // 更新daily
-                        console.log('dailys', res.data)
                         this.dailysData.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
                     } else {
@@ -167,31 +165,40 @@
                 this.getUserDailys(this.curUserId)
             },
             init () {
-                const str = "{'感想':'测试1','内容':'测试内容'}"
-                const json1 = JSON.parse(str.replace(/'/g, '"'))
-                console.log('json', json1)
-                // console.log('beforeToday', new Date((new Date()).getTime() - 24 * 60 * 60 * 1000))
                 // 获取所有组列表
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
                     this.groupsData = res.data
-                    console.log('init_group, groups:', this.groupsData)
-                    // 初始化组，选择第一个
+
+                    // 初始化显示的组
                     if (this.groupsData.length !== 0) {
-                        this.curGroupId = this.groupsData[0].id
-                        this.curGroup = this.groupsData[0]
-                        console.log('curGroup', this.curGroup)
-                        // 获取组内成员
-                        this.getGroupUsers(this.curGroupId)
-                        // 初始化组内所有日报（根据日期选择）
-                        this.changeDate(this.curDate)
+                        // 初始化日期：首先检测url中是否指定日期
+                        this.curDate = new Date(this.$route.query.date)
+                        if (this.curDate.toString() === 'Invalid Date') {
+                            this.curDate = new Date()
+                        }
+
+                        // 查看url中是否有组id
+                        const groupIdInURL = Number(this.$route.query.group)
+                        if (!isNaN(groupIdInURL) && groupIdInURL > 0) {
+                            this.curGroupId = groupIdInURL
+                            // 更改当前组信息
+                            const vm = this
+                            this.groupsData.forEach(function (group) {
+                                if (group.id === groupIdInURL) {
+                                    vm.curGroup = group
+                                }
+                            })
+                        } else {
+                            this.curGroupId = this.groupsData[0].id
+                            this.curGroup = this.groupsData[0]
+                        }
                     }
                 })
             },
             // 点击切换组
             changeGroup (groupId) {
-                if (groupId === null || groupId === '') {
-                    console.log('x')
+                if (!isNaN(groupId) && groupId > 0) {
                     this.curGroup = {
                         id: '',
                         name: '',
@@ -217,7 +224,6 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.curDate = new Date()
                     this.changeDate(this.curDate)
                 }
             },
@@ -225,17 +231,11 @@
             changeDate (date) {
                 this.curUserId = null
                 this.rightIsUser = false
-                if (this.curGroupId === null || this.curGroupId === '') {
-                    console.log('curGroupId为空')
-                } else {
-                    console.log('curDate：', date)
-                    console.log('month', date.getMonth())
+                if (!isNaN(this.curGroupId) && this.curGroupId > 0) {
                     const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                    console.log('paramDate', paramDate)
                     this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate).then(res => {
                         // this.rightIsUser = false
                         if (res.result) {
-                            console.log('groupDailys', res.data)
                             this.dailysData.count = res.data.length
                             this.dailysData.dailys = res.data
                         } else {
@@ -259,7 +259,7 @@
         /* border-radius: 4px; */
         margin:0px 100px;
         padding: 20px 50px;
-        
+
     }
     .container_title {
         font-size: 22px;
@@ -273,7 +273,7 @@
     }
     .users_list >>> .bk-button{
         margin-bottom: 10px;
-        
+
     }
     .right_container{
         float: right;
