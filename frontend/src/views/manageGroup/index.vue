@@ -509,7 +509,7 @@
             operateMyComment (status) {
                 if (status === 0) {
                     this.$http.get(
-                        '/update_evaluate_daily/' + this.dialogMember.id + '/' + this.selectGroupId + '/?update_evaluate=' + this.myNewComment
+                        '/update_evaluate_daily/' + this.selectGroupId + '/' + this.dialogMember.id + '/?evaluate_content=' + this.myNewComment
                     ).then(res => {
                         this.getDaily(
                             this.selectGroupId,
@@ -531,7 +531,7 @@
                     })
                 } else {
                     this.$http.delete(
-                        '/delete_evaluate_daily/' + this.dialogMember.id + '/' + this.selectGroupId + '/'
+                        '/delete_evaluate_daily/' + this.selectGroupId + '/' + this.dialogMember.id + '/'
                     ).then(res => {
                         this.getDaily(
                             this.selectGroupId,
