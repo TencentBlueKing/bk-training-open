@@ -283,6 +283,7 @@
 
 <script>
     import moment from 'moment'
+    import { isValidDate } from '@/utils/utils'
     export default {
         components: {},
         data () {
@@ -364,11 +365,22 @@
             }
         },
         created () {
-            // 初始化日期：首先检测url中是否指定日期
-            this.curDate = new Date(this.$route.query.date)
-            if (this.curDate.toString() === 'Invalid Date') {
-                this.curDate = new Date()
+            let groupIdInURL = this.$route.query.group
+            if (groupIdInURL !== undefined) {
+                groupIdInURL = +groupIdInURL
+                if (typeof groupIdInURL === 'number') {
+                    this.selectGroupId = groupIdInURL
+                }
             }
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                if (isValidDate(dateInURL)) {
+                    this.curDate = new Date(dateInURL)
+                } else {
+                    this.curDate = new Date()
+                }
+            }
+
             this.formatDate = moment(this.curDate).format(moment.HTML5_FMT.DATE)
             this.init()
         },
@@ -380,10 +392,8 @@
                 ).then(res => {
                     this.groupList = res.data
                     if (this.groupList.length > 0) {
-                        // 查看url中是否有组id
-                        const groupIdInURL = Number(this.$route.query.group)
-                        if (!isNaN(groupIdInURL) && groupIdInURL > 0) {
-                            this.selectGroupId = groupIdInURL
+                        if (this.selectGroupId > 0) {
+                            this.changeGroup(this.selectGroupId)
                         } else {
                             this.selectGroupId = this.groupList[0].id
                         }

@@ -79,6 +79,8 @@
 </template>
 
 <script>
+    import { isValidDate } from '@/utils/utils'
+
     export default {
         components: {},
         data () {
@@ -104,7 +106,7 @@
                 isUser: false,
                 rightIsUser: false,
                 // 日期选择（当前正常，get时需要再次转化）
-                curDate: new Date(),
+                curDate: null,
                 // 日报数据
                 dailysData: {
                     count: 100,
@@ -118,6 +120,23 @@
             }
         },
         created () {
+            // 初始化组id和日期
+            let groupIdInURL = this.$route.query.group
+            if (groupIdInURL !== undefined) {
+                groupIdInURL = +groupIdInURL
+                if (typeof groupIdInURL === 'number') {
+                    this.curGroupId = groupIdInURL
+                }
+            }
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                if (isValidDate(dateInURL)) {
+                    this.curDate = new Date(dateInURL)
+                } else {
+                    this.curDate = new Date()
+                }
+            }
+
             this.init()
         },
         methods: {
@@ -169,23 +188,12 @@
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
                     this.groupsData = res.data
-
                     // 初始化显示的组
                     if (this.groupsData.length !== 0) {
-                        // 初始化日期：首先检测url中是否指定日期
-                        this.curDate = new Date(this.$route.query.date)
-                        if (this.curDate.toString() === 'Invalid Date') {
-                            this.curDate = new Date()
-                        }
-
-                        // 查看url中是否有组id
-                        const groupIdInURL = Number(this.$route.query.group)
-                        if (!isNaN(groupIdInURL) && groupIdInURL > 0) {
-                            this.curGroupId = groupIdInURL
-                            // 更改当前组信息
+                        if (this.curGroupId !== null) {
                             const vm = this
                             this.groupsData.forEach(function (group) {
-                                if (group.id === groupIdInURL) {
+                                if (group.id === vm.curGroupId) {
                                     vm.curGroup = group
                                 }
                             })
@@ -193,6 +201,7 @@
                             this.curGroupId = this.groupsData[0].id
                             this.curGroup = this.groupsData[0]
                         }
+                        this.changeDate(this.curDate)
                     }
                 })
             },
