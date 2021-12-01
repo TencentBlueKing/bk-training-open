@@ -330,7 +330,7 @@
                     }
                 },
                 // 当天日期
-                curDate: new Date(),
+                curDate: null,
                 formatDate: '',
                 // 选择的组
                 selectGroupId: 0,
@@ -364,7 +364,12 @@
             }
         },
         created () {
-            this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+            // 初始化日期：首先检测url中是否指定日期
+            this.curDate = new Date(this.$route.query.date)
+            if (this.curDate.toString() === 'Invalid Date') {
+                this.curDate = new Date()
+            }
+            this.formatDate = moment(this.curDate).format(moment.HTML5_FMT.DATE)
             this.init()
         },
         methods: {
@@ -375,8 +380,13 @@
                 ).then(res => {
                     this.groupList = res.data
                     if (this.groupList.length > 0) {
-                        this.selectGroupId = this.groupList[0].id
-                        this.loadApply()
+                        // 查看url中是否有组id
+                        const groupIdInURL = Number(this.$route.query.group)
+                        if (!isNaN(groupIdInURL) && groupIdInURL > 0) {
+                            this.selectGroupId = groupIdInURL
+                        } else {
+                            this.selectGroupId = this.groupList[0].id
+                        }
                     }
                 })
             },
