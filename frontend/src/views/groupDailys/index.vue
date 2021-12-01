@@ -282,6 +282,9 @@
         margin:0 100px;
         padding: 20px 50px;
     }
+    .container{
+        display: flex;
+    }
     .container_title {
         font-size: 22px;
         font-weight: 700;
