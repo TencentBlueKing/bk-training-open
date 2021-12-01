@@ -71,8 +71,8 @@ def evaluate_daily(request):
     return JsonResponse({"result": True, "code": 0, "message": "点评成功", "data": []})
 
 
-@require_http_methods(["GET"])
-@is_group_member(admin_needed=["GET"])
+@require_http_methods(["POST"])
+@is_group_member(admin_needed=["POST"])
 def notice_non_report_users(request, group_id):
     """
     提醒未写日报成员写日报
