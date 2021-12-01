@@ -22,42 +22,34 @@
                 <div style="margin-top:18px;height:707px;">
                     <div v-if="isUser" class="users_list">
                         <div>
-                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="clickUser(user.id)" class="mr10">
+                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="changeDateOrUser(user.id, '')" class="mr10">
                                 {{user.name}}
                             </bk-button>
                         </div>
                     </div>
                     <div class="date_picker" style="margin-left:0px;" v-else>
-                        <bk-date-picker class="mr15" @change="changeDate(curDate)" style="position:relative;" v-model="curDate"
+                        <bk-date-picker class="mr15" @change="changeDateOrUser('', curDate)" style="position:relative;" v-model="curDate" format="yyyy-MM-dd"
                             :placeholder="'选择日期'"
-                            open="true"
+                            :open="true"
                             :ext-popover-cls="'custom-popover-cls'"
                             :options="customOption">
                         </bk-date-picker>
                     </div>
                 </div>
+
+                <!-- 清除浮动，撑开盒子 -->
+                <div style="clear:both;"></div>
             </div>
             <div class="right_container">
-                <!-- 显示筛选日报个数等 -->
-                <div v-show="rightIsUser" style="height:32px;margin-bottom:10px;color: #313238;font-size: 14px;">
-                    <div style="float:left;">
-                        <span>显示日报个数：</span>
-                        <bk-select :disabled="false" v-model="curDailyNum"
-                            style="display:inline-block; width:80px;"
-                            ext-cls="select-custom"
-                            ext-popover-cls="select-popover-custom"
-                            @change="changeDailyNum()"
-                        >
-                            <bk-option v-for="num in numlist"
-                                :key="num.value"
-                                :id="num.value"
-                                :name="num.name">
-                            </bk-option>
-                        </bk-select>
-                    </div>
-                    <span style="float:right;">日报总数：{{dailysData.count}}</span>
-                </div>
-                <div v-if="dailysData.dailys.length === 0" style="margin: 200px auto;width:140px;">
+                <bk-pagination style="margin-bottom: 10px;"
+                    @change="changePage"
+                    @limit-change="changeLimit"
+                    :current.sync="defaultPaging.current"
+                    :count.sync="defaultPaging.count"
+                    :limit="defaultPaging.limit"
+                    :limit-list="defaultPaging.limitList">
+                </bk-pagination>
+                <div v-if="defaultPaging.count === 0" style="margin: 200px auto;width:140px;">
                     没有日报内容哟~
                 </div>
                 <div>
@@ -69,7 +61,11 @@
                             <p>{{value}}</p>
                         </div>
                     </bk-card>
+
                 </div>
+
+                <!-- 清除浮动，撑开盒子 -->
+                <div style="clear:both;"></div>
             </div>
 
             <!-- 清除浮动，撑开盒子 -->
@@ -81,10 +77,21 @@
 <script>
     import { isValidDate } from '@/utils/utils'
 
+    import { bkPagination } from 'bk-magic-vue'
+    import moment from 'moment'
+
     export default {
-        components: {},
+        components: {
+            bkPagination
+        },
         data () {
             return {
+                defaultPaging: {
+                    current: 1,
+                    limit: 8,
+                    count: 0,
+                    limitList: [8, 16, 32, 64]
+                },
                 groupsData: [],
                 curGroupId: null,
                 curGroup: {
@@ -104,19 +111,15 @@
                 },
                 // 控制显示日期还是显示成员
                 isUser: false,
-                rightIsUser: false,
-                // 日期选择（当前正常，get时需要再次转化）
+                // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
                 curDate: null,
                 // 日报数据
                 dailysData: {
-                    count: 100,
                     dailys: []
                 },
                 // 用户列表
                 groupUsers: [],
-                curUserId: null,
-                curDailyNum: 7,
-                numlist: [{ 'name': 7, 'value': 7 }, { 'name': 14, 'value': 14 }, { 'name': 30, 'value': 30 }, { 'name': '全部', 'value': 0 }]
+                curUserId: null
             }
         },
         created () {
@@ -140,6 +143,16 @@
             this.init()
         },
         methods: {
+            // 每页日报数量
+            changeLimit (pageSize) {
+                this.defaultPaging.limit = pageSize
+                this.getDailys()
+            },
+            // 切换页面
+            changePage (page) {
+                this.defaultPaging.current = page
+                this.getDailys()
+            },
             // 点击切换显示类型的按钮
             changeType () {
                 this.isUser = !this.isUser
@@ -154,34 +167,27 @@
                     this.groupUsers = res.data
                 })
             },
-            // 根据成员获取对应日报
-            getUserDailys (userId) {
-                // 获取日报
-                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&report_num=' + this.curDailyNum).then((res) => {
+            // 修改日期或成员
+            changeDateOrUser (userId, date) {
+                this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
+                this.curUserId = userId
+                this.getDailys()
+            },
+            // 获取当前组日报
+            getDailys () {
+                this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
                     if (res.result) {
-                        // 更新daily
-                        this.dailysData.count = res.data.total_report_num
+                        this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
                     } else {
-                        const config = {}
-                        config.message = res.message
-                        config.offsetY = 80
-                        config.theme = 'error'
+                        const config = {
+                            message: res.message,
+                            offsetY: 80,
+                            theme: 'error'
+                        }
                         this.$bkMessage(config)
                     }
                 })
-            },
-            clickUser (userId) {
-                this.curUserId = userId
-                this.rightIsUser = true
-                this.getUserDailys(userId)
-            },
-            // 切换获取日报数量
-            changeDailyNum () {
-                if (this.curDailyNum === '全部') {
-                    this.curDailyNum = 0
-                }
-                this.getUserDailys(this.curUserId)
             },
             init () {
                 // 获取所有组列表
@@ -190,6 +196,12 @@
                     this.groupsData = res.data
                     // 初始化显示的组
                     if (this.groupsData.length !== 0) {
+                        this.curGroupId = this.groupsData[0].id
+                        this.curGroup = this.groupsData[0]
+                        // 获取组内成员
+                        this.getGroupUsers(this.curGroupId)
+                        // 初始化组内所有日报（根据日期选择）
+                        this.changeDateOrUser('', this.curDate)
                         if (this.curGroupId !== null) {
                             const vm = this
                             this.groupsData.forEach(function (group) {
@@ -207,7 +219,7 @@
             },
             // 点击切换组
             changeGroup (groupId) {
-                if (!isNaN(groupId) && groupId > 0) {
+                if (groupId === null || groupId === '') {
                     this.curGroup = {
                         id: '',
                         name: '',
@@ -219,7 +231,6 @@
                     this.groupUsers = []
                     this.curUserId = null
                     this.dailysData.dailys = []
-                    this.rightIsUser = false
                 } else {
                     const vm = this
                     // 更改当前组信息
@@ -233,28 +244,8 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.changeDate(this.curDate)
-                }
-            },
-            // 根据日期获取当前组日报
-            changeDate (date) {
-                this.curUserId = null
-                this.rightIsUser = false
-                if (!isNaN(this.curGroupId) && this.curGroupId > 0) {
-                    const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate).then(res => {
-                        // this.rightIsUser = false
-                        if (res.result) {
-                            this.dailysData.count = res.data.length
-                            this.dailysData.dailys = res.data
-                        } else {
-                            const config = {}
-                            config.message = res.message
-                            config.offsetY = 80
-                            config.theme = 'error'
-                            this.$bkMessage(config)
-                        }
-                    })
+                    this.curDate = new Date()
+                    this.changeDateOrUser('', this.curDate)
                 }
             }
         }
