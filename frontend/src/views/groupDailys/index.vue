@@ -156,23 +156,19 @@
             },
             // 获取当前组日报
             getDailys () {
-                if (this.curGroupId === null || this.curGroupId === '') {
-                    console.log('curGroupId为空')
-                } else {
-                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
-                        if (res.result) {
-                            this.defaultPaging.count = res.data.total_report_num
-                            this.dailysData.dailys = res.data.reports
-                        } else {
-                            const config = {
-                                message: res.message,
-                                offsetY: 80,
-                                theme: 'error'
-                            }
-                            this.$bkMessage(config)
+                this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
+                    if (res.result) {
+                        this.defaultPaging.count = res.data.total_report_num
+                        this.dailysData.dailys = res.data.reports
+                    } else {
+                        const config = {
+                            message: res.message,
+                            offsetY: 80,
+                            theme: 'error'
                         }
-                    })
-                }
+                        this.$bkMessage(config)
+                    }
+                })
             },
             init () {
                 // 获取所有组列表
