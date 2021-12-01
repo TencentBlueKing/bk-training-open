@@ -31,7 +31,6 @@
         methods: {
             setStyle () {
                 document.querySelector('#content').style.minHeight = this.minheight + 'px'
-                // console.log('document.querySelector(id).style.minHeight == ', document.querySelector(id).style)
             }
         }
     }
