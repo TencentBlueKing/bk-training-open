@@ -4,25 +4,25 @@
         <td style="margin: 0 auto; overflow: hidden; padding: 0; border: 0 dotted rgb(238, 238, 238);">
             <!--logo图片-->
             <!--标题-->
-                {{ mail_title }}
+            {{ mail_title }}
             <!--组信息-->
 
-                <p style="word-break: break-word; line-height: 20px; font-size: 17px; margin: 0; color: #222222;">
-                    {{ mail_content}}
-                </p>
+            <p style="word-break: break-word; line-height: 20px; font-size: 17px; margin: 0; color: #222222;">
+                {{ mail_content }}
+            </p>
             </div>
             <!--用户日志-->
-            <div >
+            <div>
                 <p>
-                {% for daily in daily_list %}
-                      <b>{{ daily.id }}:  </b>
-                          {%for x,y in daily.content.items  %}
-                          <b>{{ x }}:</b>{{ y }}<br>
-                              {% endfor %}
-                         <b>评价人:</b>{{ username}}<br>
-                            <b>评价:</b>{{ daily.evaluate }}
-                       <hr>
-                {% endfor %}
+                    {% for daily in daily_list %}
+                        <b>{{ daily.id }}: </b>
+                        {% for x,y in daily.content.items %}
+                            <b>{{ x }}:</b>{{ y }}<br>
+                        {% endfor %}
+                        <b>评价人:</b>{{ username }}<br>
+                        <b>评价:</b>{{ daily.evaluate }}
+                        <hr>
+                    {% endfor %}
                 </p>
             </div>
             <!--分隔线-->
