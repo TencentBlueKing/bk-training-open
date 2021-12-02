@@ -330,7 +330,7 @@
                     }
                 },
                 // 当天日期
-                curDate: new Date(),
+                curDate: null,
                 formatDate: '',
                 // 选择的组
                 selectGroupId: 0,
@@ -364,7 +364,18 @@
             }
         },
         created () {
-            this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+            const groupIdInURL = this.$route.query.group
+            if (groupIdInURL !== undefined) {
+                this.selectGroupId = parseInt(groupIdInURL)
+            }
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                this.curDate = new Date(dateInURL)
+            } else {
+                this.curDate = new Date()
+            }
+
+            this.formatDate = moment(this.curDate).format(moment.HTML5_FMT.DATE)
             this.init()
         },
         methods: {
@@ -375,8 +386,11 @@
                 ).then(res => {
                     this.groupList = res.data
                     if (this.groupList.length > 0) {
-                        this.selectGroupId = this.groupList[0].id
-                        this.loadApply()
+                        if (this.selectGroupId > 0) {
+                            this.changeGroup(this.selectGroupId)
+                        } else {
+                            this.selectGroupId = this.groupList[0].id
+                        }
                     }
                 })
             },
