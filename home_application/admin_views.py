@@ -77,7 +77,7 @@ def notice_non_report_users(request, group_id):
     """
     提醒未写日报成员写日报
     """
-    date = request.GET.get("date")
+    date = json.loads(request.body).get("date")
     # 组内成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids).values_list("username", flat=True)
@@ -86,13 +86,12 @@ def notice_non_report_users(request, group_id):
         "create_by", flat=True
     )
     non_report_users = set(group_users) - set(report_user_usernames)
-    username_str = ",".join([user for user in non_report_users])
+    username_str = ",".join(non_report_users)
     # 发送邮件
     if non_report_users:
         # 放进celery里
         send_unfinished_dairy.delay(username_str, date)
         return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功", "data": []})
-
     else:
         return JsonResponse({"result": True, "code": 0, "message": "无未写日报成员", "data": []})
 
@@ -109,7 +108,7 @@ def delete_evaluate_daily(request, group_id, daily_id):
     if daily.remove_evaluate(username):
         return JsonResponse({"result": True, "code": 0, "message": "删除成功", "data": []})
     else:
-        return JsonResponse({"result": False, "code": 0, "message": "评价不存在成功", "data": []})
+        return JsonResponse({"result": False, "code": 0, "message": "评价不存在", "data": []})
 
 
 @require_http_methods(["POST"])
@@ -121,7 +120,7 @@ def update_evaluate_daily(request, group_id, daily_id):
     try:
         daily = Daily.objects.get(id=daily_id)
     except Daily.DoesNotExist:
-        return JsonResponse({"result": False, "code": 0, "message": "无此评论", "data": []})
+        return JsonResponse({"result": False, "code": 0, "message": "无此日报", "data": []})
     evaluate_content = request.GET.get("evaluate_content")
     username = request.user.username
     daily.add_evaluate(username, evaluate_content)
@@ -135,9 +134,8 @@ def send_evaluate_all(request, group_id):
     发生邮件给所有组成员
     可以发生多个邮件
     """
-    daily_ids = request.GET.get("daily_ids")
-    date = Daily.objects.filter(id=daily_ids[0]).values_list("date")
-    date = str(date[0])
+    daily_ids = json.loads(request.body).get("daily_ids")
+    date = Daily.objects.get(id=daily_ids[0]).date
     username = request.user.username
     evaluate_name = []
     # 日报内容 评价
