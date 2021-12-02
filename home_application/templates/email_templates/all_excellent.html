@@ -14,24 +14,17 @@
             <!--用户日志-->
             <div >
                 <p>
-{% for i,j in zip_data %}
-    {% for n,m in i.items %}
-        <b>{{ n }}</b>:{{ m }}<br>
-    {% endfor %}
-    {% for n in j.values %}
-     {% if forloop.first %}
-       <b>评价人：</b>{{ n }}<br>
-     {% endif %}
-     {% if forloop.last %}
-         <b> 评价：</b>{{ n }}<br>
-     {% endif %}
-
- {% endfor %}
-       <hr>
-{% endfor %}
+                {% for daily in daily_list %}
+                      <b>{{ daily.id }}:  </b>
+                          {%for x,y in daily.content.items  %}
+                          <b>{{ x }}:</b>{{ y }}<br>
+                              {% endfor %}
+                         <b>评价人:</b>{{ username}}<br>
+                            <b>评价:</b>{{ daily.evaluate }}
+                       <hr>
+                {% endfor %}
                 </p>
             </div>
-
             <!--分隔线-->
             <div style="border: #CCCCCC 1px solid"></div>
             <!--蓝鲸智云-->
