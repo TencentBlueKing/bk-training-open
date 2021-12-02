@@ -183,22 +183,17 @@ def send_apply_for_group_to_manager(user_name, group_admins, group_name):
 
 
 @task()
-def send_good_daily(user_name, date, content_list, evaluate_name):
+def send_good_daily(username,user_name, date,  daily_list):
     """
     发生日报给组内所有人
+    :param username: 管理员
     :param user_name: 用户名：username string(多人以逗号连接)
     :param date : 日报时间
-    :param content_list: 日报内容
-    :param evaluate_name:日报评价
+    :param daily_list: 日报内容 日报评价
     """
-    content_list_dict = []
-    for content_list in content_list:
-        content_list = ast.literal_eval(content_list)
-        content_list_dict.append(content_list)
     mail_title = "{} 日报推送".format(date)
     html_template = get_template("all_excellent.html")
-    zip_data = zip(content_list_dict, evaluate_name)
-    mail_content = html_template.render({"zip_data": zip_data})
+    mail_content = html_template.render({"daily_list":daily_list,"username":username})
     send_mail(
         receiver__username=user_name,
         title=mail_title,
