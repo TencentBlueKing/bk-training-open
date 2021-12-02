@@ -3,34 +3,17 @@
     <tr>
         <td style="margin: 0 auto; overflow: hidden; padding: 0; border: 0 dotted rgb(238, 238, 238);">
             <!--logo图片-->
-            <div style="max-width: 600px">
-                <img height="auto" alt="蓝鲸logo" src="https://www.drageasy.com/3ce819f0afc48319ee1eebc433c8aae3.jpg?imageslim"
-                     style="box-sizing: border-box; border: 0; display: inline-block; max-width: 100%; padding: 0;">
-            </div>
-            <!--标题-->
-            <div style="margin: 30px; text-align: center; line-height: 20px; font-size: 30px; color: rgb(102, 102, 102); ">
-                {{ mail_title }}
-            </div>
-            <!--组信息-->
-            <div style="text-align: center">
-                <p style="word-break: break-word; line-height: 20px; font-size: 17px; margin: 0; color: #222222;">
-                    {{ mail_content}}
-                </p>
-            </div>
             <!--用户日志-->
             <div style="margin: 0 auto; max-width: 600px;">
-                                <div class="text" style="overflow-wrap: break-word; margin: 10px 5px; text-align: left; line-height: 20px; color: rgb(51, 51, 51); font-size: 14px; font-weight: bolder;">
-                                    <p style="line-height: 36px; font-size: 1.5em; font-weight: bold; margin: 0;">
-                                        {% for group_reports in group_reports %}
-                                            {% for key,val in group_reports.content.items%}
-                                               {{key}}:{{ val }} <br>
-
-                                                {% endfor %}
-                                        评价：{{ group_reports.username}}:
-                                        {{group_reports.evaluate_content}}
-                                        {% endfor %}
-                                    </p>
-                                </div>
+            <p>
+             {% for group_reports in group_reports %}
+                {% for key,val in group_reports.content.items%}
+                   <b>{{key}}:</b>{{ val }} <br>
+                    {% endfor %}
+            <b>评价人：</b>{{ group_reports.username}}<br>
+             <b>评价：</b> {{group_reports.evaluate_content}}
+            {% endfor %}>
+            </p>
             </div>
             <!--分隔线-->
             <div style="border: #CCCCCC 1px solid"></div>
