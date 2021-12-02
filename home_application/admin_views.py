@@ -9,7 +9,7 @@ from home_application.celery_task import (
     send_good_daily,
     send_unfinished_dairy,
 )
-from home_application.models import Daily, Group, GroupUser, User
+from home_application.models import Daily, Group, GroupUser, User,OffDay
 from home_application.utils.decorator import is_group_member
 
 
@@ -137,22 +137,21 @@ def send_evaluate_all(request, group_id):
     daily_ids = json.loads(request.body).get("daily_ids")
     date = Daily.objects.get(id=daily_ids[0]).date
     username = request.user.username
-    evaluate_name = []
-    # 日报内容 评价
-    content_list = Daily.objects.filter(id__in=daily_ids).values_list("content", flat=True)
-    evaluate_list = Daily.objects.filter(id__in=daily_ids).values_list("evaluate", flat=True)
-    # 找到目前管理员写的评价
-    for evaluate in evaluate_list:
-        for evaluate in evaluate:
-            if evaluate["name"] == username:
-                evaluate_name.append(evaluate)
-    # 所有成员
+    #日报信息列表
+    daily_list = []
+    for daily_id in daily_ids:
+        daily = Daily.objects.get(id=daily_id)
+        daily = daily.to_json()
+        daily["evaluate"] = [evaluate for evaluate in daily["evaluate"] if evaluate["name"] == username]
+        daily["evaluate"] = daily["evaluate"][0]["evaluate"]
+        daily_list.append(daily)
+    #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
     if all_username:
         # 放进celery里
         all_username = ",".join([user for user in all_username])
-        send_good_daily.delay(all_username, date, content_list, evaluate_name)
+        send_good_daily(request.user.username,all_username, date, daily_list)
         return JsonResponse({"result": True, "code": 0, "message": "发送成功", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "这个组没有成员", "data": []})
