@@ -195,12 +195,10 @@ def send_good_daily(user_name, date, content_list, evaluate_name):
     for content_list in content_list:
         content_list = ast.literal_eval(content_list)
         content_list_dict.append(content_list)
-    mail_title = "{} 优秀日报推送".format(date)
-    print(content_list)
-    print(evaluate_name)
+    mail_title = "{} 日报推送".format(date)
     html_template = get_template("all_excellent.html")
     zip_data = zip(content_list_dict, evaluate_name)
-    mail_content = html_template.render({"mail_title": mail_title, "zip_data": zip_data})
+    mail_content = html_template.render({"zip_data": zip_data})
     send_mail(
         receiver__username=user_name,
         title=mail_title,
