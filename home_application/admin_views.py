@@ -142,8 +142,12 @@ def send_evaluate_all(request, group_id):
     for daily_id in daily_ids:
         daily = Daily.objects.get(id=daily_id)
         daily = daily.to_json()
-        daily["evaluate"] = [evaluate for evaluate in daily["evaluate"] if evaluate["name"] == username]
-        daily["evaluate"] = daily["evaluate"][0]["evaluate"]
+        if daily["evaluate"]:
+            daily["evaluate"] = daily["evaluate"][0]["evaluate"]
+        else:
+            daily["evaluate"] = "管理员未评价"
+        if daily["evaluate"][0]["evaluate"]:
+            daily["evaluate"] = daily["evaluate"][0]["evaluate"]
         daily_list.append(daily)
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
