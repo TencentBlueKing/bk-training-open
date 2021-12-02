@@ -4,9 +4,12 @@
             <bk-divider align="left" style="margin-bottom:30px;">
                 <div class="container_title">填写日报</div>
             </bk-divider>
+            <div v-if="dailyIsPut">
+                <bk-alert type="warning" title="当天日报已保存，不可重复提交！" closable></bk-alert>
+            </div>
             <div class="top_container" style="margin-top:50px;">
                 <span>选择模板：</span>
-                <bk-select :disabled="!writeFalg" v-model="curTemplateId" style="width: 250px; display: inline-block; vertical-align: bottom; "
+                <bk-select v-model="curTemplateId" style="width: 250px; display: inline-block; vertical-align: bottom; "
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     searchable
@@ -26,11 +29,11 @@
                     :placeholder="'选择日期'"
                     :ext-popover-cls="'custom-popover-cls'"
                     :options="customOption"
-                    @change="getDailyByDate(reportDate)"
+                    @change="changeDate(reportDate)"
                 >
                 </bk-date-picker>
                 <bk-button :theme="'primary'"
-                    :disabled="!writeFalg"
+                    :disabled="!saveFalg || dailyIsPut"
                     type="submit" :title="'保存'" @click="clickSaveDaily()" class="mr10" style="margin-left:40px;">
                     保存
                 </bk-button>
@@ -61,7 +64,6 @@
                             :rows="3"
                             :maxlength="255"
                             v-model="dailyData[index]"
-                            :disabled="!writeFalg"
                             @change="saveFalg = true"
                         >
                         </bk-input>
@@ -75,8 +77,14 @@
 </template>
 
 <script>
+    import { bkAlert } from 'bk-magic-vue'
+    import moment from 'moment'
+    
     export default {
         name: '',
+        components: {
+            bkAlert
+        },
         data () {
             return {
                 templateList: [],
@@ -102,8 +110,9 @@
                 saveDailyDialog: {
                     visiable: false
                 },
+                // 当前日期的日报是否已提交
+                dailyIsPut: false,
                 saveFalg: false,
-                writeFalg: true,
                 saveText: '未保存',
                 clearFlag: 0
             }
@@ -113,12 +122,7 @@
         },
         
         methods: {
-            // 转化日期格式yyyy-MM-dd
-            formateDate (date) {
-                return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-            },
             changeTemplate () {
-                console.log(this.curTemplateId + 'x')
                 if (this.curTemplateId === null || this.curTemplateId === '') {
                     this.curTemplate = []
                     this.dailyData = []
@@ -126,7 +130,6 @@
             },
             // 切换模板
             selectTemplate () {
-                console.log('切换模板curTemplateId', this.curTemplateId)
                 this.dailyData = []
                 const vm = this
                 vm.templateList.forEach(function (template) {
@@ -134,8 +137,6 @@
                         vm.curTemplate = template.content.split(';')
                     }
                 })
-                console.log('templateList', this.templateList)
-                console.log('template', this.curTemplate)
             },
             // 界面初始化
             init () {
@@ -143,9 +144,8 @@
                     if (res.result) {
                         this.templateList = res.data
                         this.clearFlag = 1
-                        console.log('templateList', this.templateList)
                         // 获取用户今日的日报
-                        this.getDailyByDate(this.reportDate)
+                        this.changeDate(this.reportDate)
                     } else {
                         // 调用获取日报模板接口失败
                         const config = {}
@@ -157,52 +157,32 @@
                 })
             },
             clickSaveDaily () {
-                console.log('isToday', this.formateDate(this.reportDate) === this.formateDate(new Date()))
-                if (this.formateDate(this.reportDate) === this.formateDate(new Date())) {
+                if (moment(this.reportDate).format('YYYY-MM-DD') === moment(new Date()).format('YYYY-MM-DD')) {
                     this.saveDaily()
                 } else {
                     this.saveDailyDialog.visiable = true
                 }
             },
-            // 获取用户指定日期日报，如果没有写日报，则自动渲染第一个模板的内容
-            getDailyByDate (date) {
-                this.writeFalg = true
+            // 获取用户指定日期日报，如果没有写日报，补则签
+            changeDate (date) {
+                this.saveFalg = false
                 const config = {}
                 config.offsetY = 80
-                console.log('templates', this.templateList)
-                this.$http.get('/daily_report/?date=' + this.formateDate(date)).then(res => {
+                this.$http.get('/daily_report/?date=' + moment(date).format('YYYY-MM-DD')).then(res => {
                     if (res.result) {
-                        console.log('daily', res.data)
                         if (JSON.stringify(res.data) === '{}') {
+                            this.dailyIsPut = false
                             // 今天的日志还没写
-                            console.log(this.formateDate(date) + '天没写日报')
                             if (this.templateList.length > 0) {
                                 // 默认选择第一个默认模板
                                 this.curTemplateId = this.templateList[0].id
                                 this.curTemplate = this.templateList[0].content.split(';')
-                                console.log('curTemplateId:', this.curTemplateId)
-                                console.log('curTemplate', this.curTemplate)
                                 this.dailyData = []
                                 this.saveText = '未保存'
                             }
                         } else {
-                            // 写了日报，给日报注入内容
-                            const templateContent = []
-                            const daily = []
-                            for (const key in res.data.content) {
-                                templateContent.push(key)
-                                daily.push(res.data.content[key])
-                            }
-                            this.curTemplateId = res.data.template_id
-                            this.curTemplate = templateContent
-                            this.dailyData = daily
-                            console.log('curTemplateId', this.curTemplateId)
-                            console.log('curTemplate', this.curTemplate)
-                            console.log('dailyData', this.dailyData)
-                            if (res.data.send_describe === '已发送') {
-                                this.writeFalg = false
-                            }
-                            this.saveText = res.data.send_describe
+                            this.dailyIsPut = true
+                            this.saveText = '已保存'
                         }
                     } else {
                         // 调用获取当前日报接口失败
@@ -228,11 +208,9 @@
                     this.$bkMessage(config)
                     return
                 }
-                console.log(this.dailyData)
                 let flag = true
                 const content = {}
                 for (let i = 0; i < this.curTemplate.length; i++) {
-                    console.log('日报内容', this.dailyData[i])
                     if (this.dailyData[i] === null || this.dailyData[i] === '' || this.dailyData[i] === undefined) {
                         config.message = '"' + this.curTemplate[i] + '"不可为空'
                         flag = false
@@ -241,24 +219,21 @@
                         content[this.curTemplate[i]] = this.dailyData[i]
                     }
                 }
-                console.log('hasFullContentFlag:', flag)
                 if (flag === false) {
                     this.addDailyFormData = { date: null, content: {}, template_id: null }
                     config.theme = 'error'
                     this.$bkMessage(config)
                 } else {
                     // 设置日期数据
-                    this.addDailyFormData.date = this.formateDate(this.reportDate)
+                    this.addDailyFormData.date = moment(this.reportDate).format('YYYY-MM-DD')
                     this.addDailyFormData.content = content
                     this.addDailyFormData.template_id = this.curTemplateId
                     // 调取添加日报接口
-                    console.log('addDailyFormData:', this.addDailyFormData)
                     this.$http.post('/daily_report/', this.addDailyFormData).then(res => {
                         config.message = res.message
                         if (res.result) {
                             config.theme = 'success'
                             this.$bkMessage(config)
-                            console.log('填写成功，重新获取日报信息')
                         } else {
                             this.addDailyFormData = null
                             config.theme = 'error'
@@ -276,6 +251,9 @@
 </script>
 
 <style scoped>
+    .demo-block.demo-alert .bk-alert{
+        margin-bottom: 20px;
+    }
     .body {
         border: 2px solid #EAEBF0 ;
         width: 1649px;
