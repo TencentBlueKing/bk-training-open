@@ -9,7 +9,7 @@ from home_application.celery_task import (
     send_good_daily,
     send_unfinished_dairy,
 )
-from home_application.models import Daily, Group, GroupUser, User,OffDay
+from home_application.models import Daily, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 
 
@@ -136,8 +136,7 @@ def send_evaluate_all(request, group_id):
     """
     daily_ids = json.loads(request.body).get("daily_ids")
     date = Daily.objects.get(id=daily_ids[0]).date
-    username = request.user.username
-    #日报信息列表
+    # 日报信息列表
     daily_list = []
     for daily_id in daily_ids:
         daily = Daily.objects.get(id=daily_id)
@@ -155,7 +154,7 @@ def send_evaluate_all(request, group_id):
     if all_username:
         # 放进celery里
         all_username = ",".join([user for user in all_username])
-        send_good_daily(request.user.username,all_username, date, daily_list)
+        send_good_daily(request.user.username, all_username, date, daily_list)
         return JsonResponse({"result": True, "code": 0, "message": "发送成功", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "这个组没有成员", "data": []})
