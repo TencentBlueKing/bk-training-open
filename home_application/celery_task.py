@@ -183,7 +183,7 @@ def send_apply_for_group_to_manager(user_name, group_admins, group_name):
 
 
 @task()
-def send_good_daily(username,user_name, date,  daily_list):
+def send_good_daily(username, user_name, date, daily_list):
     """
     发生日报给组内所有人
     :param username: 管理员
@@ -193,7 +193,7 @@ def send_good_daily(username,user_name, date,  daily_list):
     """
     mail_title = "{} 日报推送".format(date)
     html_template = get_template("all_excellent.html")
-    mail_content = html_template.render({"daily_list":daily_list,"username":username})
+    mail_content = html_template.render({"daily_list": daily_list, "username": username})
     send_mail(
         receiver__username=user_name,
         title=mail_title,
