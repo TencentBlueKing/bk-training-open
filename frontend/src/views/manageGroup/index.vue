@@ -148,57 +148,51 @@
                         <div v-for="daily in hasSubmitDaily" :key="daily" class="flexcard">
                             <bk-card class="card" :show-head="true" :show-foot="true">
                                 <div slot="header" class="head-main">
-                                    {{daily.create_name}}的日报
+                                    <div class="mr20">{{daily.create_name}}的日报</div><div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div><div v-else style="color: #63656E">未点评</div>
                                 </div>
                                 <div>
-                                    <h3 style="height: 25px;overflow: hidden">点评情况：<span v-if="daily.evaluate.length" style="color: #3A84FF;font-size: 18px;">已点评</span><span v-else style="color: #63656E;font-size: 18px;">未点评</span></h3>
+                                    <div v-for="(val, key) in daily.content" :key="key">
+                                        <h2>{{key}}</h2>
+                                        <div style="font-size:18px">
+                                            <pre>{{val}}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="daily.evaluate.length">
+                                    <h2>点评情况</h2>
+                                    <div>
+                                        <div class="singleComment" v-for="(evaluate,index) in daily.evaluate" :key="index">
+                                            <span style="font-weight: bold">{{evaluate.name + '说：'}}</span><span>{{evaluate.evaluate}}</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div slot="footer" class="foot-main">
-                                    <div class="noComment">
-                                        <div>
-                                            <bk-button
-                                                :theme="'primary'"
-                                                :title="'查看日报'"
-                                                class="mr10"
-                                                @click="openDialog(daily)">
-                                                查看日报
-                                            </bk-button>
-                                        </div>
+                                    <div>
+                                        <bk-button
+                                            :theme="'success'"
+                                            :title="'分享'"
+                                            class="mr10"
+                                            size="small"
+                                            @click="dealShareAll">
+                                            加入待分享
+                                        </bk-button>
+                                        <bk-button
+                                            :theme="'primary'"
+                                            :title="'去点评'"
+                                            class="mr10"
+                                            size="small"
+                                            @click="openDialog(daily)">
+                                            去点评
+                                        </bk-button>
                                     </div>
                                 </div>
                             </bk-card>
                         </div>
                         <bk-dialog
                             v-model="dailyDetailDialog.visible"
-                            title="日报内容"
                             :header-position="dailyDetailDialog.headerPosition"
                             :width="dailyDetailDialog.width"
                             :position="{ top: 20, left: 100 }">
-                            <div v-for="(val, key) in dialogMember.content" :key="key">
-                                <h3>{{key}}</h3>
-                                <bk-input
-                                    :placeholder="val"
-                                    :type="'textarea'"
-                                    font-size="large"
-                                    :rows="2"
-                                    style="margin-bottom: 15px; color: #000000"
-                                    :readonly="true">
-                                </bk-input>
-                            </div>
-                            <div v-if="dialogMember.evaluate.length">
-                                <h2>点评情况</h2>
-                                <div style="max-height: 190px; overflow: scroll">
-                                    <div class="singleComment" v-for="(evaluate,index) in dialogMember.evaluate" :key="index">
-                                        <bk-input
-                                            :type="'textarea'"
-                                            font-size="large"
-                                            :rows="3" style="margin: 5px 0;"
-                                            :placeholder="evaluate.name + '说：' + evaluate.evaluate"
-                                            :readonly="true">
-                                        </bk-input>
-                                    </div>
-                                </div>
-                            </div>
                             <div v-if="dialogMember.hasComment">
                                 <h2>修改我的点评</h2>
                                 <div class="singleComment">
@@ -226,14 +220,6 @@
                             </div>
                             <div slot="footer" class="dialog-foot">
                                 <div>
-                                    <bk-button
-                                        :theme="'success'"
-                                        :title="'分享'"
-                                        class="mr10"
-                                        size="large"
-                                        @click="dealShareAll">
-                                        加入待分享
-                                    </bk-button>
                                     <template v-if="dialogMember.hasComment">
                                         <bk-button
                                             :theme="'warning'"
@@ -489,6 +475,16 @@
                     }
                 }
             },
+            hasComment (daily) {
+                for (const singleEvaluate of daily.evaluate) {
+                    if (singleEvaluate.name === this.currentUserName) {
+                        this.myPastComment = singleEvaluate.evaluate
+                        this.myNewComment = singleEvaluate.evaluate
+                        return true
+                    }
+                }
+                return false
+            },
             // 提交我的点评信息
             submitMyComment () {
                 if (this.myComment.length) {
@@ -573,6 +569,29 @@
                     '/list_member_daily/' + id + '/?date=' + date
                 ).then(res => {
                     this.memberDaily = res.data
+                    for (const daily of this.memberDaily) {
+                        if (daily.write_status) {
+                            const newContent = {}
+                            for (const key in daily.content) {
+                                if (daily.content[key] instanceof Array) {
+                                    let points = ''
+                                    if (daily.content.isPrivate) {
+                                        for (const point of daily.content[key]) {
+                                            points = points + point.content + ';\n'
+                                        }
+                                    } else {
+                                        for (const point of daily.content[key]) {
+                                            points = points + point.content + ';-----(' + point.cost + ')\n'
+                                        }
+                                    }
+                                    newContent[key] = points
+                                } else if (key !== 'isPrivate') {
+                                    newContent[key] = daily.content[key]
+                                }
+                            }
+                            daily.content = newContent
+                        }
+                    }
                 })
             },
             // 改变日历的日期
@@ -641,6 +660,8 @@
 }
 .head-main{
     height: 100%;
+    display: flex;
+    justify-content: space-between;
     overflow: hidden;
 }
 .cards{
@@ -654,10 +675,9 @@
     margin: 10px 0.5%;
 }
 .card >>> .bk-card-body{
-    height: 150px;
+    height: 200px;
     padding: 0 20px;
-    background-color: #eeeeee;
-    overflow: hidden;
+    overflow-y: scroll;
 }
 .foot-main {
     width: 100%;
