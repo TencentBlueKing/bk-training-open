@@ -110,7 +110,7 @@
                 // 控制显示日期还是显示成员
                 isUser: false,
                 // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
-                curDate: moment(new Date()).format('YYYY-MM-DD'),
+                curDate: null,
                 // 日报数据
                 dailysData: {
                     dailys: []
@@ -121,6 +121,17 @@
             }
         },
         created () {
+            // 初始化组id和日期
+            const groupIdInURL = this.$route.query.group
+            if (groupIdInURL !== undefined) {
+                this.curGroupId = parseInt(groupIdInURL)
+            }
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                this.curDate = new Date(dateInURL)
+            } else {
+                this.curDate = new Date()
+            }
             this.init()
         },
         methods: {
@@ -175,14 +186,23 @@
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
                     this.groupsData = res.data
-                    // 初始化组，选择第一个
+                    // 初始化显示的组
                     if (this.groupsData.length !== 0) {
-                        this.curGroupId = this.groupsData[0].id
-                        this.curGroup = this.groupsData[0]
-                        // 获取组内成员
-                        this.getGroupUsers(this.curGroupId)
-                        // 初始化组内所有日报（根据日期选择）
-                        this.changeDateOrUser('', this.curDate)
+                        if (this.curGroupId !== null) {
+                            const vm = this
+                            this.groupsData.forEach(function (group) {
+                                if (group.id === vm.curGroupId) {
+                                    vm.curGroup = group
+                                    // 获取组内成员
+                                    vm.getGroupUsers(vm.curGroupId)
+                                    // 初始化组内所有日报（根据日期选择）
+                                    vm.changeDateOrUser('', vm.curDate)
+                                }
+                            })
+                        } else {
+                            this.curGroupId = this.groupsData[0].id
+                            this.curGroup = this.groupsData[0]
+                        }
                     }
                 })
             },
@@ -213,7 +233,6 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.curDate = new Date()
                     this.changeDateOrUser('', this.curDate)
                 }
             }
@@ -226,9 +245,8 @@
     .body{
         border: 2px solid #EAEBF0 ;
         /* border-radius: 4px; */
-        margin:0px 100px;
+        margin:0 100px;
         padding: 20px 50px;
-        
     }
     .container_title {
         font-size: 22px;
@@ -242,7 +260,6 @@
     }
     .users_list >>> .bk-button{
         margin-bottom: 10px;
-        
     }
     .right_container{
         float: right;
