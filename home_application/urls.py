@@ -41,4 +41,5 @@ urlpatterns = (
     url(r"^apply_for_group/$", views.apply_for_group),
     path("get_apply_for_group_users/<int:group_id>/", views.get_apply_for_group_users),
     path("deal_join_group/<int:group_id>/", views.deal_join_group),
+    path("get_user_dates/", views.get_user_dates),
 )

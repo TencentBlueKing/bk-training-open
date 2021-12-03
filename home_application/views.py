@@ -631,9 +631,25 @@ def report_filter(request, group_id):
     # 查询所有人的日报
     member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group).order_by("-date")
     total_report_num = member_report.count()
-
+    # 查找自己的日报
+    get_my_report = True
+    try:
+        Daily.objects.get(date=report_date, create_by=request.user.username)
+    except ValueError:
+        get_my_report = False
     # 分页
     member_report = get_paginator(member_report, page, page_size)
     # 查询完毕返回数据
-    res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
+    res_data = {
+        "total_report_num": total_report_num,
+        "reports": content_format_as_json(member_report),
+        "my_today_report": get_my_report,
+    }
     return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": res_data})
+
+
+@require_GET
+def get_user_dates(request):
+    """获取用户写过所有日报的日期"""
+    member_dates = Daily.objects.filter(create_by=request.user.username).values_list("date", flat=True)
+    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": list(member_dates)})
