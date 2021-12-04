@@ -31,9 +31,9 @@
                     </bk-date-picker>
                 </div>
                 <div style="margin-left: 2%">
-                    <bk-badge :theme="'danger'" :max="99" :val="newApplyData.length">
+                    <bk-badge theme="danger" :max="99" :val="newApplyData.length">
                         <bk-button
-                            :theme="'primary'"
+                            theme="primary"
                             @click="newApplyDialog.visible = true">
                             新的申请入组
                         </bk-button>
@@ -72,7 +72,7 @@
                     </bk-table>
                 </bk-dialog>
                 <div>
-                    <bk-badge :theme="'danger'" :max="99" :val="hasNotSubmitMember.length">
+                    <bk-badge theme="danger" :max="99" :val="hasNotSubmitMember.length">
                         <bk-button
                             :theme="'primary'"
                             :title="'未提交'"
@@ -94,17 +94,17 @@
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button :theme="'primary'" :title="'确认'" class="mr10" size="large" @click="remindAll" :disabled="hasRemindAll">
+                            <bk-button theme="primary" title="确认" class="mr10" size="large" @click="remindAll" :disabled="hasRemindAll">
                                 {{ hasRemindAll ? '已提醒' : '一键提醒' }}
                             </bk-button>
                         </div>
                     </div>
                 </bk-dialog>
                 <div>
-                    <bk-badge :theme="'danger'" :max="99" :val="shareAllList.length">
+                    <bk-badge theme="danger" :max="99" :val="shareAllList.length">
                         <bk-button
-                            :theme="'primary'"
-                            :title="'分享日报'"
+                            theme="primary"
+                            title="分享日报"
                             @click="shareAllDialog.visible = true">
                             分享日报
                         </bk-button>
@@ -119,7 +119,7 @@
                     <div>
                         <template v-for="(daily,index) in shareAllList">
                             <a :key="index" @click="removeFromShareList(index)" style="cursor:pointer">
-                                <bk-badge :theme="'danger'" :val="'X'" :key="index" class="mr15">
+                                <bk-badge theme="danger" :val="'X'" :key="index" class="mr15">
                                     <bk-button
                                         :key="index"
                                         style="width:130px;"
@@ -169,16 +169,16 @@
                                 <div slot="footer" class="foot-main">
                                     <div>
                                         <bk-button
-                                            :theme="'success'"
-                                            :title="'分享'"
+                                            theme="success"
+                                            title="分享"
                                             class="mr10"
                                             size="small"
                                             @click="dealShareAll">
                                             加入待分享
                                         </bk-button>
                                         <bk-button
-                                            :theme="'primary'"
-                                            :title="'去点评'"
+                                            theme="primary"
+                                            title="去点评"
                                             class="mr10"
                                             size="small"
                                             @click="openDialog(daily)">
@@ -199,7 +199,7 @@
                                 <div class="singleComment">
                                     <bk-input
                                         v-model="myNewComment"
-                                        :type="'textarea'"
+                                        type="textarea"
                                         font-size="large"
                                         :clearable="true"
                                         :rows="3"
@@ -210,9 +210,9 @@
                             <div v-else>
                                 <h2>我的点评</h2>
                                 <bk-input
-                                    :placeholder="'请输入'"
+                                    placeholder="请输入"
                                     :clearable="true"
-                                    :type="'textarea'"
+                                    type="textarea"
                                     font-size="large"
                                     v-model="myComment"
                                     :rows="3"
@@ -223,8 +223,8 @@
                                 <div>
                                     <template v-if="dialogMember.hasComment">
                                         <bk-button
-                                            :theme="'warning'"
-                                            :title="'确认修改'"
+                                            theme="warning"
+                                            title="确认修改"
                                             class="mr10"
                                             size="large"
                                             @click="operateMyComment(0)"
@@ -232,8 +232,8 @@
                                             修改
                                         </bk-button>
                                         <bk-button
-                                            :theme="'danger'"
-                                            :title="'删除评论'"
+                                            theme="danger"
+                                            title="删除评论"
                                             class="mr10"
                                             size="large"
                                             @click="operateMyComment(1)">
@@ -242,8 +242,8 @@
                                     </template>
                                     <template v-else-if="myComment.length">
                                         <bk-button
-                                            :theme="'primary'"
-                                            :title="'确认'"
+                                            theme="primary"
+                                            title="确认"
                                             class="mr10"
                                             size="large"
                                             @click="submitMyComment">
@@ -251,8 +251,8 @@
                                         </bk-button>
                                     </template>
                                     <bk-button
-                                        :theme="'default'"
-                                        :title="'关闭'"
+                                        theme="default"
+                                        title="关闭"
                                         class="mr10"
                                         size="large"
                                         @click="dailyDetailDialog.visible = false">

@@ -199,7 +199,6 @@
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
-                        console.log(res)
                         this.classifyContent()
                     } else {
                         const config = {
@@ -212,10 +211,6 @@
                 })
             },
             init () {
-                const str = "{'感想':'测试1','内容':'测试内容'}"
-                const json1 = JSON.parse(str.replace(/'/g, '"'))
-                console.log('json', json1)
-                // console.log('beforeToday', new Date((new Date()).getTime() - 24 * 60 * 60 * 1000))
                 // 获取所有组列表
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
