@@ -148,6 +148,7 @@ def send_evaluate_all(request, group_id):
                 if evaluate["name"] == request.user.username:
                     daily["evaluate"] = evaluate["evaluate"]
                     sign = False
+                    break
         if sign:
             daily["evaluate"] = "管理员未评价"
         daily_list.append(daily)
