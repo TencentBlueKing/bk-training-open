@@ -29,7 +29,7 @@ class TimeBasic(models.Model):
 # 组
 class Group(TimeBasic):
     name = models.CharField(max_length=128, unique=True, verbose_name="组名字")
-    # 多个管理员用户名拼接成的字符串
+    # 逗号分隔，一个或多个管理员用户名拼接成的字符串
     admin = models.CharField(max_length=255, verbose_name="管理员们")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
@@ -141,3 +141,17 @@ class Daily(TimeBasic):
             "template_id": self.template_id,
             "evaluate": self.evaluate,
         }
+
+    def add_evaluate(self, username, content):
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.evaluate.append({"name": username, "evaluate": content})
+        self.save()
+
+    def remove_evaluate(self, username):
+        sign = self.evaluate
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.save()
+        if self.evaluate == sign:
+            return False
+        else:
+            return True
