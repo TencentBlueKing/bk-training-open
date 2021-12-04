@@ -51,13 +51,13 @@
                                         <bk-button
                                             theme="warning"
                                             text
-                                            @click="changeContent(props.row, 0)">
+                                            @click="changeContent(props.row, index)">
                                             修改
                                         </bk-button>
                                         <bk-button
                                             theme="danger"
                                             text
-                                            @click="deleteContent(props.row, 0)">
+                                            @click="deleteContent(props.row, index)">
                                             删除
                                         </bk-button>
                                     </template>
@@ -183,7 +183,7 @@
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
-                newCost: '',
+                newCost: 0,
                 // 指向dailyData.content的下标
                 currentIndex: 0,
                 // 提交数据的格式化对象
@@ -224,6 +224,7 @@
         methods: {
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+                this.getDailyReport()
             },
             cheakDailyDates () {
                 this.$http.get('/get_reports_dates/').then(res => {
@@ -263,27 +264,18 @@
             },
             // 界面初始化
             init () {
+                this.cheakDailyDates()
+                this.getDailyReport()
+            },
+            getDailyReport () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
                     this.cheakDailyDates()
                     if (Object.keys(res.data).length) {
                         this.hasWrittenToday = true
-                        this.dailyData.title = []
-                        this.dailyData.content = []
-                        this.dailyTemplates = []
-                        this.templateContent = []
-                        for (const key in res.data.content) {
-                            if (res.data.content[key] instanceof Array) {
-                                this.dailyData.title.push(key)
-                                this.dailyData.content.push(res.data.content[key])
-                            } else if (key === 'isPrivate') {
-                                this.dailyData.isPrivate = res.data.content[key]
-                            } else {
-                                this.dailyTemplates.push(key)
-                                this.templateContent.push(res.data.content[key])
-                            }
-                        }
+                    } else {
+                        this.hasWrittenToday = false
                     }
                 })
             },
@@ -314,7 +306,7 @@
             changeContent (row, changeIndex) {
                 this.currentIndex = changeIndex
                 this.newContent = row.content
-                this.newCost = row.cost
+                this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
                 this.isAdd = false
                 this.addDialog.visible = true
@@ -359,7 +351,7 @@
             addDialogChange (val) {
                 if (val === false) {
                     this.newContent = ''
-                    this.newCost = ''
+                    this.newCost = 0
                 }
             },
             moreTemplateDialogChange (val) {
