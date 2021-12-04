@@ -29,7 +29,7 @@ class TimeBasic(models.Model):
 # 组
 class Group(TimeBasic):
     name = models.CharField(max_length=128, unique=True, verbose_name="组名字")
-    # 多个管理员用户名拼接成的字符串
+    # 逗号分隔，一个或多个管理员用户名拼接成的字符串
     admin = models.CharField(max_length=255, verbose_name="管理员们")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
