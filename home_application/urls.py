@@ -42,4 +42,7 @@ urlpatterns = (
     path("get_apply_for_group_users/<int:group_id>/", views.get_apply_for_group_users),
     path("deal_join_group/<int:group_id>/", views.deal_join_group),
     path("get_reports_dates/", views.get_reports_dates),
+    path("delete_evaluate_daily/<int:group_id>/<int:daily_id>/", admin_views.delete_evaluate_daily),
+    path("update_evaluate_daily/<int:group_id>/<int:daily_id>/", admin_views.update_evaluate_daily),
+    path("send_evaluate_all/<int:group_id>/", admin_views.send_evaluate_all),
 )
