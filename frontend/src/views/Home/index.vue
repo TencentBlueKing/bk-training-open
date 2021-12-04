@@ -33,7 +33,7 @@
                 <bk-button :theme="'primary'"
                     :disabled="!writeFalg"
                     type="submit" :title="'保存'" @click="clickSaveDaily()" class="mr10" style="margin-left:40px;">
-                    {{saveType}}
+                    保存
                 </bk-button>
                 <bk-dialog v-model="saveDailyDialog.visiable" theme="primary" class="save-daily-dialog" :show-footer="false">
                     <bk-form label-width="80">
@@ -76,11 +76,12 @@
 </template>
 
 <script>
+    import moment from 'moment'
+
     export default {
         name: '',
         data () {
             return {
-                saveType: '保存',
                 curDate: new Date(),
                 templateList: [],
                 curTemplateId: null,
@@ -123,31 +124,24 @@
         },
         
         methods: {
-            // 转化日期格式yyyy-MM-dd
-            formateDate (date) {
-                return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-            },
-            // 比较日期
-            equalsDate (date) {
-                return this.dailyDates.some(item => item.getFullYear() === date.getFullYear() && item.getMonth() === date.getMonth() && item.getDate() === date.getDate())
-            },
             cheakDailyDates () {
-                this.$http.get('/get_user_dates/').then(res => {
+                this.$http.get('/get_reports_dates/').then(res => {
                     if (res.result) {
-                        this.dailyDates = res.data.map(item => new Date(item))
+                        this.dailyDates = res.data
                         this.customOption = {
                             disabledDate: (date) => {
-                                if (this.equalsDate(date) || this.curDate < date) {
+                                if (this.dailyDates.includes(moment(date).format('YYYY-MM-DD')) || this.curDate < date) {
                                     return true
                                 }
                             }
                         }
                     } else {
                         // 调用获取日报模板接口失败
-                        const config = {}
-                        config.offsetY = 80
-                        config.message = res.message
-                        config.theme = 'error'
+                        const config = {
+                            offsetY: 80,
+                            message: res.message,
+                            theme: 'error'
+                        }
                         this.$bkMessage(config)
                     }
                 })
@@ -179,16 +173,17 @@
                         this.getDailyByDate(this.reportDate)
                     } else {
                         // 调用获取日报模板接口失败
-                        const config = {}
-                        config.offsetY = 80
-                        config.message = res.message
-                        config.theme = 'error'
+                        const config = {
+                            offsetY: 80,
+                            message: res.message,
+                            theme: 'error'
+                        }
                         this.$bkMessage(config)
                     }
                 })
             },
             clickSaveDaily () {
-                if (this.formateDate(this.reportDate) === this.formateDate(new Date())) {
+                if (moment(this.reportDate).format('YYYY-MM-DD') === moment(new Date()).format('YYYY-MM-DD')) {
                     this.saveDaily()
                 } else {
                     this.saveDailyDialog.visiable = true
@@ -197,9 +192,7 @@
             // 获取用户指定日期日报，如果没有写日报，则自动渲染第一个模板的内容
             getDailyByDate (date) {
                 this.writeFalg = true
-                const config = {}
-                config.offsetY = 80
-                this.$http.get('/daily_report/?date=' + this.formateDate(date)).then(res => {
+                this.$http.get('/daily_report/?date=' + moment(date).format('YYYY-MM-DD')).then(res => {
                     if (res.result) {
                         if (JSON.stringify(res.data) === '{}') {
                             // 今天的日志还没写
@@ -227,9 +220,12 @@
                             this.saveText = res.data.send_describe
                         }
                     } else {
-                        // 调用获取当前日报接口失败
-                        config.message = res.message
-                        config.theme = 'error'
+                        // 调用获取日报模板接口失败
+                        const config = {
+                            offsetY: 80,
+                            message: res.message,
+                            theme: 'error'
+                        }
                         this.$bkMessage(config)
                     }
                 })
@@ -267,7 +263,7 @@
                     this.$bkMessage(config)
                 } else {
                     // 设置日期数据
-                    this.addDailyFormData.date = this.formateDate(this.reportDate)
+                    this.addDailyFormData.date = moment(this.reportDate).format('YYYY-MM-DD')
                     this.addDailyFormData.content = content
                     this.addDailyFormData.template_id = this.curTemplateId
                     // 调取添加日报接口

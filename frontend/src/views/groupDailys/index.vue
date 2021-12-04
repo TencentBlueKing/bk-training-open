@@ -134,12 +134,6 @@
             if (groupIdInURL !== undefined) {
                 this.curGroupId = parseInt(groupIdInURL)
             }
-            // const dateInURL = this.$route.query.date
-            // if (dateInURL !== undefined) {
-            //     this.curDate = new Date(dateInURL)
-            // } else {
-            //     this.curDate = new Date()
-            // }
             this.init()
         },
         methods: {
