@@ -143,12 +143,11 @@ def send_evaluate_all(request, group_id):
     dailys = Daily.objects.filter(id__in=daily_ids)
     for daily in dailys:
         daily = daily.to_json()
-        if daily["evaluate"]:
-            for evaluate in daily["evaluate"]:
-                if evaluate["name"] == request.user.username:
-                    daily["evaluate"] = evaluate["evaluate"]
-                    sign = False
-                    break
+        for evaluate in daily["evaluate"]:
+            if evaluate["name"] == request.user.username:
+                daily["evaluate"] = evaluate["evaluate"]
+                sign = False
+                break
         if sign:
             daily["evaluate"] = "管理员未评价"
         daily_list.append(daily)
