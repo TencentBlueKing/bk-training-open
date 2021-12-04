@@ -138,8 +138,8 @@ def send_evaluate_all(request, group_id):
     date = Daily.objects.get(id=daily_ids[0]).date
     # 日报信息列表
     daily_list = []
-    for daily_id in daily_ids:
-        daily = Daily.objects.get(id=daily_id)
+    dailys = Daily.objects.filter(id__in=daily_ids)
+    for daily in dailys:
         daily = daily.to_json()
         if daily["evaluate"]:
             daily["evaluate"] = daily["evaluate"][0]["evaluate"]
