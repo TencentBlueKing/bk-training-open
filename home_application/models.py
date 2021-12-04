@@ -141,3 +141,17 @@ class Daily(TimeBasic):
             "template_id": self.template_id,
             "evaluate": self.evaluate,
         }
+
+    def add_evaluate(self, username, content):
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.evaluate.append({"name": username, "evaluate": content})
+        self.save()
+
+    def remove_evaluate(self, username):
+        sign = self.evaluate
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.save()
+        if self.evaluate == sign:
+            return False
+        else:
+            return True
