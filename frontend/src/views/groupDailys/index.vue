@@ -31,9 +31,9 @@
                         <bk-date-picker class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
                             :placeholder="'选择日期'"
                             :open="true"
+                            :ext-popover-cls="'custom-popover-cls'"
                             :options="customOption">
                         </bk-date-picker>
-                        <!--:ext-popover-cls="'custom-popover-cls'"-->
                     </div>
                 </div>
 
@@ -58,14 +58,15 @@
                     没有日报内容哟~
                 </div>
                 <div>
-                    <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
+                    <bk-card v-for="(daily, index) in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
                         <div>日期：{{daily.date}}</div>
                         <div>日报状态：{{daily.send_describe}}</div>
-                        <div v-for="(value, key) in daily.content" :key="key">
-                            <p style="font-weight: 700;font-size:18px;">{{key}}</p>
-                            <p>{{value}}</p>
+                        <div v-for="(value, key) in dailysData.formatContent[index]" :key="key" style="font-size:18px">
+                            <p style="font-weight: bold">{{key}}</p>
+                            <pre>{{value}}</pre>
                         </div>
                     </bk-card>
+
                 </div>
 
                 <!-- 清除浮动，撑开盒子 -->
@@ -79,13 +80,11 @@
 </template>
 
 <script>
-    import { bkPagination, bkAlert } from 'bk-magic-vue'
-    
+    import { bkPagination } from 'bk-magic-vue'
     import moment from 'moment'
 
     export default {
         components: {
-            bkAlert,
             bkPagination
         },
         data () {
@@ -121,7 +120,10 @@
                 curDate: moment(new Date()).format('YYYY-MM-DD'),
                 // 日报数据
                 dailysData: {
-                    dailys: []
+                    count: 100,
+                    dailys: [],
+                    formatTitle: [],
+                    formatContent: []
                 },
                 // 用户列表
                 groupUsers: [],
@@ -161,6 +163,31 @@
                     this.groupUsers = res.data
                 })
             },
+            // 拆分日报内容
+            classifyContent () {
+                for (const index in this.dailysData.dailys) {
+                    const daily = this.dailysData.dailys[index]
+                    this.dailysData.formatContent[index] = {}
+                    for (const key in daily.content) {
+                        if (daily.content[key] instanceof Array) {
+                            let points = ''
+                            if (daily.content.isPrivate) {
+                                for (const point of daily.content[key]) {
+                                    points = points + point.content + ';\n'
+                                }
+                            } else {
+                                for (const point of daily.content[key]) {
+                                    points = points + point.content + ';-----(' + point.cost + ')\n'
+                                }
+                            }
+                            this.dailysData.formatTitle[index] = key
+                            this.dailysData.formatContent[index][key] = points
+                        } else if (key !== 'isPrivate') {
+                            this.dailysData.formatContent[index][key] = daily.content[key]
+                        }
+                    }
+                }
+            },
             // 修改日期或成员
             changeDateOrUser (userId, date) {
                 this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
@@ -173,11 +200,7 @@
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
-                        if (res.data.my_today_report) {
-                            this.myTodayReport = true
-                        } else {
-                            this.myTodayReport = false
-                        }
+                        this.classifyContent()
                     } else {
                         const config = {
                             message: res.message,
