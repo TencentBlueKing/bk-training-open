@@ -192,6 +192,7 @@
                             v-model="dailyDetailDialog.visible"
                             :header-position="dailyDetailDialog.headerPosition"
                             :width="dailyDetailDialog.width"
+                            @value-change="dailyDetailDialogChange"
                             :position="{ top: 20, left: 100 }">
                             <div v-if="dialogMember.hasComment">
                                 <h2>修改我的点评</h2>
@@ -270,7 +271,6 @@
 <script>
     import moment from 'moment'
     export default {
-        components: {},
         data () {
             return {
                 groupList: [],
@@ -324,29 +324,15 @@
                 shareAllList: [],
                 shareAllIdList: [],
                 hasShareAll: false,
-                currentUserName: this.$store.state.user.username
+                currentUserName: this.$store.state.user.username,
+                hasSubmitDaily: []
             }
         },
         computed: {
-            hasSubmitDaily () {
-                return this.memberDaily.filter((item) => {
-                    return item.write_status
-                })
-            },
             hasNotSubmitMember () {
                 return this.memberDaily.filter((item) => {
                     return !item.write_status
                 })
-            }
-        },
-        watch: {
-            'dailyDetailDialog.visible': {
-                handler (newvalue, oldvalue) {
-                    if (newvalue === false) {
-                        this.myComment = ''
-                    }
-                },
-                deep: true
             }
         },
         created () {
@@ -569,28 +555,29 @@
                     '/list_member_daily/' + id + '/?date=' + date
                 ).then(res => {
                     this.memberDaily = res.data
-                    for (const daily of this.memberDaily) {
-                        if (daily.write_status) {
-                            const newContent = {}
-                            for (const key in daily.content) {
-                                if (daily.content[key] instanceof Array) {
-                                    let points = ''
-                                    if (daily.content.isPrivate) {
-                                        for (const point of daily.content[key]) {
-                                            points = points + point.content + ';\n'
-                                        }
-                                    } else {
-                                        for (const point of daily.content[key]) {
-                                            points = points + point.content + ';-----(' + point.cost + ')\n'
-                                        }
+                    this.hasSubmitDaily = this.memberDaily.filter((daily) => {
+                        return daily.write_status
+                    })
+                    for (const daily of this.hasSubmitDaily) {
+                        const newContent = {}
+                        for (const key in daily.content) {
+                            if (daily.content[key] instanceof Array) {
+                                let points = ''
+                                if (daily.content.isPrivate) {
+                                    for (const point of daily.content[key]) {
+                                        points = points + point.content + ';\n'
                                     }
-                                    newContent[key] = points
-                                } else if (key !== 'isPrivate') {
-                                    newContent[key] = daily.content[key]
+                                } else {
+                                    for (const point of daily.content[key]) {
+                                        points = points + point.content + ';-----(' + point.cost + ')\n'
+                                    }
                                 }
+                                newContent[key] = points
+                            } else if (key !== 'isPrivate') {
+                                newContent[key] = daily.content[key]
                             }
-                            daily.content = newContent
                         }
+                        daily.content = newContent
                     }
                 })
             },
@@ -632,6 +619,11 @@
                         })
                     }
                 })
+            },
+            dailyDetailDialogChange (val) {
+                if (val === false) {
+                    this.myComment = ''
+                }
             }
         }
     }

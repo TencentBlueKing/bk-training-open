@@ -1,12 +1,13 @@
 <template>
     <div class="body">
-        <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">填写日报</div>
-        </bk-divider>
         <div class="container">
             <div class="top_container">
                 <div>
-                    <h2 class="mr30 f20" style="margin: 0;">日报状态：<span v-if="hasWrittenToday" style="color: #3A84FF;font-size: 18px;">已写日报</span><span v-else style="color: #63656E;font-size: 18px;">未写日报</span></h2>
+                    <h2 class="mr30 f20" style="margin: 0;">
+                        日报状态：
+                        <span v-if="hasWrittenToday" style="color: #3A84FF;font-size: 18px;">已写日报</span>
+                        <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
+                    </h2>
                 </div>
                 <div>
                     <span class="mr10 f20">隐私模式</span>
@@ -61,6 +62,7 @@
                     title="新增内容"
                     :header-position="addDialog.headerPosition"
                     :width="addDialog.width"
+                    @value-change="addDialogChange"
                     :position="{ top: 20, left: 100 }">
                     <div>
                         <h3>内容</h3>
@@ -74,9 +76,14 @@
                         <h3>所花时间</h3>
                         <bk-input
                             placeholder="所花时间"
-                            :type="'text'"
+                            type="number"
                             v-model="newCost"
+                            :precision="1"
+                            :min="0"
                         >
+                            <template slot="append">
+                                <div class="group-text">小时</div>
+                            </template>
                         </bk-input>
                     </div>
                     <div slot="footer" class="dialog-foot">
@@ -92,10 +99,13 @@
                 </bk-dialog>
                 <bk-dialog
                     v-model="moreTemplateDialog.visible"
-                    title="新增模板标题"
                     :header-position="moreTemplateDialog.headerPosition"
                     :width="moreTemplateDialog.width"
+                    @value-change="moreTemplateDialogChange"
                     :position="{ top: 20, left: 100 }">
+                    <div slot="header">
+                        <span class="mr30">新增模板标题</span>
+                    </div>
                     <div>
                         <bk-input
                             placeholder="新增模板标题"
@@ -137,7 +147,6 @@
 <script>
     import moment from 'moment'
     export default {
-        components: {},
         data () {
             return {
                 formatDate: '',
@@ -183,25 +192,6 @@
                 hasWrittenToday: false
             }
         },
-        watch: {
-            'addDialog.visible': {
-                handler (newvalue, oldvalue) {
-                    if (newvalue === false) {
-                        this.newContent = ''
-                        this.newCost = ''
-                    }
-                },
-                deep: true
-            },
-            'moreTemplateDialog.visible': {
-                handler (newvalue, oldvalue) {
-                    if (newvalue === false) {
-                        this.newTitle = ''
-                    }
-                },
-                deep: true
-            }
-        },
         created () {
             this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
             this.init()
@@ -244,13 +234,13 @@
             },
             // 保存增加表格中的一行新内容
             addRow () {
-                const newObj = { 'content': this.newContent, 'cost': this.newCost }
+                const newObj = { 'content': this.newContent, 'cost': this.newCost + '小时' }
                 this.dailyData.content[this.currentIndex].push(newObj)
                 this.addDialog.visible = false
             },
             // 保存对指定行的修改
             changeRow () {
-                const newObj = { 'content': this.newContent, 'cost': this.newCost }
+                const newObj = { 'content': this.newContent, 'cost': this.newCost + '小时' }
                 this.dailyData.content[this.currentIndex].splice(this.targetRow, 1, newObj)
                 this.addDialog.visible = false
             },
@@ -299,6 +289,17 @@
             // 删除自定义模板标题
             deleteTemplate (index) {
                 this.dailyTemplates.splice(index, 1)
+            },
+            addDialogChange (val) {
+                if (val === false) {
+                    this.newContent = ''
+                    this.newCost = ''
+                }
+            },
+            moreTemplateDialogChange (val) {
+                if (val === false) {
+                    this.newTitle = ''
+                }
             }
         }
     }
