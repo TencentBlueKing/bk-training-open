@@ -635,7 +635,7 @@ def report_filter(request, group_id):
     get_my_report = True
     try:
         Daily.objects.get(date=report_date, create_by=request.user.username)
-    except ValueError:
+    except Exception:
         get_my_report = False
     # 分页
     member_report = get_paginator(member_report, page, page_size)

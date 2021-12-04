@@ -200,6 +200,7 @@
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
+                        this.myTodayReport = res.data.my_today_report
                         this.classifyContent()
                     } else {
                         const config = {

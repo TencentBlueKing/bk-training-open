@@ -8,8 +8,7 @@
                     :placeholder="'选择日期'"
                     :ext-popover-cls="'custom-popover-cls'"
                     :options="customOption"
-                    :start-date="curDate"
-                    @change="getDailyByDate(reportDate)"
+                    @change="changeDate(reportDate)"
                 >
                 </bk-date-picker>
                 <div>
@@ -159,6 +158,7 @@
     export default {
         data () {
             return {
+                curDate: new Date(),
                 formatDate: '',
                 addDialog: {
                     visible: false,
@@ -215,12 +215,16 @@
             const dateInURL = this.$route.query.date
             if (dateInURL !== undefined) {
                 this.reportDate = new Date(dateInURL)
+                this.formatDate = dateInURL
             } else {
                 this.reportDate = new Date()
             }
             this.init()
         },
         methods: {
+            changeDate (date) {
+                this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+            },
             cheakDailyDates () {
                 this.$http.get('/get_reports_dates/').then(res => {
                     if (res.result) {
