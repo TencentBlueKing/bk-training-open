@@ -14,6 +14,7 @@
   - [1. 开发模式----基于PR的开发模式](#1-开发模式----基于pr的开发模式)
   - [2. 开发流程](#2-开发流程)
   - [3. 开发规范](#3-开发规范)
+  - [4. 装饰器的使用](#4-装饰器的使用)
 - [四、学习资料](#四学习资料)
 
 <!-- /TOC -->
@@ -285,46 +286,72 @@ git pull blueking-train
     git commit -m bugfix:xxxxxxxxxxxxx
     ```
   
-- 装饰器使用说明
+## 4. 装饰器的使用
 
-  - 限制请求方法
+- 限制请求方法
 
-    限制请求方法请直接使用Django自带的装饰器，有`require_http_methods`, `require_GET`, `require_POST`三种，导入方式如下：
+  限制请求方法请直接使用Django自带的装饰器，有`require_http_methods`, `require_GET`, `require_POST`三种，导入方式如下：
 
-    ```python
-    from django.views.decorators.http import require_http_methods, require_GET, require_POST
-    ```
+  ```python
+  from django.views.decorators.http import require_http_methods, require_GET, require_POST
+  ```
 
-    `require_GET`限制只能用GET方法，`require_POST`限制只能用POST方法，而`require_http_methods`则以数组作为参数限制指定的几种方法，用法示例如下：
+  `require_GET`限制只能用GET方法，`require_POST`限制只能用POST方法，而`require_http_methods`则以数组作为参数限制指定的几种方法，用法示例如下：
 
-    ```python
-    @require_http_methods(["POST", "PATCH"])
-    ```
+  ```python
+  @require_http_methods(["POST", "PATCH"])
+  ```
 
-  - 需要限制用户在组内，或者需要限制用户拥有组的管理员权限
+- 组权限限制
 
-    自定义了鉴别是否为指定组成员的装饰器[is_group_member](./home_application/utils/decorator.py)
+  封装了鉴别当前用户是否为指定组成员或管理员的装饰器[is_group_member](./home_application/utils/decorator.py)
 
-    - 为了避免`request.body`无法重复读取的问题，使用时需要将组id放在URL中
-    - 其中装饰器的参数`admin_needed`用来限制需要管理员才能访问的方法，默认为None，表示该请求下所有方法都不需要管理员权限，当指定方法需要管理员权限时需要将对应的方法以`list`的形式传进去
-    
-    `urls.py`中的写法参考如下：
-    
-    ```python
-    path("report_template/<int:group_id>/", views.report_template),
-    ```
-    
-    `views.py`中的使用方法参考如下：
-    
-    ```python
-    from home_application.utils.decorator import is_group_admin
-    
-    @is_group_member(admin_needed=["POST", "PATCH", "DELETE"])
-    def report_template(request, group_id):
-        # 相关操作
-    ```
-    
-    
+  - 为了避免`request.body`无法重复读取的问题，使用时需要将组id放在URL中
+  - 其中装饰器的参数`admin_needed`用来限制需要管理员才能访问的方法，默认为None，表示该请求下所有方法都不需要管理员权限，当指定方法需要管理员权限时需要将对应的方法以`list`的形式传进去
+  
+  `urls.py`中的写法参考如下：
+  
+  ```python
+  path("report_template/<int:group_id>/", views.report_template),
+  ```
+  
+  >  **实际使用的时候url中一定不要漏掉组id**
+  
+  `views.py`中的使用方法参考如下：
+  
+  ```python
+  from home_application.utils.decorator import is_group_admin
+  
+  @is_group_member(admin_needed=["POST", "PATCH", "DELETE"])
+  def report_template(request, group_id):
+      # 相关操作
+  ```
+  
+## 5. 邮件模板
+
+1. `simple_notify.html`
+
+   发送简单的通知，需要的参数为：
+
+   + notify_title     通知标题
+   + notify_content   通知正文
+   
+   以上两个参数都支持添加html标签，下边的例子就是在邮件正文中添加了超链接
+   
+   ```python
+   mail_content = get_template("simple_notify.html").render(
+       {
+           "notify_title": "日报提醒",
+           "notify_content": """
+                   Hi, {}的日报还没完成，请
+                   <a style="color: #177EE6" href="https://paas-edu.bktencent.com/t/train-test/">
+                       填写日报
+                   </a>
+                   """.format(date),
+       }
+   )
+   send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
+   ```
 
 # 四、学习资料
 

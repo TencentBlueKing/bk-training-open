@@ -2,12 +2,19 @@
 # -*- coding: utf-8 -*-
 # @Time     : 2020-07-06 10:24:59
 # @Remarks  : 邮件相关操作的封装
+import datetime
 import logging
 import os
 
+from celery.task import task
 from django.template.loader import get_template
 
 from blueking.component.shortcuts import get_client_by_user
+from home_application.models import Group
+from home_application.utils.report_operation import (
+    get_none_reported_user_of_group,
+    get_report_info_by_group_and_date,
+)
 
 logger = logging.getLogger("celery")
 
@@ -22,6 +29,7 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
     :param attachments:         邮件附件，格式与官方文档一致
     :return:                    API调用结果
     """
+    logger.info(receiver__username)
     # 从环境变量获取用户名(需添加白名单)
     if attachments is None:
         attachments = []
@@ -44,31 +52,104 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
     return send_result
 
 
-def yesterday_report_notify(notify_title, notify_detail, button_text, button_link, receiver):
+@task()
+def remind_to_write_daily(username: str, date=None):
     """
-    发送昨天的日报通知，适用成员的和管理员的
-    :param notify_title:    通知标题
-    :param notify_detail:   渲染通知内容的数据，数据格式为：
-                            [
-                                {"detail": "已完成：", "users": ["username(name)", "12345678Q(小乐乐)"]},
-                                {"detail": "未完成：", "users": ["username(name)""]}
-                            ]
-    :param button_text:     按钮上显示的文字
-    :param button_link:     点击按钮后的跳转链接
-    :param receiver:        邮件接收人，由逗号分割的蓝鲸用户名，e.g. 123Q,456Q,789Q
-    :return:                send_mail()方法的返回值
+    提醒指定用户写指定日期的日报
+    :param username:    被提醒人用户名
+    :param date:        需要写日报的日期，默认为『今天』
+    :return:            发送邮件的返回值，即蓝鲸API调用结果
     """
-    mail_content = get_template("yesterday_report.html").render(
+    if date is None:
+        date = "今天"
+    mail_content = get_template("simple_notify.html").render(
         {
-            "notify_title": notify_title,
-            "notify_detail": notify_detail,
-            "button_text": button_text,
-            "button_link": button_link,
+            "notify_title": "日报提醒",
+            "notify_content": """
+                Hi, {}的日报还没完成，请
+                <a style="color: #177EE6" href="https://paas-edu.bktencent.com/t/train-test/">
+                    填写日报
+                </a>
+                """.format(
+                date
+            ),
         }
     )
-    return send_mail(
-        receiver__username=receiver,
-        title=notify_title,
-        content=mail_content,
-        body_format="Html",
+    return send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
+
+
+def notify_none_reported_user():
+    """
+    每晚8点需要通知没写日报的用户及时写日报
+    """
+    all_user_none_reported = set()
+    group_ids = Group.objects.values_list("id", flat=True)
+    for group_id in group_ids:
+        all_user_none_reported |= get_none_reported_user_of_group(group_id)
+    for username in all_user_none_reported:
+        remind_to_write_daily.apply_async(kwargs={"username": username})
+
+
+@task()
+def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
+    """
+    告知管理员组内日报信息
+    :param admin_username:  管理员的用户名
+    :param date:            日报对应的日期，默认为昨天
+    :param group_infos:     组信息list，具体数据格式如下：
+                            [{
+                                "group_name": 这是一个-很好听的名字, # 组名字
+                                "daily_count": 10,              # 写了日报的人数
+                                "none_write_daily_count": 1,    # 没写日报的人数，包含请假的人
+                                "people_in_vacation_count": 0,  # 请假人数
+                                "group_link": "https://***/manageGroup?date=2021-12-3&group=1"  # 组管理页面
+                            },]
+    :return:                发送邮件的返回值，即蓝鲸API调用结果
+    """
+    if date is None:
+        date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
+    mail_content = get_template("group_daily.html").render(
+        {
+            "notify_title": "[{}] 日报速览".format(date),
+            "group_dailies": group_infos,
+        }
     )
+    return send_mail(receiver__username=admin_username, title="日报提醒助手", content=mail_content, body_format="Html")
+
+
+def notify_yesterday_report_info():
+    """
+    早上10点发送昨天日报概览给管理员
+    """
+    admin_group_map = {}
+    group_ids = Group.objects.values_list("id", flat=True)
+    last_workday = str((datetime.datetime.today() - datetime.timedelta(days=1)).date())
+
+    for g_id in group_ids:
+        group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=last_workday)
+
+        # 循环组内管理员，将组信息添到管理员管理的组信息中
+        for admin_username in group_info["admin"]:
+
+            if admin_username not in admin_group_map.keys():
+                admin_group_map[admin_username] = []
+
+            admin_group_map[admin_username].append(
+                {
+                    "group_name": group_info["name"],  # 组名字
+                    "daily_count": len(group_info["report_users"]),  # 写了日报的人数
+                    "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
+                    "people_in_vacation_count": 0,  # TODO 请假人数
+                    "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
+                        last_workday, g_id
+                    ),  # 组管理页面
+                }
+            )
+    for admin_username in admin_group_map.keys():
+        notify_admin_group_info.apply_async(
+            kwargs={
+                "admin_username": admin_username,
+                "group_infos": admin_group_map[admin_username],
+                "date": last_workday,
+            }
+        )
