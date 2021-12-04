@@ -136,13 +136,11 @@
                             }
                         }
                     } else {
-                        // 调用获取日报模板接口失败
-                        const config = {
+                        this.$bkMessage({
                             offsetY: 80,
                             message: res.message,
                             theme: 'error'
-                        }
-                        this.$bkMessage(config)
+                        })
                     }
                 })
             },
@@ -172,13 +170,11 @@
                         // 获取用户今日的日报
                         this.getDailyByDate(this.reportDate)
                     } else {
-                        // 调用获取日报模板接口失败
-                        const config = {
+                        this.$bkMessage({
                             offsetY: 80,
                             message: res.message,
                             theme: 'error'
-                        }
-                        this.$bkMessage(config)
+                        })
                     }
                 })
             },
@@ -220,13 +216,11 @@
                             this.saveText = res.data.send_describe
                         }
                     } else {
-                        // 调用获取日报模板接口失败
-                        const config = {
+                        this.$bkMessage({
                             offsetY: 80,
                             message: res.message,
                             theme: 'error'
-                        }
-                        this.$bkMessage(config)
+                        })
                     }
                 })
             },
