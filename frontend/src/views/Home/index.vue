@@ -271,6 +271,7 @@
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
+                    this.cheakDailyDates()
                     if (Object.keys(res.data).length) {
                         this.hasWrittenToday = true
                     } else {
