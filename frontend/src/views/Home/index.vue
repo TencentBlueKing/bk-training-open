@@ -2,6 +2,15 @@
     <div class="body">
         <div class="container">
             <div class="top_container">
+                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
+                <bk-date-picker class="mr15" v-model="reportDate"
+                    :clearable="false"
+                    :placeholder="'选择日期'"
+                    :ext-popover-cls="'custom-popover-cls'"
+                    :options="customOption"
+                    @change="changeDate(reportDate)"
+                >
+                </bk-date-picker>
                 <div>
                     <h2 class="mr30 f20" style="margin: 0;">
                         日报状态：
@@ -149,6 +158,7 @@
     export default {
         data () {
             return {
+                curDate: new Date(),
                 formatDate: '',
                 addDialog: {
                     visible: false,
@@ -170,6 +180,7 @@
                     content: [[], []],
                     isPrivate: false
                 },
+                dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
                 newCost: '',
@@ -189,18 +200,73 @@
                 // 新标题临时变量
                 newTitle: '',
                 // 今日写日报状况（已写，未写）
-                hasWrittenToday: false
+                hasWrittenToday: false,
+                customOption: {
+                    disabledDate: function (date) {
+                        if (date > new Date()) {
+                            return true
+                        }
+                    }
+                }
             }
         },
         created () {
             this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                this.reportDate = new Date(dateInURL)
+                this.formatDate = dateInURL
+            } else {
+                this.reportDate = new Date()
+            }
             this.init()
         },
         methods: {
+            changeDate (date) {
+                this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+            },
+            cheakDailyDates () {
+                this.$http.get('/get_reports_dates/').then(res => {
+                    if (res.result) {
+                        this.dailyDates = res.data
+                        this.customOption = {
+                            disabledDate: (date) => {
+                                if (this.dailyDates.includes(moment(date).format('YYYY-MM-DD')) || this.curDate < date) {
+                                    return true
+                                }
+                            }
+                        }
+                    } else {
+                        this.$bkMessage({
+                            offsetY: 80,
+                            message: res.message,
+                            theme: 'error'
+                        })
+                    }
+                })
+            },
+            changeTemplate () {
+                if (this.curTemplateId === null || this.curTemplateId === '') {
+                    this.curTemplate = []
+                    this.dailyData = []
+                }
+            },
+            // 切换模板
+            selectTemplate () {
+                this.dailyData = []
+                const vm = this
+                vm.templateList.forEach(function (template) {
+                    if (template.id === vm.curTemplateId) {
+                        vm.curTemplate = template.content.split(';')
+                    }
+                })
+            },
+            // 界面初始化
             init () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
+                    this.cheakDailyDates()
                     if (Object.keys(res.data).length) {
                         this.hasWrittenToday = true
                         this.dailyData.title = []
