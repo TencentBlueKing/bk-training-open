@@ -29,7 +29,6 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
     :param attachments:         邮件附件，格式与官方文档一致
     :return:                    API调用结果
     """
-    logger.info(receiver__username)
     # 从环境变量获取用户名(需添加白名单)
     if attachments is None:
         attachments = []
@@ -62,18 +61,12 @@ def remind_to_write_daily(username: str, date=None):
     """
     if date is None:
         date = "今天"
+    notify_content = "Hi, %s的日报还没完成，请" % date
+    link_url = "https://paas-edu.bktencent.com/t/train-test/"
+    link_text = "填写日报"
+
     mail_content = get_template("simple_notify.html").render(
-        {
-            "notify_title": "日报提醒",
-            "notify_content": """
-                Hi, {}的日报还没完成，请
-                <a style="color: #177EE6" href="https://paas-edu.bktencent.com/t/train-test/">
-                    填写日报
-                </a>
-                """.format(
-                date
-            ),
-        }
+        {"notify_title": "日报提醒", "notify_content": notify_content, "link_text": link_text, "link_url": link_url}
     )
     return send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
 
@@ -126,30 +119,30 @@ def notify_yesterday_report_info():
     last_workday = str((datetime.datetime.today() - datetime.timedelta(days=1)).date())
 
     for g_id in group_ids:
+        # 组信息
         group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=last_workday)
+        # 从组信息提取发送邮件需要的数据
+        g_info_for_mail = {
+            "group_name": group_info["name"],  # 组名字
+            "daily_count": len(group_info["report_users"]),  # 写了日报的人数
+            "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
+            "people_in_vacation_count": 0,  # TODO 请假人数
+            "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
+                last_workday, g_id
+            ),  # 组管理页面
+        }
 
         # 循环组内管理员，将组信息添到管理员管理的组信息中
         for admin_username in group_info["admin"]:
-
             if admin_username not in admin_group_map.keys():
                 admin_group_map[admin_username] = []
+            admin_group_map[admin_username].append(g_info_for_mail)
 
-            admin_group_map[admin_username].append(
-                {
-                    "group_name": group_info["name"],  # 组名字
-                    "daily_count": len(group_info["report_users"]),  # 写了日报的人数
-                    "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
-                    "people_in_vacation_count": 0,  # TODO 请假人数
-                    "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
-                        last_workday, g_id
-                    ),  # 组管理页面
-                }
-            )
-    for admin_username in admin_group_map.keys():
+    for admin_username, info in admin_group_map.items():
         notify_admin_group_info.apply_async(
             kwargs={
                 "admin_username": admin_username,
-                "group_infos": admin_group_map[admin_username],
+                "group_infos": info,
                 "date": last_workday,
             }
         )

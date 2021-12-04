@@ -1,9 +1,12 @@
 <div style="margin: 0 auto; padding: 40px; text-align: center; height: 100%; overflow: hidden; box-sizing: border-box; max-width: 800px">
     <h2 style="font-size: 2em">
-        {{ notify_title|safe }}
+        {{ notify_title }}
     </h2>
     <div style="font-size: 1.2em;">
-        {{ notify_content|safe }}
+        {{ notify_content }}
+        <a style="color: #177EE6" href="{{ link_url }}">
+            {{ link_text }}
+        </a>
     </div>
     <div style="width: 100%; margin: 0 auto;">
         <img style="width: 100%; height: auto" src="https://smartpublic-10032816.file.myqcloud.com/custom/20211202202931/22735/20211202202931/--08ef28251a40e164b98dc57caf85c83c.png"  alt="装饰图"/>

@@ -333,8 +333,10 @@ git pull blueking-train
 
    发送简单的通知，需要的参数为：
 
-   + notify_title     通知标题
+   + notify_title          通知标题
    + notify_content   通知正文
+   + link_text             超链接显示的文本
+   + link_url               超链接网址
    
    以上两个参数都支持添加html标签，下边的例子就是在邮件正文中添加了超链接
    
@@ -342,12 +344,9 @@ git pull blueking-train
    mail_content = get_template("simple_notify.html").render(
        {
            "notify_title": "日报提醒",
-           "notify_content": """
-                   Hi, {}的日报还没完成，请
-                   <a style="color: #177EE6" href="https://paas-edu.bktencent.com/t/train-test/">
-                       填写日报
-                   </a>
-                   """.format(date),
+           "notify_content": "notify_content",
+           "link_text": "link_text",
+           "link_url": "link_url"
        }
    )
    send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
