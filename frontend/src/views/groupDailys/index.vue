@@ -282,7 +282,7 @@
     }
     .left_container{
         width: 360px;
-        min-width: 350px;
+        min-width: 358px;
         border-right: 1px solid #EAEBF0 ;
         padding-right: 10px;
     }

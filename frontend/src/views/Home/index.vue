@@ -38,6 +38,100 @@
                         type="submit" :title="'保存'" @click="clickSaveDaily()">
                         保存
                     </bk-button>
+                    <bk-button style="margin-left:14px;" :theme="'primary'"
+                        type="submit" :title="'请假'" @click="leaveManage()">
+                        请假
+                    </bk-button>
+                    <bk-sideslider width="600"
+                        :is-show.sync="leaveSetting.visible"
+                        :quick-close="false"
+                        @hidden="hiddenSlider"
+                        ext-cls="leave-slide">
+                        <div slot="header" class="slide-header">
+                            <div :class="{
+                                'header-tabs': true,
+                                'tabs-active': tindex === activeTabIndex
+                            }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(tindex)">
+                                {{title}}
+                            </div>
+                        </div>
+                        <div slot="content">
+                            <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabIndex === 0">
+                                <div class="leave-apply">
+                                    <bk-form :label-width="80" form-type="horizontal">
+                                        <bk-form-item label="请假日期" :required="true">
+                                            <bk-date-picker
+                                                v-model="leaveFormData.dateTimeRange"
+                                                class="mr15"
+                                                :clearable="false"
+                                                :placeholder="'选择日期范围'"
+                                                :type="'daterange'"
+                                                @clear="clearDate"
+                                            ></bk-date-picker>
+                                        </bk-form-item>
+                                        <bk-form-item label="请假原因">
+                                            <bk-input
+                                                placeholder=""
+                                                :type="'textarea'"
+                                                :rows="3"
+                                                :maxlength="255"
+                                                v-model="leaveFormData.reason">
+                                            </bk-input>
+                                        </bk-form-item>
+                                        <bk-form-item class="mt20">
+                                            <bk-button
+                                                style="margin-right: 3px;"
+                                                theme="primary" title="提交"
+                                                @click.stop.prevent="submitLeave">提交</bk-button>
+                                        </bk-form-item>
+                                    </bk-form>
+                                </div>
+                            </div>
+                            <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabIndex === 1">
+                                <div class="leave-manage">
+                                    <div class="select-bar">
+                                        <div class="ptitle">选择组</div>
+                                        <bk-select :disabled="false" v-model="selectedGroup" style="width: 200px;"
+                                            ext-cls="select-custom"
+                                            ext-popover-cls="select-popover-custom"
+                                            @selected="handleSelectGroup"
+                                            searchable>
+                                            <bk-option v-for="goption in groupList"
+                                                :key="goption.id"
+                                                :id="goption.id"
+                                                :name="goption.name">
+                                            </bk-option>
+                                        </bk-select>
+                                    </div>
+                                    <div class="leave-load" v-show="isleaveTableLoad" v-bkloading="{ isLoading: isleaveTableLoad, theme: 'primary', zIndex: 10 }"></div>
+                                    <bk-table
+                                        v-show="!isleaveTableLoad"
+                                        :virtual-render="false"
+                                        :data="leaveTableData.data"
+                                        :size="leaveTableData.size"
+                                        :outer-border="false"
+                                        :header-border="false"
+                                        :header-cell-style="{ background: '#fff' }"
+                                        :pagination="leaveTableData.pagination"
+                                        @page-change="handlePageChange"
+                                        @page-limit-change="handlePageLimitChange">
+                                        <div slot="empty-text">
+                                            空数据
+                                        </div>
+                                        <bk-table-column label="人员信息" prop="name" min-width="150" show-overflow-tooltip="true"></bk-table-column>
+                                        <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
+                                        <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true" min-width="150"></bk-table-column>
+                                        <bk-table-column label="操作" width="80">
+                                            <template slot-scope="props">
+                                                <bk-button class="mr10" theme="primary" text :disabled="!leaveTableData.isAdmin" @click="cancelLeave(props.row)">销假</bk-button>
+                                            </template>
+                                        </bk-table-column>
+                                    </bk-table>
+                                </div>
+                            </div>
+                        </div>
+                    </bk-sideslider>
+                    
                 </div>
                 
                 <div class="state-bar" style="justify-content: flex-end;">
@@ -78,18 +172,27 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </contentWapper>
 
 </template>
 
 <script>
+    import { bkInput, bkDatePicker, bkTable, bkTableColumn, bkButton, bkSideslider, bkForm, bkFormItem } from 'bk-magic-vue'
     import contentWapper from '../components/content-wapper.vue'
+
     export default {
         name: '',
         components: {
-            contentWapper
+            contentWapper,
+            bkInput,
+            bkDatePicker,
+            bkTable,
+            bkTableColumn,
+            bkButton,
+            bkSideslider,
+            bkForm,
+            bkFormItem
         },
         data () {
             return {
@@ -110,6 +213,7 @@
                     send_email: false
                 },
                 reportDate: new Date(),
+                checkLeaveDate: new Date(),
                 customOption: {
                     disabledDate: function (date) {
                         if (date > new Date()) {
@@ -123,7 +227,33 @@
                 saveFalg: false,
                 writeFalg: true,
                 saveText: '未保存',
-                clearFlag: 0
+                clearFlag: 0,
+                leaveSetting: {
+                    visible: false
+                },
+                isleaveTableLoad: true,
+                leaveTableData: {
+                    size: 'small',
+                    data: [],
+                    isAdmin: false,
+                    pagination: {
+                        current: 1,
+                        count: 0,
+                        limit: 10,
+                        'limit-list': [10, 20, 50]
+                    }
+                },
+                leaveFormData: {
+                    reason: '',
+                    dateTimeRange: [new Date(), new Date()]
+                },
+                slideTitleList: [
+                    '请假申请',
+                    '请假管理'
+                ],
+                activeTabIndex: 0, // 0是请假申请 1是请假管理
+                groupList: [],
+                selectedGroup: ''
             }
         },
         created () {
@@ -131,6 +261,119 @@
             vm.init()
         },
         methods: {
+            // 打开请假管理
+            leaveManage () {
+                this.leaveSetting.visible = true
+            },
+            // 获取请假管理表
+            getLeaveList (type) {
+                this.isleaveTableLoad = true
+                this.leaveTableData.data = []
+                const todayDate = this.formateDate(new Date())
+                const groupId = this.selectedGroup
+                const sign = 0 // 1 返回未请假人 或 0 返回请假人
+                if (type === 1) {
+                    this.leaveTableData.pagination.current = (this.leaveTableData.pagination.count - 1) / this.leaveTableData.pagination.limit
+                }
+                this.$http.get('/display_personnel_information/' + groupId
+                    + '/?date=' + todayDate
+                    + '&sign=' + sign
+                    + '&current_page=' + this.leaveTableData.pagination.current
+                    + '&page_size=' + this.leaveTableData.pagination.limit
+                ).then(res => {
+                    if (res.data.is_admin !== null && res.data.is_admin !== undefined) {
+                        this.leaveTableData.isAdmin = res.data.is_admin
+                    }
+                    if (res.data.total_record !== 0) {
+                        this.leaveTableData.pagination.count = res.data.total_record
+                        
+                        res.data.off_day_list.map((item, index) => {
+                            this.leaveTableData.data.push({
+                                'offdayId': item.id,
+                                'leaveDate': item.start_date + '  ~  ' + item.end_date,
+                                'reason': item.reason,
+                                'name': item.user + '(' + item.name + ')'
+                            })
+                        })
+                    }
+                }).finally(() => {
+                    this.isleaveTableLoad = false
+                })
+            },
+            // 请假滑窗关闭事件
+            hiddenSlider () {
+                this.leaveFormData.reason = ''
+                this.leaveFormData.dateTimeRange = [new Date(), new Date()]
+                this.activeTabIndex = 0
+            },
+            // 切换请假页签事件
+            changeTab (index) {
+                this.activeTabIndex = index
+                if (this.activeTabIndex === 1) {
+                    this.getLeaveList()
+                }
+            },
+            // 选择组
+            handleSelectGroup (value, option) {
+                this.getLeaveList()
+            },
+            // 清空请假日期
+            clearDate () {
+                this.leaveFormData.dateTimeRange = -1
+                console.log('this.leaveFormData.dateTimeRange == ', this.leaveFormData.dateTimeRange)
+            },
+            // 请假确认事件
+            submitLeave () {
+                const params = {}
+                params.start_date = this.formateDate(this.leaveFormData.dateTimeRange[0])
+                params.end_date = this.formateDate(this.leaveFormData.dateTimeRange[1])
+                params.reason = this.leaveFormData.reason
+                this.$http.post('/add_off_info/', params).then(res => {
+                    console.log('dsdsadd = ', res)
+                    if (res.result) {
+                        console.log('请假成功')
+                        console.log('dsdsadd = ', res.result)
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'success',
+                            'message': res.message
+                        })
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'warning',
+                            'message': res.message
+                        })
+                    }
+                })
+            },
+            handlePageChange (page) {
+                this.leaveTableData.pagination.current = page
+                this.getLeaveList()
+            },
+            handlePageLimitChange () {
+                this.leaveTableData.pagination.limit = arguments[0]
+                this.getLeaveList()
+            },
+            cancelLeave (row) {
+                console.log(this.leaveTableData.pagination.current)
+
+                const offdayId = row.offdayId
+                this.$http.delete('/remove_off/' + this.selectedGroup + '/' + offdayId + '/').then(res => {
+                    if (res.result) {
+                        this.getLeaveList(1)
+                    } else {
+                        // 调用获取日报模板接口失败
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'theme': 'error',
+                            'message': res.message
+                        })
+                    }
+                })
+            },
             // 转化日期格式yyyy-MM-dd
             formateDate (date) {
                 return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
@@ -172,6 +415,15 @@
                         config.message = res.message
                         config.theme = 'error'
                         this.$bkMessage(config)
+                    }
+                })
+
+                // 获取当前用户组信息
+                vm.$http.get('/get_user_groups/').then((res) => {
+                    console.log('init_group, groupsData:', res.data)
+                    vm.groupList = res.data
+                    if (vm.groupList.length !== 0) {
+                        vm.selectedGroup = vm.groupList[0].id
                     }
                 })
             },
@@ -358,5 +610,59 @@
     .state-text{
         margin-top: 8px;
         font-size: 16px;
+    }
+    .leave-slide .slide-header{
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .leave-slide .slide-header .title{
+        height: 60px;
+        line-height: 60px;
+        border-bottom: 1px solid #dcdee5;
+        font-size: 16px;
+        font-weight: 700;
+        color: #666;
+    }
+    .leave-slide .slide-header .header-tabs{
+        width: 50%;
+        text-align:center
+    }
+    .leave-slide .slide-header .tabs-active{
+        border-bottom: 2px solid #3a84ff;
+        color: #3a84ff;
+    }
+    .leave-slide .slide-header .header-tabs:hover{
+        cursor: pointer;
+        color: #3a84ff;
+    }
+    .leave-slide .leave-manage .leave-load {
+        height: 300px;
+        line-height: 300px;
+        /* border: 1px solid #eee; */
+        text-align: center;
+    }
+    .leave-slide .leave-manage .select-bar{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .leave-slide .leave-manage .select-bar .ptitle{
+        font-size: 14px;
+        font-weight: 400;
+        color: #63656e;
+        margin-right: 10px;
+    }
+    .leave-slide .leave-manage .loadbox{
+        height: 300px;
+        line-height: 300px;
+        border: 1px solid #eee;
+        text-align: center;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-form-control{
+        width: 94% !important;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
+        width: 200px;
     }
 </style>

@@ -593,4 +593,5 @@ html {
 .tippy-popper{
     z-index: 2910 !important;
 }
+
 </style>
