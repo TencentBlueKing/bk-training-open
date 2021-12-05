@@ -1,219 +1,116 @@
 <template>
     <contentWapper :pageid="pageId" :minheight="pageMinHeight">
-        <div class="addReport-body">
-            <div class="top_container">
-                <div class="fun-bar">
-                    <div class="fun-item">
-                        <span style="line-height: 32px;">选择模板：</span>
-                        <bk-select :disabled="!writeFalg" v-model="curTemplateId"
-                            class="select-template"
-                            ext-cls="select-custom"
-                            ext-popover-cls="select-popover-custom"
-                            z-index="99"
-                            searchable
-                            @selected="selectTemplate()"
-                            @change="changeTemplate()"
-                            placeholder="请选择模板"
-                        >
-                            <bk-option v-for="template in templateList"
-                                :key="template.id"
-                                :id="template.id"
-                                :name="template.name">
-                            </bk-option>
-                        </bk-select>
+        <div class="left_container">
+            <div class="select-bar">
+                <div class="member-select">
+                    <bk-select :disabled="false" v-model="curGroupId"
+                        ext-cls="select-custom"
+                        ext-popover-cls="select-popover-custom"
+                        @change="changeGroup(curGroupId)"
+                        z-index="99"
+                        searchable>
+                        <bk-option v-for="group in groupsData"
+                            :key="group.id"
+                            :id="group.id"
+                            :name="group.name">
+                        </bk-option>
+                    </bk-select>
+                    <bk-button :theme="'primary'" type="submit" @click="changeType" style="margin-left:14px;">
+                        {{isUser ? '日期' : '成员'}}
+                    </bk-button>
+                </div>
+                <div class="date-select">
+                    <div v-if="isUser" class="users_list">
+                        <div>
+                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="changeDateOrUser(user.id, '')" class="mr10">
+                                {{user.name}}
+                            </bk-button>
+                        </div>
+                        <bk-button v-show="user.username !== 'admin'" v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" @click="clickUser(user.id)" class="mr10">
+                            {{user.username}}({{user.name}})
+                        </bk-button>
                     </div>
-                    <div class="fun-item">
-                        <span>选择日期：</span>
-                        <bk-date-picker class="mr15" v-model="reportDate"
-                            :clearable="false"
+                    <div class="date_picker" style="margin-left:0px;" v-else>
+                        <bk-date-picker class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
                             :placeholder="'选择日期'"
+                            :open="true"
                             :ext-popover-cls="'custom-popover-cls'"
-                            :options="customOption"
-                            @change="getDailyByDate(reportDate)"
-                        >
+                            :options="customOption">
                         </bk-date-picker>
                     </div>
-                    <bk-button :theme="'primary'"
-                        :disabled="!writeFalg"
-                        type="submit" :title="'保存'" @click="clickSaveDaily()">
-                        保存
-                    </bk-button>
-                    <bk-button style="margin-left:14px;" :theme="'primary'"
-                        type="submit" :title="'请假'" @click="leaveManage()">
-                        请假
-                    </bk-button>
-                    <bk-sideslider width="600"
-                        :is-show.sync="leaveSetting.visible"
-                        :quick-close="false"
-                        @hidden="hiddenSlider"
-                        ext-cls="leave-slide">
-                        <div slot="header" class="slide-header">
-                            <div :class="{
-                                'header-tabs': true,
-                                'tabs-active': tindex === activeTabIndex
-                            }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(tindex)">
-                                {{title}}
-                            </div>
-                        </div>
-                        <div slot="content">
-                            <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabIndex === 0">
-                                <div class="leave-apply">
-                                    <bk-form :label-width="80" form-type="horizontal">
-                                        <bk-form-item label="请假日期" :required="true">
-                                            <bk-date-picker
-                                                v-model="leaveFormData.dateTimeRange"
-                                                class="mr15"
-                                                :clearable="false"
-                                                :placeholder="'选择日期范围'"
-                                                :type="'daterange'"
-                                                @clear="clearDate"
-                                            ></bk-date-picker>
-                                        </bk-form-item>
-                                        <bk-form-item label="请假原因">
-                                            <bk-input
-                                                placeholder=""
-                                                :type="'textarea'"
-                                                :rows="3"
-                                                :maxlength="255"
-                                                v-model="leaveFormData.reason">
-                                            </bk-input>
-                                        </bk-form-item>
-                                        <bk-form-item class="mt20">
-                                            <bk-button
-                                                style="margin-right: 3px;"
-                                                theme="primary" title="提交"
-                                                @click.stop.prevent="submitLeave">提交</bk-button>
-                                        </bk-form-item>
-                                    </bk-form>
-                                </div>
-                            </div>
-                            <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabIndex === 1">
-                                <div class="leave-manage">
-                                    <div class="select-bar">
-                                        <div class="ptitle">选择组</div>
-                                        <bk-select :disabled="false" v-model="selectedGroup" style="width: 200px;"
-                                            ext-cls="select-custom"
-                                            ext-popover-cls="select-popover-custom"
-                                            @selected="handleSelectGroup"
-                                            searchable>
-                                            <bk-option v-for="goption in groupList"
-                                                :key="goption.id"
-                                                :id="goption.id"
-                                                :name="goption.name">
-                                            </bk-option>
-                                        </bk-select>
-                                    </div>
-                                    <div class="leave-load" v-show="isleaveTableLoad" v-bkloading="{ isLoading: isleaveTableLoad, theme: 'primary', zIndex: 10 }"></div>
-                                    <bk-table
-                                        v-show="!isleaveTableLoad"
-                                        :virtual-render="false"
-                                        :data="leaveTableData.data"
-                                        :size="leaveTableData.size"
-                                        :outer-border="false"
-                                        :header-border="false"
-                                        :header-cell-style="{ background: '#fff' }"
-                                        :pagination="leaveTableData.pagination"
-                                        @page-change="handlePageChange"
-                                        @page-limit-change="handlePageLimitChange">
-                                        <div slot="empty-text">
-                                            空数据
-                                        </div>
-                                        <bk-table-column label="人员信息" prop="name" min-width="150" show-overflow-tooltip="true"></bk-table-column>
-                                        <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
-                                        <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true" min-width="150"></bk-table-column>
-                                        <bk-table-column label="操作" width="80">
-                                            <template slot-scope="props">
-                                                <bk-button class="mr10" theme="primary" text :disabled="!leaveTableData.isAdmin" @click="cancelLeave(props.row)">销假</bk-button>
-                                            </template>
-                                        </bk-table-column>
-                                    </bk-table>
-                                </div>
-                            </div>
-                        </div>
-                    </bk-sideslider>
-                    
                 </div>
-                
-                <div class="state-bar" style="justify-content: flex-end;">
-                    <bk-dialog v-model="saveDailyDialog.visiable" theme="primary" class="save-daily-dialog" :show-footer="false">
-                        <bk-form label-width="80">
-                            <bk-form-item style="margin-left:60px;">
-                                请选择保存方式
-                            </bk-form-item>
-                            <bk-form-item>
-                                <bk-button style="margin-right: 20px;" theme="primary" title="保存并发送邮件" @click.stop.prevent="saveAndSend()">保存并发送邮件</bk-button>
-                                <bk-button ext-cls="mr5" @click="saveDaily()" theme="default" title="仅保存">仅保存</bk-button>
-                            </bk-form-item>
-                        </bk-form>
-                    </bk-dialog>
-                    <span class="state-text">
-                        日报状态：{{saveText}}
-                    </span>
-                </div>
-            </div>
 
-            <div v-show="reportIsLoading" class="test-dom" v-bkloading="{ isLoading: basicLoading, theme: 'primary', zIndex: 10 }">
+                <!-- 清除浮动，撑开盒子 -->
+                <div style="clear:both;"></div>
             </div>
-            <!-- 写日报模块 -->
-            <div v-show="!reportIsLoading" class="body-container">
-                <div v-for="(title,index) in curTemplate" :key="index" style="margin:50px 0px;">
-                    <div style="font-size: 18px;font-weight: 700;">{{title}}</div>
-                    <div class="input-demo">
-                        <bk-input
-                            placeholder=""
-                            :type="'textarea'"
-                            :rows="3"
-                            :maxlength="255"
-                            v-model="dailyData[index]"
-                            :disabled="!writeFalg"
-                            @change="saveFalg = true"
-                        >
-                        </bk-input>
-                    </div>
+            <div class="right_container">
+                <div v-if="!myTodayReport" style="margin-bottom: 10px;">
+                    <bk-alert type="warning" title="警告的提示文字">
+                        <bk-link theme="warning" slot="title" :href="'/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
+                    </bk-alert>
                 </div>
+                <bk-pagination style="margin-bottom: 10px;"
+                    @change="changePage"
+                    @limit-change="changeLimit"
+                    :current.sync="defaultPaging.current"
+                    :count.sync="defaultPaging.count"
+                    :limit="defaultPaging.limit"
+                    :limit-list="defaultPaging.limitList">
+                </bk-pagination>
+                <div v-if="defaultPaging.count === 0" style="margin: 200px auto;width:140px;">
+                    没有日报内容哟~
+                </div>
+                <div>
+                    <bk-card v-for="(daily, index) in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
+                        <div>日期：{{daily.date}}</div>
+                        <div>日报状态：{{daily.send_describe}}</div>
+                        <div v-for="(value, key) in dailysData.formatContent[index]" :key="key" style="font-size:18px">
+                            <p style="font-weight: bold">{{key}}</p>
+                            <pre>{{value}}</pre>
+                        </div>
+                    </bk-card>
+
+                </div>
+
+                <!-- 清除浮动，撑开盒子 -->
+                <div style="clear:both;"></div>
             </div>
         </div>
+
+        <!-- 清除浮动，撑开盒子 -->
+        <div style="clear:both;"></div>
     </contentWapper>
 
 </template>
 
 <script>
-    import { bkInput, bkDatePicker, bkTable, bkTableColumn, bkButton, bkSideslider, bkForm, bkFormItem } from 'bk-magic-vue'
-    import contentWapper from '../components/content-wapper.vue'
+    import { bkPagination } from 'bk-magic-vue'
+    import moment from 'moment'
 
     export default {
-        name: '',
         components: {
-            contentWapper,
-            bkInput,
-            bkDatePicker,
-            bkTable,
-            bkTableColumn,
-            bkButton,
-            bkSideslider,
-            bkForm,
-            bkFormItem
+            bkPagination
         },
         data () {
             return {
-                pageId: 'addReport',
-                pageMinHeight: 840,
-                reportIsLoading: true,
-                basicLoading: true,
-                templateList: [],
-                curTemplateId: null,
-                curTemplate: [],
-                // 日报内容
-                dailyData: [],
-                // 添加日报提交表单内容
-                addDailyFormData: {
-                    date: null,
-                    content: {},
-                    template_id: null,
-                    send_email: false
+                // 判断用户今天有没有写日报
+                myTodayReport: false,
+                defaultPaging: {
+                    current: 1,
+                    limit: 8,
+                    count: 0,
+                    limitList: [8, 16, 32, 64]
                 },
-                reportDate: new Date(),
-                checkLeaveDate: new Date(),
+                groupsData: [],
+                curGroupId: null,
+                curGroup: {
+                    id: '',
+                    name: '',
+                    admin: [],
+                    create_by: '',
+                    create_name: '',
+                    create_time: ''
+                },
                 customOption: {
                     disabledDate: function (date) {
                         if (date > new Date()) {
@@ -221,448 +118,252 @@
                         }
                     }
                 },
-                saveDailyDialog: {
-                    visiable: false
+                // 控制显示日期还是显示成员
+                isUser: false,
+                // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
+                curDate: moment(new Date()).format('YYYY-MM-DD'),
+                // 日报数据
+                dailysData: {
+                    count: 100,
+                    dailys: [],
+                    formatTitle: [],
+                    formatContent: []
                 },
-                saveFalg: false,
-                writeFalg: true,
-                saveText: '未保存',
-                clearFlag: 0,
-                leaveSetting: {
-                    visible: false
-                },
-                isleaveTableLoad: true,
-                leaveTableData: {
-                    size: 'small',
-                    data: [],
-                    isAdmin: false,
-                    pagination: {
-                        current: 1,
-                        count: 0,
-                        limit: 10,
-                        'limit-list': [10, 20, 50]
-                    }
-                },
-                leaveFormData: {
-                    reason: '',
-                    dateTimeRange: [new Date(), new Date()]
-                },
-                slideTitleList: [
-                    '请假申请',
-                    '请假管理'
-                ],
-                activeTabIndex: 0, // 0是请假申请 1是请假管理
-                groupList: [],
-                selectedGroup: ''
+                // 用户列表
+                groupUsers: [],
+                curUserId: null
             }
         },
         created () {
-            const vm = this
-            vm.init()
+            // 初始化组id和日期
+            const groupIdInURL = this.$route.query.group
+            if (groupIdInURL !== undefined) {
+                this.curGroupId = parseInt(groupIdInURL)
+            }
+            this.init()
         },
         methods: {
-            // 打开请假管理
-            leaveManage () {
-                this.leaveSetting.visible = true
+            // 每页日报数量
+            changeLimit (pageSize) {
+                this.defaultPaging.limit = pageSize
+                this.getDailys()
             },
-            // 获取请假管理表
-            getLeaveList (type) {
-                this.isleaveTableLoad = true
-                this.leaveTableData.data = []
-                const todayDate = this.formateDate(new Date())
-                const groupId = this.selectedGroup
-                const sign = 0 // 1 返回未请假人 或 0 返回请假人
-                if (type === 1) {
-                    this.leaveTableData.pagination.current = (this.leaveTableData.pagination.count - 1) / this.leaveTableData.pagination.limit
-                }
-                this.$http.get('/display_personnel_information/' + groupId
-                    + '/?date=' + todayDate
-                    + '&sign=' + sign
-                    + '&current_page=' + this.leaveTableData.pagination.current
-                    + '&page_size=' + this.leaveTableData.pagination.limit
-                ).then(res => {
-                    if (res.data.is_admin !== null && res.data.is_admin !== undefined) {
-                        this.leaveTableData.isAdmin = res.data.is_admin
-                    }
-                    if (res.data.total_record !== 0) {
-                        this.leaveTableData.pagination.count = res.data.total_record
-                        
-                        res.data.off_day_list.map((item, index) => {
-                            this.leaveTableData.data.push({
-                                'offdayId': item.id,
-                                'leaveDate': item.start_date + '  ~  ' + item.end_date,
-                                'reason': item.reason,
-                                'name': item.user + '(' + item.name + ')'
-                            })
-                        })
-                    }
-                }).finally(() => {
-                    this.isleaveTableLoad = false
-                })
+            // 切换页面
+            changePage (page) {
+                this.defaultPaging.current = page
+                this.getDailys()
             },
-            // 请假滑窗关闭事件
-            hiddenSlider () {
-                this.leaveFormData.reason = ''
-                this.leaveFormData.dateTimeRange = [new Date(), new Date()]
-                this.activeTabIndex = 0
-            },
-            // 切换请假页签事件
-            changeTab (index) {
-                this.activeTabIndex = index
-                if (this.activeTabIndex === 1) {
-                    this.getLeaveList()
+            // 点击切换显示类型的按钮
+            changeType () {
+                this.isUser = !this.isUser
+                if (!this.isUser) {
+                    this.changeGroup(this.curGroupId)
+                    document.querySelector('.left_container').style.minWidth = 290
+                    console.log('left_container == ', document.querySelector('.left_container').style.minWidth)
+                } else {
+                    document.querySelector('.left_container').style.minWidth = 350
                 }
             },
-            // 选择组
-            handleSelectGroup (value, option) {
-                this.getLeaveList()
-            },
-            // 清空请假日期
-            clearDate () {
-                this.leaveFormData.dateTimeRange = -1
-                console.log('this.leaveFormData.dateTimeRange == ', this.leaveFormData.dateTimeRange)
-            },
-            // 请假确认事件
-            submitLeave () {
-                const params = {}
-                params.start_date = this.formateDate(this.leaveFormData.dateTimeRange[0])
-                params.end_date = this.formateDate(this.leaveFormData.dateTimeRange[1])
-                params.reason = this.leaveFormData.reason
-                this.$http.post('/add_off_info/', params).then(res => {
-                    console.log('dsdsadd = ', res)
-                    if (res.result) {
-                        console.log('请假成功')
-                        console.log('dsdsadd = ', res.result)
-                        this.$bkMessage({
-                            'offsetY': 80,
-                            'delay': 2000,
-                            'theme': 'success',
-                            'message': res.message
-                        })
-                    } else {
-                        this.$bkMessage({
-                            'offsetY': 80,
-                            'delay': 2000,
-                            'theme': 'warning',
-                            'message': res.message
-                        })
-                    }
+            // 获取组内成员
+            getGroupUsers (groupId) {
+                // 根据组id获取组成员
+                this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
+                    this.groupUsers = res.data
                 })
             },
-            handlePageChange (page) {
-                this.leaveTableData.pagination.current = page
-                this.getLeaveList()
-            },
-            handlePageLimitChange () {
-                this.leaveTableData.pagination.limit = arguments[0]
-                this.getLeaveList()
-            },
-            cancelLeave (row) {
-                console.log(this.leaveTableData.pagination.current)
-
-                const offdayId = row.offdayId
-                this.$http.delete('/remove_off/' + this.selectedGroup + '/' + offdayId + '/').then(res => {
-                    if (res.result) {
-                        this.getLeaveList(1)
-                    } else {
-                        // 调用获取日报模板接口失败
-                        this.$bkMessage({
-                            'offsetY': 80,
-                            'theme': 'error',
-                            'message': res.message
-                        })
+            // 拆分日报内容
+            classifyContent () {
+                for (const index in this.dailysData.dailys) {
+                    const daily = this.dailysData.dailys[index]
+                    this.dailysData.formatContent[index] = {}
+                    for (const key in daily.content) {
+                        if (daily.content[key] instanceof Array) {
+                            let points = ''
+                            if (daily.content.isPrivate) {
+                                for (const point of daily.content[key]) {
+                                    points = points + point.content + ';\n'
+                                }
+                            } else {
+                                for (const point of daily.content[key]) {
+                                    points = points + point.content + ';-----(' + point.cost + ')\n'
+                                }
+                            }
+                            this.dailysData.formatTitle[index] = key
+                            this.dailysData.formatContent[index][key] = points
+                        } else if (key !== 'isPrivate') {
+                            this.dailysData.formatContent[index][key] = daily.content[key]
+                        }
                     }
-                })
-            },
-            // 转化日期格式yyyy-MM-dd
-            formateDate (date) {
-                return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-            },
-            changeTemplate () {
-                console.log(this.curTemplateId + 'x')
-                if (this.curTemplateId === null || this.curTemplateId === '') {
-                    this.curTemplate = []
-                    this.dailyData = []
                 }
             },
-            // 切换模板
-            selectTemplate () {
-                this.dailyData = []
-                const vm = this
-                vm.templateList.forEach(function (template) {
-                    if (template.id === vm.curTemplateId) {
-                        vm.curTemplate = template.content.split(';')
-                    }
-                })
+            // 修改日期或成员
+            changeDateOrUser (userId, date) {
+                this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
+                this.curUserId = userId
+                this.getDailys()
             },
-            // 界面初始化
-            init () {
-                const vm = this
-                // 开始loading
-                vm.reportIsLoading = true
-                
-                this.$http.get('/get_all_report_template/').then(res => {
+            // 获取当前组日报
+            getDailys () {
+                this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
                     if (res.result) {
-                        this.templateList = res.data
-                        this.clearFlag = 1
-                        // 获取用户今日的日报
-                        this.getDailyByDate(this.reportDate)
+                        this.defaultPaging.count = res.data.total_report_num
+                        this.dailysData.dailys = res.data.reports
+                        this.myTodayReport = res.data.my_today_report
+                        this.classifyContent()
                     } else {
-                        // 调用获取日报模板接口失败
-                        vm.reportIsLoading = false
-                        const config = {}
-                        config.offsetY = 80
-                        config.message = res.message
-                        config.theme = 'error'
+                        const config = {
+                            message: res.message,
+                            offsetY: 80,
+                            theme: 'error'
+                        }
                         this.$bkMessage(config)
                     }
                 })
-
-                // 获取当前用户组信息
-                vm.$http.get('/get_user_groups/').then((res) => {
-                    console.log('init_group, groupsData:', res.data)
-                    vm.groupList = res.data
-                    if (vm.groupList.length !== 0) {
-                        vm.selectedGroup = vm.groupList[0].id
+            },
+            init () {
+                // 获取所有组列表
+                this.$http.get('/get_user_groups/').then((res) => {
+                    // 更新组信息
+                    this.groupsData = res.data
+                    // 初始化显示的组
+                    if (this.groupsData.length !== 0) {
+                        if (this.curGroupId !== null) {
+                            const vm = this
+                            this.groupsData.forEach(function (group) {
+                                if (group.id === vm.curGroupId) {
+                                    vm.curGroup = group
+                                    // 获取组内成员
+                                    vm.getGroupUsers(vm.curGroupId)
+                                    // 初始化组内所有日报（根据日期选择）
+                                    vm.changeDateOrUser('', vm.curDate)
+                                }
+                            })
+                        } else {
+                            this.curGroupId = this.groupsData[0].id
+                            this.curGroup = this.groupsData[0]
+                        }
                     }
                 })
             },
-            clickSaveDaily () {
-                console.log('isToday', this.formateDate(this.reportDate) === this.formateDate(new Date()))
-                if (this.formateDate(this.reportDate) === this.formateDate(new Date())) {
-                    this.saveDaily()
-                } else {
-                    this.saveDailyDialog.visiable = true
-                }
-            },
-            // 获取用户指定日期日报，如果没有写日报，则自动渲染第一个模板的内容
-            getDailyByDate (date) {
-                const vm = this
-                this.writeFalg = true
-                const config = {}
-                config.offsetY = 80
-                console.log('templates', this.templateList)
-                this.$http.get('/daily_report/?date=' + this.formateDate(date))
-                    .then(res => {
-                        if (res.result) {
-                            console.log('vm.reportIsLoading == ', vm.reportIsLoading)
-                            console.log('daily', res.data)
-                            if (JSON.stringify(res.data) === '{}') {
-                                // 今天的日志还没写
-                                if (this.templateList.length > 0) {
-                                    // 默认选择第一个默认模板
-                                    this.curTemplateId = this.templateList[0].id
-                                    this.curTemplate = this.templateList[0].content.split(';')
-                                    console.log('curTemplateId:', this.curTemplateId)
-                                    console.log('curTemplate', this.curTemplate)
-                                    this.dailyData = []
-                                    this.saveText = '未保存'
-                                }
-                            } else {
-                                // 写了日报，给日报注入内容
-                                const templateContent = []
-                                const daily = []
-                                for (const key in res.data.content) {
-                                    templateContent.push(key)
-                                    daily.push(res.data.content[key])
-                                }
-                                this.curTemplateId = res.data.template_id
-                                this.curTemplate = templateContent
-                                this.dailyData = daily
-                                console.log('curTemplateId', this.curTemplateId)
-                                console.log('curTemplate', this.curTemplate)
-                                console.log('dailyData', this.dailyData)
-                                if (res.data.send_describe === '已发送') {
-                                    this.writeFalg = false
-                                }
-                                this.saveText = res.data.send_describe
-                            }
-                        } else {
-                            // 调用获取当前日报接口失败
-                            vm.reportIsLoading = false
-                            config.message = res.message
-                            config.theme = 'error'
-                            this.$bkMessage(config)
-                        }
-                    }).finally(() => {
-                        vm.reportIsLoading = false
-                    })
-            },
-            saveAndSend () {
-                this.addDailyFormData.send_email = true
-                this.saveDaily()
-            },
-            // 保存日报
-            saveDaily () {
-                // 消息提示框的参数设置
-                const config = {
-                    'offsetY': 80
-                }
-                if (this.dailyData.length === 0) {
-                    config.message = '未填写内容不可以保存日报'
-                    config.theme = 'error'
-                    this.$bkMessage(config)
-                    return
-                }
-                console.log(this.dailyData)
-                let flag = true
-                const content = {}
-                for (let i = 0; i < this.curTemplate.length; i++) {
-                    console.log('日报内容', this.dailyData[i])
-                    if (this.dailyData[i] === null || this.dailyData[i] === '' || this.dailyData[i] === undefined) {
-                        config.message = '"' + this.curTemplate[i] + '"不可为空'
-                        flag = false
-                    } else {
-                        // 设置日期内容
-                        content[this.curTemplate[i]] = this.dailyData[i]
+            // 点击切换组
+            changeGroup (groupId) {
+                if (groupId === null || groupId === '') {
+                    this.curGroup = {
+                        id: '',
+                        name: '',
+                        admin: [],
+                        create_by: '',
+                        create_name: '',
+                        create_time: ''
                     }
-                }
-                console.log('hasFullContentFlag:', flag)
-                if (flag === false) {
-                    this.addDailyFormData = { date: null, content: {}, template_id: null }
-                    config.theme = 'error'
-                    this.$bkMessage(config)
+                    this.groupUsers = []
+                    this.curUserId = null
+                    this.dailysData.dailys = []
                 } else {
-                    // 设置日期数据
-                    this.addDailyFormData.date = this.formateDate(this.reportDate)
-                    this.addDailyFormData.content = content
-                    this.addDailyFormData.template_id = this.curTemplateId
-                    // 调取添加日报接口
-                    console.log('addDailyFormData:', this.addDailyFormData)
-                    this.$http.post('/daily_report/', this.addDailyFormData).then(res => {
-                        config.message = res.message
-                        if (res.result) {
-                            config.theme = 'success'
-                            this.$bkMessage(config)
-                            console.log('填写成功，重新获取日报信息')
-                        } else {
-                            this.addDailyFormData = null
-                            config.theme = 'error'
-                            this.$bkMessage(config)
+                    const vm = this
+                    // 更改当前组信息
+                    this.groupsData.forEach(function (group) {
+                        if (group.id === groupId) {
+                            vm.curGroup = group
                         }
-                        this.getDailyByDate(this.reportDate)
-                        this.saveDailyDialog.visiable = false
-                        this.sendEmail = false
                     })
+                    // 更改组用户
+                    this.getGroupUsers(groupId)
+                    // 更改界面为日期显示
+                    this.isUser = false
+                    // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
+                    this.changeDateOrUser('', this.curDate)
                 }
             }
-
         }
     }
 </script>
 
 <style scoped>
-    .test-dom {
-        height: 300px;
-        line-height: 300px;
-        /* border: 1px solid #eee; */
-        text-align: center;
+@import "./index.css";
+    .body{
+        border: 2px solid #EAEBF0 ;
+        /* border-radius: 4px; */
+        margin:0 100px;
+        padding: 20px 50px;
     }
-    .container-title {
+    .container_title {
         font-size: 22px;
         font-weight: 700;
     }
-    .body-container {
-        margin-top:40px;
+    .left_container{
+        width: 360px;
+        min-width: 358px;
+        border-right: 1px solid #EAEBF0 ;
+        padding-right: 10px;
     }
-    .top_container{
+    .select-bar{
         width: 100%;
         display: flex;
         flex-wrap: wrap;
+    }
+    .member-select{
+        display: flex;
+        margin-right: 10px;
+    }
+    .member-select /deep/ .bk-select{
+        min-width: 110px;
+    }
+    .users_list{
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .users_list .users_list_title{
+        font-size: 16px;
+        width: 100%;
+        height: 32px;
+        line-height: 32px;
+    }
+    .users_list /deep/ .bk-button{
+        margin-bottom: 10px;
+    }
+    .right_container{
+        min-width: 380px;
+        width: 100%;
+        padding-left: 20px;
+    }
+    .no-report{
+        width: 100%;
+        height: 600px;
+        line-height: 600px;
+        text-align: center;
+    }
+    .right_container .report-info{
+        height: 40px;
+        line-height: 40px;
+        display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
     }
-    .top_container /deep/ .bk-date-picker{
-        width: 50%;
-        position: relative;
-        width: 110px;
-    }
-    .fun-bar{
-        width: 700px;
-        display: flex;
-        justify-content: flex-start;
-        flex-flow: wrap;
-        flex-direction: row;
-    }
-    .fun-item{
-        display: flex;
-        height: 32px;
-        line-height: 32px;
-        margin-right: 20px;
-    }
-    .state-bar{
-        display: flex;
-        height: 32px;
-        line-height: 32px;
-    }
-    .mr15 /deep/ .bk-date-picker-dropdown{
-        top:32px !important;
-    }
-    .input-demo {
-        margin-top:20px ;
-    }
-    .select-template{
-        width: 12%;
-        min-width: 100px;
-        display: inline-block;
-        vertical-align: bottom;
-    }
-    .state-text{
-        margin-top: 8px;
-        font-size: 16px;
-    }
-    .leave-slide .slide-header{
+    .report-num-select{
         display: flex;
         flex-wrap: nowrap;
-    }
-    .leave-slide .slide-header .title{
-        height: 60px;
-        line-height: 60px;
-        border-bottom: 1px solid #dcdee5;
-        font-size: 16px;
-        font-weight: 700;
-        color: #666;
-    }
-    .leave-slide .slide-header .header-tabs{
-        width: 50%;
-        text-align:center
-    }
-    .leave-slide .slide-header .tabs-active{
-        border-bottom: 2px solid #3a84ff;
-        color: #3a84ff;
-    }
-    .leave-slide .slide-header .header-tabs:hover{
-        cursor: pointer;
-        color: #3a84ff;
-    }
-    .leave-slide .leave-manage .leave-load {
-        height: 300px;
-        line-height: 300px;
-        /* border: 1px solid #eee; */
-        text-align: center;
-    }
-    .leave-slide .leave-manage .select-bar{
-        display: flex;
-        flex-wrap: wrap;
         align-items: center;
+    }
+    .report-num-select span{
+        width: 112px;
+        margin-bottom: 10px;
+    }
+    .card{
+        float: left;
+        width: calc(46% - 5px);
+        margin-right: 18px;
+    }
+    .card /deep/ .bk-card-body{
+        height: 280px;
+        overflow-y: auto;
+        padding-top: 10px;
+    }
+    .date_picker /deep/ .bk-date-picker-dropdown{
+        top: 32px !important;
+    }
+    .demo-block.demo-alert .bk-alert{
         margin-bottom: 20px;
-    }
-    .leave-slide .leave-manage .select-bar .ptitle{
-        font-size: 14px;
-        font-weight: 400;
-        color: #63656e;
-        margin-right: 10px;
-    }
-    .leave-slide .leave-manage .loadbox{
-        height: 300px;
-        line-height: 300px;
-        border: 1px solid #eee;
-        text-align: center;
-    }
-    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-form-control{
-        width: 94% !important;
-    }
-    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
-        width: 200px;
     }
 </style>
