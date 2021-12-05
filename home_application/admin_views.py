@@ -154,6 +154,10 @@ def send_evaluate_all(request, group_id):
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
+    # 排除管理员 管理员不用写日报
+    group_admin_list = Group.objects.filter(id=group_id).values_list("admin", flat=True)
+    group_admin_list = group_admin_list[0].split(",")
+    all_username = list(set(all_username) - set(group_admin_list))
     if all_username:
         # 放进celery里
         all_username = ",".join([user for user in all_username])
