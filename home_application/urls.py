@@ -45,4 +45,7 @@ urlpatterns = (
     path("delete_evaluate_daily/<int:group_id>/<int:daily_id>/", admin_views.delete_evaluate_daily),
     path("update_evaluate_daily/<int:group_id>/<int:daily_id>/", admin_views.update_evaluate_daily),
     path("send_evaluate_all/<int:group_id>/", admin_views.send_evaluate_all),
+    path("add_off_info/<int:group_id>/", admin_views.add_off_info),
+    path("display_personnel_information/<int:group_id>/", admin_views.display_personnel_information),
+    path("remove_off/<int:group_id>/<int:offday_id>/", admin_views.remove_off),
 )
