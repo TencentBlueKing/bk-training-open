@@ -28,7 +28,7 @@
                         </div>
                     </div>
                     <div class="date_picker" style="margin-left:0px;" v-else>
-                        <bk-date-picker class="mr15" @change="changeDateOrUser('', curDate)" style="position:relative;" v-model="curDate" format="yyyy-MM-dd"
+                        <bk-date-picker class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
                             :placeholder="'选择日期'"
                             :open="true"
                             :ext-popover-cls="'custom-popover-cls'"
@@ -41,6 +41,11 @@
                 <div style="clear:both;"></div>
             </div>
             <div class="right_container">
+                <div v-if="!myTodayReport" style="margin-bottom: 10px;">
+                    <bk-alert type="warning" title="警告的提示文字">
+                        <bk-link theme="warning" slot="title" :href="'/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
+                    </bk-alert>
+                </div>
                 <bk-pagination style="margin-bottom: 10px;"
                     @change="changePage"
                     @limit-change="changeLimit"
@@ -84,6 +89,8 @@
         },
         data () {
             return {
+                // 判断用户今天有没有写日报
+                myTodayReport: false,
                 defaultPaging: {
                     current: 1,
                     limit: 8,
@@ -110,7 +117,7 @@
                 // 控制显示日期还是显示成员
                 isUser: false,
                 // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
-                curDate: null,
+                curDate: moment(new Date()).format('YYYY-MM-DD'),
                 // 日报数据
                 dailysData: {
                     count: 100,
@@ -128,12 +135,6 @@
             const groupIdInURL = this.$route.query.group
             if (groupIdInURL !== undefined) {
                 this.curGroupId = parseInt(groupIdInURL)
-            }
-            const dateInURL = this.$route.query.date
-            if (dateInURL !== undefined) {
-                this.curDate = new Date(dateInURL)
-            } else {
-                this.curDate = new Date()
             }
             this.init()
         },
@@ -198,7 +199,7 @@
                 this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
-                        this.dailysData.dailys = res.data.reports
+                        this.myTodayReport = res.data.my_today_report
                         this.classifyContent()
                     } else {
                         const config = {
@@ -307,5 +308,8 @@
     }
     .date_picker >>>.bk-date-picker-dropdown{
         top: 32px !important;
+    }
+    .demo-block.demo-alert .bk-alert{
+        margin-bottom: 20px;
     }
 </style>

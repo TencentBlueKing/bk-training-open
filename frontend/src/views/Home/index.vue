@@ -2,6 +2,15 @@
     <div class="body">
         <div class="container">
             <div class="top_container">
+                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
+                <bk-date-picker class="mr15" v-model="reportDate"
+                    :clearable="false"
+                    :placeholder="'选择日期'"
+                    :ext-popover-cls="'custom-popover-cls'"
+                    :options="customOption"
+                    @change="changeDate(reportDate)"
+                >
+                </bk-date-picker>
                 <div>
                     <h2 class="mr30 f20" style="margin: 0;">
                         日报状态：
@@ -42,13 +51,13 @@
                                         <bk-button
                                             theme="warning"
                                             text
-                                            @click="changeContent(props.row, 0)">
+                                            @click="changeContent(props.row, index)">
                                             修改
                                         </bk-button>
                                         <bk-button
                                             theme="danger"
                                             text
-                                            @click="deleteContent(props.row, 0)">
+                                            @click="deleteContent(props.row, index)">
                                             删除
                                         </bk-button>
                                     </template>
@@ -149,6 +158,7 @@
     export default {
         data () {
             return {
+                curDate: new Date(),
                 formatDate: '',
                 addDialog: {
                     visible: false,
@@ -170,9 +180,10 @@
                     content: [[], []],
                     isPrivate: false
                 },
+                dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
-                newCost: '',
+                newCost: 0,
                 // 指向dailyData.content的下标
                 currentIndex: 0,
                 // 提交数据的格式化对象
@@ -189,35 +200,82 @@
                 // 新标题临时变量
                 newTitle: '',
                 // 今日写日报状况（已写，未写）
-                hasWrittenToday: false
+                hasWrittenToday: false,
+                customOption: {
+                    disabledDate: function (date) {
+                        if (date > new Date()) {
+                            return true
+                        }
+                    }
+                }
             }
         },
         created () {
             this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                this.reportDate = new Date(dateInURL)
+                this.formatDate = dateInURL
+            } else {
+                this.reportDate = new Date()
+            }
             this.init()
         },
         methods: {
+            changeDate (date) {
+                this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+                this.getDailyReport()
+            },
+            cheakDailyDates () {
+                this.$http.get('/get_reports_dates/').then(res => {
+                    if (res.result) {
+                        this.dailyDates = res.data
+                        this.customOption = {
+                            disabledDate: (date) => {
+                                if (this.dailyDates.includes(moment(date).format('YYYY-MM-DD')) || this.curDate < date) {
+                                    return true
+                                }
+                            }
+                        }
+                    } else {
+                        this.$bkMessage({
+                            offsetY: 80,
+                            message: res.message,
+                            theme: 'error'
+                        })
+                    }
+                })
+            },
+            changeTemplate () {
+                if (this.curTemplateId === null || this.curTemplateId === '') {
+                    this.curTemplate = []
+                    this.dailyData = []
+                }
+            },
+            // 切换模板
+            selectTemplate () {
+                this.dailyData = []
+                const vm = this
+                vm.templateList.forEach(function (template) {
+                    if (template.id === vm.curTemplateId) {
+                        vm.curTemplate = template.content.split(';')
+                    }
+                })
+            },
+            // 界面初始化
             init () {
+                this.cheakDailyDates()
+                this.getDailyReport()
+            },
+            getDailyReport () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
+                    this.cheakDailyDates()
                     if (Object.keys(res.data).length) {
                         this.hasWrittenToday = true
-                        this.dailyData.title = []
-                        this.dailyData.content = []
-                        this.dailyTemplates = []
-                        this.templateContent = []
-                        for (const key in res.data.content) {
-                            if (res.data.content[key] instanceof Array) {
-                                this.dailyData.title.push(key)
-                                this.dailyData.content.push(res.data.content[key])
-                            } else if (key === 'isPrivate') {
-                                this.dailyData.isPrivate = res.data.content[key]
-                            } else {
-                                this.dailyTemplates.push(key)
-                                this.templateContent.push(res.data.content[key])
-                            }
-                        }
+                    } else {
+                        this.hasWrittenToday = false
                     }
                 })
             },
@@ -248,7 +306,7 @@
             changeContent (row, changeIndex) {
                 this.currentIndex = changeIndex
                 this.newContent = row.content
-                this.newCost = row.cost
+                this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
                 this.isAdd = false
                 this.addDialog.visible = true
@@ -293,7 +351,7 @@
             addDialogChange (val) {
                 if (val === false) {
                     this.newContent = ''
-                    this.newCost = ''
+                    this.newCost = 0
                 }
             },
             moreTemplateDialogChange (val) {

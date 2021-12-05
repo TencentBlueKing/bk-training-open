@@ -4,7 +4,11 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from home_application.celery_task import send_unfinished_dairy
+from home_application.celery_task import (
+    send_evaluate_daily,
+    send_good_daily,
+    send_unfinished_dairy,
+)
 from home_application.models import Daily, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 
@@ -63,13 +67,17 @@ def evaluate_daily(request):
         return JsonResponse({"result": False, "code": 1, "message": "日报不存在"})
     evaluate.append({"name": request.user.username, "evaluate": evaluate_content})
     Daily.objects.filter(id=daily_id).update(evaluate=evaluate)
+    send_evaluate_daily(daily_id, evaluate_content)
     return JsonResponse({"result": True, "code": 0, "message": "点评成功", "data": []})
 
 
-@require_http_methods(["GET"])
-@is_group_member(admin_needed=["GET"])
+@require_http_methods(["POST"])
+@is_group_member(admin_needed=["POST"])
 def notice_non_report_users(request, group_id):
-    date = request.GET.get("date")
+    """
+    提醒未写日报成员写日报
+    """
+    date = json.loads(request.body).get("date")
     # 组内成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids).values_list("username", flat=True)
@@ -86,3 +94,70 @@ def notice_non_report_users(request, group_id):
         return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "无未写日报成员", "data": []})
+
+
+@require_http_methods(["DELETE"])
+@is_group_member(admin_needed=["DELETE"])
+def delete_evaluate_daily(request, group_id, daily_id):
+    """
+    删除日报中评价
+    仅可以删除自己的
+    """
+    username = request.user.username
+    daily = Daily.objects.get(id=daily_id)
+    if daily.remove_evaluate(username):
+        return JsonResponse({"result": True, "code": 0, "message": "删除成功", "data": []})
+    else:
+        return JsonResponse({"result": False, "code": 0, "message": "评价不存在", "data": []})
+
+
+@require_http_methods(["POST"])
+@is_group_member(admin_needed=["POST"])
+def update_evaluate_daily(request, group_id, daily_id):
+    """
+    修改日报的指定评论
+    """
+    try:
+        daily = Daily.objects.get(id=daily_id)
+    except Daily.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": "无此日报", "data": []})
+    evaluate_content = request.GET.get("evaluate_content")
+    username = request.user.username
+    daily.add_evaluate(username, evaluate_content)
+    return JsonResponse({"result": True, "code": 0, "message": "修改成功", "data": []})
+
+
+@require_http_methods(["POST"])
+@is_group_member(admin_needed=["POST"])
+def send_evaluate_all(request, group_id):
+    """
+    发生邮件给所有组成员
+    可以发生多个邮件
+    """
+    daily_ids = json.loads(request.body).get("daily_ids")
+    date = Daily.objects.get(id=daily_ids[0]).date
+    # 标记 是否找到该管理员的评价
+    sign = True
+    # 日报信息列表
+    daily_list = []
+    dailys = Daily.objects.filter(id__in=daily_ids)
+    for daily in dailys:
+        daily = daily.to_json()
+        for evaluate in daily["evaluate"]:
+            if evaluate["name"] == request.user.username:
+                daily["evaluate"] = evaluate["evaluate"]
+                sign = False
+                break
+        if sign:
+            daily["evaluate"] = "管理员未评价"
+        daily_list.append(daily)
+    #  组内所有人
+    user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
+    if all_username:
+        # 放进celery里
+        all_username = ",".join([user for user in all_username])
+        send_good_daily(request.user.username, all_username, date, daily_list)
+        return JsonResponse({"result": True, "code": 0, "message": "发送成功", "data": []})
+    else:
+        return JsonResponse({"result": True, "code": 0, "message": "这个组没有成员", "data": []})
