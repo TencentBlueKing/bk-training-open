@@ -108,11 +108,16 @@
                             url: 'groupDailys',
                             show: true
                         },
-                        
                         {
-                            name: '我的组',
+                            name: '我的小组',
                             id: 3,
                             url: 'myGroup',
+                            show: true
+                        },
+                        {
+                            name: '管理组',
+                            id: 4,
+                            url: 'manageGroup',
                             show: true
                         }
                     ],
