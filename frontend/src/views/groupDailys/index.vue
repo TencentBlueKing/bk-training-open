@@ -90,7 +90,7 @@
         data () {
             return {
                 // 判断用户今天有没有写日报
-                myTodayReport: false,
+                myTodayReport: true,
                 defaultPaging: {
                     current: 1,
                     limit: 8,
@@ -200,7 +200,12 @@
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
-                        this.myTodayReport = res.data.my_today_report
+                        if (res.data.my_today_report !== undefined) {
+                            this.myTodayReport = res.data.my_today_report
+                        } else {
+                            // 响应无my_today_report参数为查看成员全部日报，不提示补签
+                            this.myTodayReport = true
+                        }
                         this.classifyContent()
                     } else {
                         const config = {
