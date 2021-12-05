@@ -204,7 +204,7 @@ def remove_off(request, group_id, offday_id):
     主要作用与请假错误想撤回
     """
     try:
-        OffDay.objects.filter(id=offday_id).delete()
+        OffDay.objects.get(id=offday_id).delete()
         return JsonResponse({"result": True, "code": 0, "message": "撤回成功", "data": []})
     except offday_id:
         return JsonResponse({"result": False, "code": 0, "message": "你没有请假", "data": []})
@@ -216,76 +216,36 @@ def display_personnel_information(request, group_id):
     """
     展示未请假人和请假人
     param sign：标记 1 返回未请假人 或 0返回请假人
-    param current_page 页码
-    param page_size 每一页的条数
     """
     date = request.GET.get("date")
     sign = request.GET.get("sign")
-    current_page = int(request.GET.get("current_page"))
-    page_size = int(request.GET.get("page_size"))
-    page_count = (current_page - 1) * page_size
+    # 组内所有人
+    # 组内所有人
+    user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    username_list = User.objects.filter(id__in=user_id).values_list("username", flat=True)
+    # 展示对应组对应日期未请假的人
+    off_day_list = check_off_status(username_list, date)
     if sign == 1:
-        # 展示对应组对应日期未请假的人
         list_at_work_user = []
-        user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
-        username_list = User.objects.filter(id__in=user_id).values_list("username", flat=True)
-        off_day_list = check_off_status(username_list, date)
         list_work_user = set(username_list) - set(off_day_list)
         list_work_user = User.objects.filter(username__in=list_work_user).values()
-        for list_work_user in list_work_user:
-            list_at_work_user.append(dict(list_work_user))
-        if list_at_work_user and current_page and page_size:
-            total_record = len(list_at_work_user)
-            if len(list_at_work_user) - page_count < page_size:
-                list_at_work_user = [list_at_work_user[i] for i in range(page_count, len(list_at_work_user))]
-            else:
-                list_at_work_user = [list_at_work_user[i] for i in range(page_count, page_count + page_size)]
-            data = {
-                "list_at_work_user": list_at_work_user,  # 未请假人信息
-                "total_record": total_record,  # 总条数
-            }
-            return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
+        for list_work_user_sign in list_work_user:
+            list_at_work_user.append(dict(list_work_user_sign))
+        if list_at_work_user:
+            return JsonResponse({"result": True, "code": 0, "message": "", "list_at_work_user": list_at_work_user})
         else:
             return JsonResponse({"result": True, "code": 0, "message": "所有人都已请假", "data": []})
     else:
-        # 展示对应组对应日期请假的人
-        admin_list = Group.objects.filter(id=group_id).values_list("admin", flat=True)
-        is_admin = [admin for admin in admin_list if admin == request.user.username]
-        if is_admin:
-            is_admin = True
-        else:
-            is_admin = False
-        # 组内所有人
-        user_id_list = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
-        if user_id_list:
-            username_list = User.objects.filter(id__in=user_id_list).values_list("username", flat=True)
-            # 这个时间段所有请假的人
-            off_day_list = []
-            off_list = list(check_off_status(username_list, date))
-            off_day_dict = OffDay.objects.filter(user__in=off_list).values()
-            for off_day_dict in off_day_dict:
-                off_day_dict["name"] = User.objects.filter(username=off_day_dict["user"]).values("name")[0]["name"]
-                off_day_list.append(off_day_dict)
-        else:
-            return JsonResponse({"result": False, "code": 0, "message": "这个组不存在", "data": []})
-        if off_day_list and current_page and page_size:
-            total_record = len(off_day_list)
-            if len(off_day_list) - page_count < page_size:
-                off_day_list = [off_day_list[i] for i in range(page_count, len(off_day_list))]
-            else:
-                off_day_list = [off_day_list[i] for i in range(page_count, page_count + page_size)]
+        # 这个时间段所有请假的人
+        off_day_list_return = []
+        off_day_dict = OffDay.objects.filter(user__in=list(off_day_list)).values()
+        for off_day_dict in off_day_dict:
+            off_day_dict["name"] = User.objects.filter(username=off_day_dict["user"]).values("name")[0]["name"]
+            off_day_list_return.append(off_day_dict)
+        if off_day_list_return:
             data = {
-                "off_day_list": off_day_list,  # 请假人信息
-                "is_admin": is_admin,  # 是否为管理员
-                "total_record": total_record,  # 总条数
+                "off_day_list": off_day_list_return,  # 请假人信息
             }
             return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
         else:
-            return JsonResponse(
-                {
-                    "result": False,
-                    "code": 0,
-                    "message": "今天没有请假的人",
-                    "data": [],
-                }
-            )
+            return JsonResponse({"result": False, "code": 0, "message": "今天没有请假的人", "data": []})
