@@ -246,7 +246,20 @@
 
 <script>
     import moment from 'moment'
+    import { bkInput, bkDatePicker, bkTable, bkTableColumn, bkButton, bkSideslider, bkForm, bkFormItem } from 'bk-magic-vue'
+
     export default {
+        name: '',
+        components: {
+            bkInput,
+            bkDatePicker,
+            bkTable,
+            bkTableColumn,
+            bkButton,
+            bkSideslider,
+            bkForm,
+            bkFormItem
+        },
         data () {
             return {
                 curDate: new Date(),
@@ -292,6 +305,7 @@
                 newTitle: '',
                 // 今日写日报状况（已写，未写）
                 hasWrittenToday: false,
+                reportDate: new Date(),
                 customOption: {
                     disabledDate: function (date) {
                         if (date > new Date()) {
@@ -395,6 +409,7 @@
                 vm.currentUserName = sessionStorage.getItem('username')
             },
             getDailyReport () {
+                const vm = this
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
@@ -403,6 +418,15 @@
                         this.hasWrittenToday = true
                     } else {
                         this.hasWrittenToday = false
+                    }
+                })
+
+                // 获取当前用户组信息
+                vm.$http.get('/get_user_groups/').then((res) => {
+                    console.log('init_group, groupsData:', res.data)
+                    vm.groupList = res.data
+                    if (vm.groupList.length !== 0) {
+                        vm.selectedGroup = vm.groupList[0].id
                     }
                 })
             },
@@ -642,6 +666,60 @@
     }
     .leave-slide .leave-manage /deep/ .bk-table .bk-table-body-wrapper .bk-table-body{
         width: 100% !important;
+    }
+    .leave-slide .leave-manage .select-bar{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .leave-slide .leave-manage .select-bar .ptitle{
+        font-size: 14px;
+        font-weight: 400;
+        color: #63656e;
+        margin-right: 10px;
+    }
+    .leave-slide .leave-manage .loadbox{
+        height: 300px;
+        line-height: 300px;
+        border: 1px solid #eee;
+        text-align: center;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-form-control{
+        width: 94% !important;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
+        width: 200px;
+    }
+    .leave-slide .slide-header{
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .leave-slide .slide-header .title{
+        height: 60px;
+        line-height: 60px;
+        border-bottom: 1px solid #dcdee5;
+        font-size: 16px;
+        font-weight: 700;
+        color: #666;
+    }
+    .leave-slide .slide-header .header-tabs{
+        width: 50%;
+        text-align:center
+    }
+    .leave-slide .slide-header .tabs-active{
+        border-bottom: 2px solid #3a84ff;
+        color: #3a84ff;
+    }
+    .leave-slide .slide-header .header-tabs:hover{
+        cursor: pointer;
+        color: #3a84ff;
+    }
+    .leave-slide .leave-manage .leave-load {
+        height: 300px;
+        line-height: 300px;
+        /* border: 1px solid #eee; */
+        text-align: center;
     }
     .leave-slide .leave-manage .select-bar{
         display: flex;
