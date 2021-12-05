@@ -10,6 +10,7 @@ from celery.task import periodic_task, task
 from django.template.loader import get_template
 
 from home_application.models import Daily, User
+from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.mail_operation import (
     notify_none_reported_user,
     notify_yesterday_report_info,
@@ -24,8 +25,9 @@ def evening_task():
     """
     每天晚上8点发送提醒邮件
     """
-    logger.info("定时任务：每晚8点提醒没写日报的同学")
-    notify_none_reported_user()
+    if CalendarHandler.today().is_workday:
+        logger.info("定时任务：每晚8点提醒没写日报的同学")
+        notify_none_reported_user()
 
 
 @periodic_task(run_every=crontab(minute=0, hour=10))
@@ -33,8 +35,10 @@ def morning_task():
     """
     每天早上10点发送前一天日报
     """
-    logger.info("定时任务：每早10点告知管理员上一个工作日的日报情况")
-    notify_yesterday_report_info()
+    today_info = CalendarHandler.today()
+    if today_info.is_workday:
+        logger.info("定时任务：每早10点告知管理员上一个工作日的日报情况")
+        notify_yesterday_report_info(today_info.last_workday)
 
 
 @task()

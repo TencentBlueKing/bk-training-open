@@ -142,9 +142,11 @@ if IS_USE_CELERY:
     INSTALLED_APPS = locals().get("INSTALLED_APPS", [])
     INSTALLED_APPS += ("django_celery_beat", "django_celery_results")
     # 设置使用上海时区
-    # CELERY_ENABLE_UTC = False
     CELERY_TIMEZONE = "Asia/Shanghai"
     CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
+    # 避免时区的问题
+    CELERY_ENABLE_UTC = False
+    DJANGO_CELERY_BEAT_TZ_AWARE = False
 
 # remove disabled apps
 if locals().get("DISABLED_APPS"):
