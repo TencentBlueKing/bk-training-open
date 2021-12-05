@@ -293,6 +293,7 @@
         float: left;
         width: 360px;
         padding-left: 20px;
+        min-width: 358px;
         border-right: 1px solid #EAEBF0 ;
     }
     .users_list >>> .bk-button{
