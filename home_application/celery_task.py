@@ -3,6 +3,7 @@
 # @Time     : 2021/11/2 17:42
 # @Remarks  : 定时任务
 import ast
+import datetime
 import logging
 
 from celery.schedules import crontab
@@ -25,7 +26,8 @@ def evening_task():
     """
     每天晚上8点发送提醒邮件
     """
-    if CalendarHandler.today().is_workday:
+    today = datetime.date.today()
+    if not CalendarHandler(today).is_holiday:
         logger.info("定时任务：每晚8点提醒没写日报的同学")
         notify_none_reported_user()
 
@@ -35,8 +37,9 @@ def morning_task():
     """
     每天早上10点发送前一天日报
     """
-    today_info = CalendarHandler.today()
-    if today_info.is_workday:
+    today_date = datetime.date.today()
+    today_info = CalendarHandler(today_date)
+    if not today_info.is_holiday:
         logger.info("定时任务：每早10点告知管理员上一个工作日的日报情况")
         notify_yesterday_report_info(today_info.last_workday)
 

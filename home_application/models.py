@@ -12,7 +12,6 @@ specific language governing permissions and limitations under the License.
 """
 import ast
 
-from django.contrib import admin
 from django.db import models
 from django_mysql.models import JSONField
 
@@ -170,7 +169,3 @@ class Holiday(TimeBasic):
 
     def __str__(self):
         return "{}-{}-{} {}".format(self.year, self.month, self.day, self.note)
-
-
-# 将节假日表注册到管理员页面
-admin.site.register(Holiday)
