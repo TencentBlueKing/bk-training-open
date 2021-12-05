@@ -311,7 +311,6 @@
     }
     .users_list /deep/ .bk-button{
         margin-bottom: 10px;
-
     }
     .right_container{
         min-width: 380px;

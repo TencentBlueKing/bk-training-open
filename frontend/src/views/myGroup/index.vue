@@ -456,6 +456,8 @@
                             this.curGroupId = this.groupsData[0].id
                             this.changeGroup(this.curGroupId)
                         }
+                    }).finally(() => {
+                        this.isGroupInfoLoad = false
                     })
                 })
             },
