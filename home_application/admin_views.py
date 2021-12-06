@@ -86,8 +86,7 @@ def notice_non_report_users(request, group_id):
     non_report_users = set(group_users) - set(report_user_usernames)
     # 发送邮件
     if non_report_users:
-        for username in non_report_users:
-            remind_to_write_daily.delay(username, date)
+        remind_to_write_daily.delay(list(non_report_users), date)
         return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "无未写日报成员", "data": []})

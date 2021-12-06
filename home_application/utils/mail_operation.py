@@ -52,12 +52,11 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
 
 
 @task()
-def remind_to_write_daily(username: str, date=None):
+def remind_to_write_daily(username_list: list, date=None):
     """
     提醒指定用户写指定日期的日报
-    :param username:    被提醒人用户名
-    :param date:        需要写日报的日期，默认为『今天』
-    :return:            发送邮件的返回值，即蓝鲸API调用结果
+    :param username_list:   被提醒人用户名list
+    :param date:            需要写日报的日期，默认为『今天』
     """
     if date is None:
         date = "今天"
@@ -68,7 +67,8 @@ def remind_to_write_daily(username: str, date=None):
     mail_content = get_template("simple_notify.html").render(
         {"notify_title": "日报提醒", "notify_content": notify_content, "link_text": link_text, "link_url": link_url}
     )
-    return send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
+    for username in username_list:
+        send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
 
 
 def notify_none_reported_user():
@@ -79,8 +79,7 @@ def notify_none_reported_user():
     group_ids = Group.objects.values_list("id", flat=True)
     for group_id in group_ids:
         all_user_none_reported |= get_none_reported_user_of_group(group_id)
-    for username in all_user_none_reported:
-        remind_to_write_daily.apply_async(kwargs={"username": username})
+    remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
 
 @task()
