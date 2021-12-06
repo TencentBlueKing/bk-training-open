@@ -230,21 +230,14 @@ def display_personnel_information(request, group_id):
     data = []
     # 展示对应组对应日期请假的人
     if sign == "0":
-        off_day_list_return = []
-        off_day_dict = list(
-            OffDay.objects.filter(
-                start_date__lte=date, end_date__gte=date, user__in=off_day_list.values_list("user", flat=True)
-            ).values()
-        )
-        user_list = list(
-            User.objects.filter(username__in=off_day_list.values_list("user", flat=True)).values_list("name", flat=True)
-        )
-        for i in range(0, len(off_day_dict)):
-            off_day_dict[i]["name"] = user_list[i]
-            off_day_list_return.append(off_day_dict[i])
-        data = off_day_list_return
+        off_infos = {info.user: model_to_dict(info) for info in off_day_list}
+        users = users.filter(username__in=off_day_list.values_list("user", flat=True))
+        for user in users:
+            user_data = model_to_dict(user)
+            user_data.update({"off_info": off_infos.get(user.username)})
+            data.append(user_data)
+    # 展示对应组对应日期未请假的人
     elif sign == "1":
-        # 展示对应组对应日期未请假的人
         at_work_usernames = set(users.values_list("username", flat=True)) - set(
             off_day_list.values_list("user", flat=True)
         )
