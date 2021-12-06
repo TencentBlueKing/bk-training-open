@@ -70,6 +70,9 @@ const store = new Vuex.Store({
             return http.get(url, {}, config).then(response => {
                 const userData = response.data || {}
                 context.commit('updateUser', userData)
+                if (userData.username !== undefined) {
+                    localStorage.setItem('username', userData.username)
+                }
                 return userData
             })
         }
