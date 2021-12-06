@@ -45,7 +45,8 @@
                     :header-position="newApplyDialog.headerPosition"
                     :width="newApplyDialog.width"
                     :position="{ top: 20, left: 100 }">
-                    <bk-table style="margin-top: 15px;"
+                    <bk-table
+                        style="margin-top: 15px;"
                         :virtual-render="true"
                         :data="newApplyData"
                         height="200px">
@@ -88,7 +89,7 @@
                     :width="hasNotSubmitDialog.width"
                     :position="{ top: 20, left: 100 }">
                     <div>
-                        <bk-button v-for="daily in hasNotSubmitMember" :key="daily.id" :theme="'primary'" style="width:130px;" class="mr10">
+                        <bk-button v-for="daily in hasNotSubmitMember" :key="daily.id" :theme="'primary'" style="width:110px;margin: 10px 0" class="mr10">
                             {{daily.create_name}}
                         </bk-button>
                     </div>
@@ -122,7 +123,7 @@
                                 <bk-badge theme="danger" :val="'X'" :key="index" class="mr15">
                                     <bk-button
                                         :key="index"
-                                        style="width:130px;"
+                                        style="width:110px;margin-bottom: 10px"
                                         hover-theme="danger">
                                         {{daily.create_name}}
                                     </bk-button>
@@ -132,8 +133,14 @@
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button :theme="'primary'" :title="'分享'" class="mr10" size="large" @click="shareAll" :disabled="hasShareAll || !shareAllList.length">
-                                {{ hasShareAll ? '已分享' : '一键分享' }}
+                            <bk-button
+                                theme="primary"
+                                title="分享"
+                                class="mr10"
+                                size="large"
+                                @click="shareAll"
+                                :disabled="!shareAllList.length">
+                                一键分享
                             </bk-button>
                         </div>
                     </div>
@@ -148,7 +155,9 @@
                         <div v-for="daily in hasSubmitDaily" :key="daily" class="flexcard">
                             <bk-card class="card" :show-head="true" :show-foot="true">
                                 <div slot="header" class="head-main">
-                                    <div class="mr20">{{daily.create_name}}的日报</div><div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div><div v-else style="color: #63656E">未点评</div>
+                                    <div class="mr20">{{daily.create_name}}的日报</div>
+                                    <div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div>
+                                    <div v-else style="color: #63656E">未点评</div>
                                 </div>
                                 <div>
                                     <div v-for="(val, key) in daily.content" :key="key">
@@ -162,7 +171,8 @@
                                     <h2>点评情况</h2>
                                     <div>
                                         <div class="singleComment" v-for="(evaluate,index) in daily.evaluate" :key="index">
-                                            <span style="font-weight: bold">{{evaluate.name + '说：'}}</span><span>{{evaluate.evaluate}}</span>
+                                            <span style="font-weight: bold">{{evaluate.name + '说：'}}</span>
+                                            <span>{{evaluate.evaluate}}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -173,7 +183,7 @@
                                             title="分享"
                                             class="mr10"
                                             size="small"
-                                            @click="dealShareAll">
+                                            @click="dealShareAll(daily)">
                                             加入待分享
                                         </bk-button>
                                         <bk-button
@@ -299,7 +309,8 @@
                 newApplyData: [],
                 // 当前打开的日报详情
                 dialogMember: {
-                    evaluate: []
+                    evaluate: [],
+                    hasComment: false
                 },
                 // 我正在评论的信息
                 myComment: '',
@@ -323,7 +334,7 @@
                 hasRemindAll: false,
                 shareAllList: [],
                 shareAllIdList: [],
-                hasShareAll: false,
+                hasSharedIdList: [],
                 currentUserName: this.$store.state.user.username,
                 hasSubmitDaily: []
             }
@@ -377,8 +388,9 @@
             // 提醒用户写日报
             remindAll () {
                 // 发出一键提醒
-                this.$http.get(
-                    '/notice_non_report_users/' + this.selectGroupId + '/?date=' + this.formatDate
+                this.$http.post(
+                    '/notice_non_report_users/' + this.selectGroupId + '/',
+                    { date: this.formatDate }
                 ).then(res => {
                     if (res.result) {
                         this.hasRemindAll = true
@@ -403,7 +415,10 @@
                 ).then(res => {
                     if (res.result) {
                         this.shareAllDialog.visible = false
-                        this.hasShareAll = true
+                        for (const id of this.shareAllIdList) {
+                            this.hasSharedIdList.push(id)
+                        }
+                        this.shareAllIdList = []
                         this.shareAllList = []
                         this.$bkMessage({
                             theme: 'success',
@@ -418,10 +433,15 @@
                 })
             },
             // 添加到待分享列表
-            dealShareAll () {
-                if (this.shareAllIdList.indexOf(this.dialogMember.id) === -1) {
-                    this.shareAllList.push(this.dialogMember)
-                    this.shareAllIdList.push(this.dialogMember.id)
+            dealShareAll (daily) {
+                if (this.hasSharedIdList.indexOf(daily.id) !== -1) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '您已经分享过该日报啦'
+                    })
+                } else if (this.shareAllIdList.indexOf(daily.id) === -1) {
+                    this.shareAllList.push(daily)
+                    this.shareAllIdList.push(daily.id)
                     this.$bkMessage({
                         theme: 'success',
                         message: '加入成功'
@@ -429,7 +449,7 @@
                 } else {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '重复加入'
+                        message: '您已经将该日报加入啦'
                     })
                 }
             },
@@ -440,6 +460,7 @@
                     showFooter: true,
                     confirmFn: () => {
                         this.shareAllList.splice(index, 1)
+                        this.shareAllIdList.splice(index, 1)
                         this.$bkMessage({
                             theme: 'success',
                             message: '移除成功'
@@ -460,16 +481,6 @@
                         break
                     }
                 }
-            },
-            hasComment (daily) {
-                for (const singleEvaluate of daily.evaluate) {
-                    if (singleEvaluate.name === this.currentUserName) {
-                        this.myPastComment = singleEvaluate.evaluate
-                        this.myNewComment = singleEvaluate.evaluate
-                        return true
-                    }
-                }
-                return false
             },
             // 提交我的点评信息
             submitMyComment () {
@@ -504,8 +515,9 @@
             // 更新，删除评论
             operateMyComment (status) {
                 if (status === 0) {
-                    this.$http.get(
-                        '/update_evaluate_daily/' + this.selectGroupId + '/' + this.dialogMember.id + '/?evaluate_content=' + this.myNewComment
+                    this.$http.post(
+                        '/update_evaluate_daily/' + this.selectGroupId + '/' + this.dialogMember.id + '/',
+                        { evaluate_content: this.myNewComment }
                     ).then(res => {
                         this.getDaily(
                             this.selectGroupId,
