@@ -1,359 +1,943 @@
 <template>
-    <contentWapper :pageid="pageId" :minheight="pageMinHeight">
-        <div class="left_container">
-            <div class="select-bar">
-                <div class="member-select">
+    <contentWapper :pageid="pageId">
+        <div class="line-container group-container">
+            <div class="group-fun">
+                <div class="group-select">
+                    <span>组名：</span>
                     <bk-select :disabled="false" v-model="curGroupId"
                         ext-cls="select-custom"
                         ext-popover-cls="select-popover-custom"
-                        @change="changeGroup(curGroupId)"
-                        z-index="99"
-                        searchable>
-                        <bk-option v-for="group in groupsData"
-                            :key="group.id"
-                            :id="group.id"
-                            :name="group.name">
+                        searchable
+                        @change="changeGroup(curGroupId)">
+                        <bk-option v-for="option in groupsData"
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name">
                         </bk-option>
                     </bk-select>
-                    <bk-button :theme="'primary'" type="submit" @click="changeType" style="margin-left:14px;">
-                        {{isUser ? '日期' : '成员'}}
+                </div>
+                <div class="group-btns">
+                    <bk-button :theme="'primary'" class="mr10" @click="addGroupDialog.visible = true">
+                        +新增组
                     </bk-button>
-                </div>
-                <div class="date-select">
-                    <div v-if="isUser" class="users_list">
-                        <div class="users_list_title">
-                            请选择成员：
-                        </div>
-                        <bk-button v-show="user.username !== 'admin'" v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" @click="clickUser(user.id)" class="mr10">
-                            {{user.username}}({{user.name}})
-                        </bk-button>
-                    </div>
-                    <div class="date_picker" v-else>
-                        <bk-date-picker class="mr15" @change="changeDate(curDate)" style="position:relative;" v-model="curDate"
-                            placement="bottom-end"
-                            :placeholder="'选择日期'"
-                            @open-change="datePickerOpenChange"
-                            :open="isDatePickerOpen"
-                            :ext-popover-cls="'custom-popover-cls'"
-                            :options="customOption">
-                        </bk-date-picker>
-                    </div>
+                    <bk-dialog v-model="addGroupDialog.visible" theme="primary" title="新增组" class="add-group-dialog" :show-footer="false">
+                        <bk-form label-width="120">
+                            <bk-form-item label="组名称" required="true">
+                                <bk-input v-model="addGroupData.formData.name"></bk-input>
+                            </bk-form-item>
+                            <bk-form-item label="管理员" required="true">
+                                <bk-select style="width: 250px; margin-top: 10px;"
+                                    searchable
+                                    multiple
+                                    display-tag
+                                    v-model="addGroupData.adminIds">
+                                    <bk-option v-for="option in bkUsers"
+                                        :key="option.id"
+                                        :id="option.id"
+                                        :name="option.username + '(' + option.display_name + ')'">
+                                    </bk-option>
+                                </bk-select>
+                            </bk-form-item>
+                            <bk-form-item>
+                                <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addGroup">提交</bk-button>
+                                <bk-button ext-cls="mr5" @click="addGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                            </bk-form-item>
+                        </bk-form>
+                    </bk-dialog>
+                    <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" :title="'编辑组'" class="mr10" ref="adminClick" @click="clickEditGroup">
+                        编辑组
+                    </bk-button>
+                    <bk-dialog v-model="editGroupDialog.visible" theme="primary" title="修改组信息" class="add-group-dialog" :show-footer="false">
+                        <bk-form label-width="120">
+                            <bk-form-item label="组名称" required="true">
+                                <bk-input v-model="editGroupData.formData.name"></bk-input>
+                            </bk-form-item>
+                            <bk-form-item label="管理员" required="true">
+                                <bk-select style="width: 250px; margin-top: 10px;"
+                                    searchable
+                                    multiple
+                                    display-tag
+                                    v-model="editGroupData.adminIds">
+                                    <bk-option v-for="option in bkUsers"
+                                        :key="option.id"
+                                        :id="option.id"
+                                        :name="option.username + '(' + option.display_name + ')'">
+                                    </bk-option>
+                                </bk-select>
+                            </bk-form-item>
+                            <bk-form-item>
+                                <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editGroup(curGroupId)">提交</bk-button>
+                                <bk-button ext-cls="mr5" @click="editGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                            </bk-form-item>
+                        </bk-form>
+                    </bk-dialog>
+                    <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" :title="'删除组'" class="mr10" @click="deleteGroupDialog.visible = true">
+                        删除组
+                    </bk-button>
+                    <bk-dialog v-model="deleteGroupDialog.visible" theme="primary" class="delete-group-dialog" :show-footer="false">
+                        <bk-form label-width="80">
+                            <bk-form-item style="margin-left:15px;">
+                                确认删除{{curGroup.name}}吗？
+                            </bk-form-item>
+                        
+                            <bk-form-item>
+                                <bk-button style="margin-left: 20px;margin-right: 20px;" theme="primary" title="提交" @click.stop.prevent="deleteGroup">提交</bk-button>
+                                <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                            </bk-form-item>
+                        </bk-form>
+                    </bk-dialog>
+                    <bk-button :theme="'primary'" :title="'申请入组'" class="mr10" @click="showApplyForGroup()">
+                        申请入组
+                    </bk-button>
+                    <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
+                        <bk-form label-width="80">
+                            <bk-form-item label="组" required="true">
+                                <bk-select v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
+                                    searchable>
+                                    <bk-option v-for="group in availableApplyGroups"
+                                        :key="group.id"
+                                        :id="group.id"
+                                        :name="group.name">
+                                    </bk-option>
+                                </bk-select>
+                            </bk-form-item>
+                            <bk-form-item>
+                                <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyForGroup.groupId === ''" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
+                                <bk-button ext-cls="mr5" @click="applyForGroup.dialogVisible = false" theme="default" title="取消">取消</bk-button>
+                            </bk-form-item>
+                        </bk-form>
+                    </bk-dialog>
                 </div>
             </div>
-                
+            <bk-dialog v-model="applyJoinGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
+                <bk-form>
+                    <bk-form-item label="组" required="true">
+                        <bk-select :disabled="false" v-model="applyJoinGroup.groupId" style="width: 250px;"
+                            ext-cls="select-custom"
+                            ext-popover-cls="select-popover-custom"
+                            searchable>
+                            <bk-option v-for="group in allGroups"
+                                :key="group.id"
+                                :id="group.id"
+                                :name="group.name">
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
+                    <bk-form-item>
+                        <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="applyJoinGroupMethods()">提交</bk-button>
+                        <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                    </bk-form-item>
+                </bk-form>
+            </bk-dialog>
+            <div v-show="isGroupInfoLoad" class="group-info-load">
+                <div class="info-load" v-bkloading="{ isLoading: isGroupInfoLoad, theme: 'primary', zIndex: 100 }">
+                </div>
+            </div>
+            <div v-show="!isGroupInfoLoad" class="group-info">
+                <div class="info-item" style="margin-right:18px;">
+                    <span class="item-title">创建人：</span>
+                    <bk-tag v-if="curGroupId !== null" ext-cls="tags">
+                        {{curGroup.create_by}}({{curGroup.create_name}})
+                    </bk-tag>
+                </div>
+                <div class="info-item">
+                    <span class="item-title">创建时间：</span>
+                    <bk-tag ext-cls="tags">
+                        {{curGroup.create_time}}
+                    </bk-tag>
+                </div>
+            </div>
+            
         </div>
-        <div class="right_container">
-            <!-- 显示筛选日报个数等 -->
-            <div v-show="rightIsUser" class="report-info">
-                <div class="report-num-select">
-                    <span>显示日报个数：</span>
-                    <bk-select :disabled="false" v-model="curDailyNum"
-                        style="display:inline-block; width:80px;"
-                        ext-cls="select-custom"
-                        ext-popover-cls="select-popover-custom"
-                        @change="changeDailyNum()"
-                    >
-                        <bk-option v-for="num in numlist"
-                            :key="num.value"
-                            :id="num.value"
-                            :name="num.name">
-                        </bk-option>
-                    </bk-select>
-                </div>
-                <span>日报总数：{{dailysData.count}}</span>
-            </div>
-            <div v-if="dailysData.dailys.length === 0" class="no-report">
-                没有日报内容哟~
-            </div>
-            <div>
-                <bk-card v-for="daily in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
-                    <div>日期：{{daily.date}}</div>
-                    <div>日报状态：{{daily.send_describe}}</div>
-                    <div v-for="(value, key) in daily.content" :key="key">
-                        <p style="font-weight: 700;font-size:18px;">{{key}}</p>
-                        <p>{{value}}</p>
-                    </div>
-                </bk-card>
-            </div>
-        </div>
+        <div class="line-container daily-template-info" style="margin-top:0px;">
+            <bk-card title="日报模板">
+                <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" style="display:float" theme="primary" @click="addDailyTemplateDialog.visible = true">+新增模板</bk-link>
+                <bk-dialog v-model="addDailyTemplateDialog.visible" theme="primary" title="新增模板" class="add-group-dialog" :show-footer="false">
+                    <bk-form label-width="120">
+                        <bk-form-item label="模板名称" required="true">
+                            <bk-input v-model="addDailyTemplateData.formData.name"></bk-input>
+                        </bk-form-item>
+                        <bk-form-item label="模板内容" required="true">
+                            <bk-input type="textarea" v-model="addDailyTemplateData.formData.content" placeholder="例如：今日任务;明日计划;总结"></bk-input>
+                        </bk-form-item>
+                        <bk-form-item>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addDailyTemplate">提交</bk-button>
+                            <bk-button ext-cls="mr5" @click="addDailyTemplateDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                        </bk-form-item>
+                    </bk-form>
+                </bk-dialog>
+                <bk-table style="margin-top:10px"
 
-        <!-- 清除浮动，撑开盒子 -->
-        <div style="clear:both;"></div>
+                    height="210px"
+                    :data="dailyTemplates"
+                    :size="size"
+                    :pagination="pagination"
+                    :virtual-render="true"
+                    @row-mouse-enter="handleRowMouseEnter"
+                    @row-mouse-leave="handleRowMouseLeave"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handlePageLimitChange">
+                    <bk-table-column label="序号" prop="dpId" width="60"></bk-table-column>
+                    <bk-table-column label="模板名称" prop="name" width="300"></bk-table-column>
+                    <bk-table-column label="模板内容" prop="content"></bk-table-column>
+                    <bk-table-column label="创建人" prop="create_by"></bk-table-column>
+                    <bk-table-column label="操作" width="150">
+                        <template slot-scope="props">
+                            <bk-button v-show="curUser.isAdmin" class="mr10" theme="primary" text :disabled="!curUser.isAdmin" @click="clickEditDailyTemplate(props.row)">修改</bk-button>
+                            <bk-button v-show="curUser.isAdmin" class="mr10" theme="primary" text :disabled="!curUser.isAdmin" @click="removeDailyTemplate(props.row)">移除</bk-button>
+                            <bk-dialog v-model="editDailyTemplateDialog.visible" theme="primary" title="修改模板" class="add-group-dialog" :show-footer="false">
+                                <bk-form label-width="120">
+                                    <bk-form-item label="模板名称" required="true">
+                                        <bk-input v-model="editDailyTemplateData.formData.name"></bk-input>
+                                    </bk-form-item>
+                                    <bk-form-item label="模板内容" required="true">
+                                        <bk-input type="textarea" v-model="editDailyTemplateData.formData.content" placeholder="请输入描述"></bk-input>
+                                    </bk-form-item>
+                                    <bk-form-item>
+                                        <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editDailyTemplate">提交</bk-button>
+                                        <bk-button ext-cls="mr5" @click="editDailyTemplateDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                                    </bk-form-item>
+                                </bk-form>
+                            </bk-dialog>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </bk-card>
+        </div>
+        <div class="line-container group-users">
+            <bk-card title="组内成员">
+                <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
+                <bk-dialog v-model="addUserDialog.visible" theme="primary" title="添加成员" class="add-group-dialog" :show-footer="false">
+                    <bk-form label-width="120">
+                        <bk-form-item label="成员" required="true">
+                            <bk-select :disabled="false" v-model="addUserForm.id" style="width: 250px;"
+                                ext-cls="select-custom"
+                                ext-popover-cls="select-popover-custom"
+                                searchable>
+                                <bk-option v-for="option in bkUsers"
+                                    :key="option.id"
+                                    :id="option.id"
+                                    :name="option.username + '(' + option.display_name + ')'">
+                                </bk-option>
+                            </bk-select>
+                        </bk-form-item>
+                        <bk-form-item>
+                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addUser">提交</bk-button>
+                            <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                        </bk-form-item>
+                    </bk-form>
+                </bk-dialog>
+                <bk-table style="margin-top: 15px;"
+                    height="212px"
+                    :data="groupUsers"
+                    :size="size"
+                    :pagination="pagination"
+                    :virtual-render="true"
+                    @row-mouse-enter="handleRowMouseEnter"
+                    @row-mouse-leave="handleRowMouseLeave"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handlePageLimitChange">
+                    <bk-table-column label="序号" prop="pId" width="60px"></bk-table-column>
+                    <bk-table-column label="用户名" prop="username"></bk-table-column>
+                    <bk-table-column label="姓名" prop="name"></bk-table-column>
+                    <bk-table-column label="电话" prop="phone"></bk-table-column>
+                    <bk-table-column label="邮箱" prop="email"></bk-table-column>
+                    <bk-table-column label="用户角色" prop="type"></bk-table-column>
+                    <bk-table-column label="操作" width="100px">
+                        <template slot-scope="props">
+                            <bk-button v-show="curUser.isAdmin " class="mr10" :disabled="isAdmin(props.row.username)" theme="primary" text @click="removeUser(props.row)">移除</bk-button>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </bk-card>
+        </div>
+           
     </contentWapper>
-
 </template>
 
 <script>
     import contentWapper from '../components/content-wapper.vue'
+    import { bkSelect, bkOption } from 'bk-magic-vue'
     export default {
+        name: '',
         components: {
+            bkSelect,
+            bkOption,
             contentWapper
         },
         data () {
             return {
-                pageId: 'groupDailys',
-                pageMinHeight: 830,
-                isDatePickerOpen: false,
+                pageId: 'myGroup',
+                isGroupInfoLoad: true,
+                // 用户信息
+                curUser: {
+                    isAdmin: false,
+                    info: {
+                        id: '',
+                        username: ''
+                    }
+                },
+                // 判断用户今天有没有写日报
+                myTodayReport: true,
+                defaultPaging: {
+                    current: 1,
+                    limit: 8,
+                    count: 0,
+                    limitList: [8, 16, 32, 64]
+                },
+                // 用户所有组信息
                 groupsData: [],
+                // 当前组信息
                 curGroupId: null,
                 curGroup: {
                     id: '',
                     name: '',
-                    admin: [],
+                    admin: '',
+                    admin_list: [],
                     create_by: '',
                     create_name: '',
                     create_time: ''
                 },
-                customOption: {
-                    disabledDate: function (date) {
-                        if (date > new Date()) {
-                            return true
-                        }
+                // 所有蓝鲸用户
+                bkUsers: [],
+                // 添加组dialog样式
+                addGroupDialog: {
+                    visible: false
+                },
+                // 添加组的请求数据
+                addGroupData: {
+                    // 被选择的管理员id
+                    adminIds: [],
+                    // 向后端提交的组信息
+                    formData: {
+                        name: '',
+                        admin: []
                     }
                 },
-                // 控制显示日期还是显示成员
-                isUser: false,
-                rightIsUser: false,
-                // 日期选择（当前正常，get时需要再次转化）
-                curDate: new Date(),
-                // 日报数据
-                dailysData: {
-                    count: 100,
-                    dailys: []
+                editGroupDialog: {
+                    visible: false
                 },
-                // 用户列表
+                // 添加组的请求数据
+                editGroupData: {
+                    // 被选择的管理员id
+                    adminIds: [],
+                    // 向后端提交的组信息
+                    formData: {
+                        name: '',
+                        admin: []
+                    }
+                },
+                deleteGroupDialog: {
+                    visible: false
+                },
+                allGroups: [],
+                applyJoinGroup: {
+                    dialogVisible: false,
+                    groupId: null
+                },
+                availableApplyGroups: [],
+                availableGroupsIsLoding: true,
+                applyForGroup: {
+                    dialogVisible: false,
+                    groupId: ''
+                },
+                addDailyTemplateDialog: {
+                    visible: false
+                },
+                addDailyTemplateData: {
+                    formData: {
+                        name: '',
+                        content: ''
+                    }
+                },
+                // 所有日志模板数据
+                dailyTemplates: [],
+                editDailyTemplateDialog: {
+                    visible: false
+                },
+                editDailyTemplateData: {
+                    formData: {
+                        template_id: '',
+                        name: '',
+                        content: ''
+                    }
+                },
+                // 所有组内成员数据
                 groupUsers: [],
-                curUserId: null,
-                curDailyNum: 7,
-                numlist: [{ 'name': 7, 'value': 7 }, { 'name': 14, 'value': 14 }, { 'name': 30, 'value': 30 }, { 'name': '全部', 'value': 0 }]
+                addUserDialog: {
+                    visible: false
+                },
+                // 拉人入组参数
+                addUserForm: {
+                    id: '',
+                    username: '',
+                    name: '',
+                    phone: '',
+                    email: ''
+                }
+            }
+        },
+        computed: {
+            sum: function () {
+                return this.Math + this.English + this.chemistry
+            },
+            average: function () {
+                return Math.round(this.sum / 3)
             }
         },
         created () {
             this.init()
         },
+        mounted () {
+            this.getAllBKUser()
+        },
         methods: {
-            // 点击切换显示类型的按钮
-            changeType () {
-                this.isUser = !this.isUser
-                if (!this.isUser) {
-                    this.changeGroup(this.curGroupId)
-                    document.querySelector('.left_container').style.minWidth = 290
-                    console.log('left_container == ', document.querySelector('.left_container').style.minWidth)
-                } else {
-                    document.querySelector('.left_container').style.minWidth = 350
+            // 判断是否为管理员
+            isAdmin (userName) {
+                return this.curGroup.admin.indexOf(userName) !== -1
+            },
+            // 请求函数
+            // 获取所有蓝鲸用户
+            getAllBKUser () {
+                this.$http.get('/get_all_bk_users/').then(res => {
+                    this.bkUsers = res.data.results
+                    console.log('bkUsers', this.bkUsers)
+                })
+            },
+            // 获取组信息，并检查当前用户是否为该组管理员
+            getGroupInfo (groupId) {
+                const vm = this
+                vm.isGroupInfoLoad = true
+                this.$http.get('/get_group_info/' + groupId + '/').then(res => {
+                    this.curGroup = res.data
+                    console.log('curGroup', this.curGroup)
+                    // 是否为此组管理员
+                    this.curUser.isAdmin = false
+                    if (vm.isAdmin(this.curUser.info.username)) {
+                        this.curUser.isAdmin = true
+                    }
+                    vm.updateGroupUsers()
+                    console.log('isAdmin', this.curUser.isAdmin)
+                }).finally(() => {
+                    vm.isGroupInfoLoad = false
+                })
+            },
+            // 获取到管理员信息后再更新组成员数组
+            updateGroupUsers () {
+                const vm = this
+                const groupData = JSON.parse(JSON.stringify(this.groupUsers))
+                groupData.map((item, index) => {
+                    if (vm.isAdmin(item.username)) {
+                        item['type'] = '管理员'
+                        groupData.unshift(groupData.splice(index, 1)[0])
+                    } else {
+                        item['type'] = ''
+                    }
+                })
+                for (const index in groupData) {
+                    groupData[index]['pId'] = Number(index) + 1
                 }
+                this.groupUsers = groupData
+                console.log('get_group_users:', groupData)
             },
             // 获取组内成员
             getGroupUsers (groupId) {
-                // 根据组id获取组成员
-                this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
+                this.$http.get('/get_group_users/' + groupId + '/').then(res => {
                     this.groupUsers = res.data
-                    console.log('curGroup-userlist', this.groupUsers)
                 })
             },
-            // 根据成员获取对应日报
-            getUserDailys (userId) {
-                // 获取日报
-                this.$http.get('/report_filter/' + this.curGroupId + '/?' + 'member_id=' + userId + '&report_num=' + this.curDailyNum).then((res) => {
-                    if (res.result) {
-                        // 更新daily
-                        console.log('dailys', res.data)
-                        this.dailysData.count = res.data.total_report_num
-                        this.dailysData.dailys = res.data.reports
-                    } else {
+            // 获取所有组信息
+            getAvailableApplyGroups () {
+                this.availableGroupsIsLoding = true
+                this.$http.get(
+                    '/get_available_apply_groups/'
+                ).then(res => {
+                    this.availableApplyGroups = res.data
+                    if (this.availableApplyGroups.length > 0) {
+                        this.applyForGroup.groupId = this.availableApplyGroups[0].id
+                    }
+                }).finally(() => {
+                    this.availableGroupsIsLoding = false
+                })
+            },
+            // 获取组模板
+            getGroupTemplates (groupId) {
+                this.$http.get('/report_template/' + groupId + '/').then(res => {
+                    const dailyReportData = JSON.parse(JSON.stringify(res.data))
+                    dailyReportData.map((item, index) => {
+                        item['dpId'] = Number(index) + 1
+                    })
+                    this.dailyTemplates = dailyReportData
+                    console.log('get_report_templates:', dailyReportData)
+                })
+            },
+            // 前端反应操作
+            // 切换组模板、组成员、是否管理员等信息
+            changeGroup (groupId) {
+                if (groupId === '' || groupId === null) {
+                    console.log('点x')
+                    this.curGroupId = null
+                    this.curGroup = {
+                        id: '',
+                        name: '',
+                        admin: '',
+                        admin_list: [],
+                        create_by: '',
+                        create_name: '',
+                        create_time: ''
+                    }
+                    this.dailyTemplates = []
+                    this.groupUsers = []
+                    this.curUser.isAdmin = false
+                } else {
+                    // 更改组信息，和当前用户是否为当前组管理员信息
+                    this.getGroupInfo(groupId)
+                    // 切换组成员信息
+                    this.getGroupUsers(groupId)
+                    // 切换组模板
+                    this.getGroupTemplates(groupId)
+                }
+            },
+            // 点击添加用户
+            clickAddUser () {
+                this.addUserDialog.visible = true
+                // 默认把蓝鲸平台第一个用户放在选项框里
+                this.addUserForm.id = this.bkUsers[0].id
+                console.log('bk-first-userId:', this.addUserForm.id)
+            },
+            clickEditGroup () {
+                this.editGroupDialog.visible = true
+                this.editGroupData.formData.name = this.curGroup.name
+                // 根据curGroup中的adminUsername获取当前组管理员id
+                const adminIds = []
+                const vm = this
+                console.log('curGroupAdmin', vm.curGroup.admin)
+                console.log(vm.curGroup.admin)
+                this.bkUsers.forEach(function (user) {
+                    if (vm.curGroup.admin.indexOf(user.username) !== -1) {
+                        adminIds.push(user.id)
+                    }
+                })
+                this.editGroupData.adminIds = adminIds
+                console.log('curGroupAdminIds', this.editGroupData.adminIds)
+            },
+            showApplyForGroup () {
+                this.applyForGroup.dialogVisible = true
+                // 获取用户（未在、未申请）组
+                this.getAvailableApplyGroups()
+            },
+            clickEditDailyTemplate (row) {
+                // console.log('当前日报模板信息', row)
+                this.editDailyTemplateDialog.visible = true
+                this.editDailyTemplateData.formData = {
+                    template_id: row.id,
+                    name: row.name,
+                    content: row.content
+                }
+            },
+            // 初始化
+            init () {
+                // 初始化用户信息
+                this.$http.get('/get_user/').then((res) => {
+                    this.curUser.info = res.data
+                    console.log('curUser', this.curUser.info)
+                    // 初始化组
+                    this.$http.get('/get_user_groups/').then((res) => {
+                        // 更新组信息
+                        this.groupsData = res.data
+                        console.log('init_group, groupsData:', this.groupsData)
+                        if (this.groupsData.length !== 0) {
+                            this.curGroupId = this.groupsData[0].id
+                            this.changeGroup(this.curGroupId)
+                        }
+                    }).finally(() => {
+                        this.isGroupInfoLoad = false
+                    })
+                })
+            },
+            // 新增组
+            addGroup () {
+                // 添加管理员信息
+                const vm = this
+                const adminlist = []
+                this.bkUsers.forEach(function (user) {
+                    if (vm.addGroupData.adminIds.indexOf(user.id) !== -1) {
+                        adminlist.push(user)
+                    }
+                })
+                // 创建组时未选择自己
+                if (this.addGroupData.adminIds.indexOf(this.curUser.info.id) === -1) {
+                    // 从蓝鲸用户中拉取本用户信息
+                    let flag = false
+                    const vm = this
+                    this.bkUsers.forEach(function (user) {
+                        if (vm.curUser.info.username === user.username) {
+                            adminlist.push(user)
+                            flag = true
+                        }
+                    })
+                    console.log('hasUser', flag)
+                    if (!flag) {
                         const config = {}
-                        config.message = res.message
+                        config.message = '未在蓝鲸用户平台找到登录用户信息'
                         config.offsetY = 80
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                        return
+                    }
+                }
+                this.addGroupData.formData.admin = adminlist
+                console.log('参数formData', this.addGroupData.formData)
+                this.$http.post('/add_group/', this.addGroupData.formData).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = res.message
+                    if (res.result) {
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        console.log('新建组id', res.data.group_id)
+                        // 更新用户所有的组列表,后更新当前组
+                        this.$http.get('/get_user_groups/').then((res2) => {
+                            this.groupsData = res2.data
+                            console.log('init_groups, allGroupsData:', this.groupsData)
+                            // 切换组
+                            this.curGroupId = res.data.group_id
+                            this.changeGroup(this.curGroupId)
+                            // dialog不可见
+                            this.addGroupDialog.visible = false
+                            // 将dialog内的内容清空
+                            this.addGroupData.formData.name = ''
+                            this.addGroupData.adminIds = []
+                        })
+                    } else {
                         config.theme = 'error'
                         this.$bkMessage(config)
                     }
                 })
             },
-            clickUser (userId) {
-                this.curUserId = userId
-                this.rightIsUser = true
-                this.getUserDailys(userId)
-            },
-            // 切换获取日报数量
-            changeDailyNum () {
-                if (this.curDailyNum === '全部') {
-                    this.curDailyNum = 0
-                }
-                this.getUserDailys(this.curUserId)
-            },
-            init () {
-                const str = "{'感想':'测试1','内容':'测试内容'}"
-                const json1 = JSON.parse(str.replace(/'/g, '"'))
-                console.log('json', json1)
-                // console.log('beforeToday', new Date((new Date()).getTime() - 24 * 60 * 60 * 1000))
-                // 获取所有组列表
-                this.$http.get('/get_user_groups/').then((res) => {
-                    // 更新组信息
-                    this.groupsData = res.data
-                    console.log('init_group, groups:', this.groupsData)
-                    // 初始化组，选择第一个
-                    if (this.groupsData.length !== 0) {
-                        this.curGroupId = this.groupsData[0].id
-                        this.curGroup = this.groupsData[0]
-                        console.log('curGroup', this.curGroup)
-                        // 获取组内成员
-                        this.getGroupUsers(this.curGroupId)
-                        // 初始化组内所有日报（根据日期选择）
-                        this.changeDate(this.curDate)
+            // 编辑组
+            editGroup (groupId) {
+                // 设置管理员信息
+                const vm = this
+                const adminlist = []
+                this.bkUsers.forEach(function (user) {
+                    if (vm.editGroupData.adminIds.indexOf(user.id) !== -1) {
+                        adminlist.push(user)
+                    }
+                })
+                this.editGroupData.formData.admin = adminlist
+                console.log('editGroup-formData', this.editGroupData.formData)
+                // 调用更新组信息接口
+                this.$http.post('/update_group/' + groupId + '/', this.editGroupData.formData).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    if (res.result) {
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        // 重新获取组列表
+                        this.$http.get('/get_user_groups/').then((res2) => {
+                            this.groupsData = res2.data
+                            this.changeGroup(groupId)
+                            this.editGroupDialog.visible = false
+                        })
+                        this.defaultPaging.count = res.data.total_report_num
+                        this.dailysData.dailys = res.data.reports
+                        if (res.data.my_today_report !== undefined) {
+                            this.myTodayReport = res.data.my_today_report
+                        } else {
+                            // 响应无my_today_report参数为查看成员全部日报，不提示补签
+                            this.myTodayReport = true
+                        }
+                        this.classifyContent()
+                    } else {
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
                     }
                 })
             },
-            // 点击切换组
-            changeGroup (groupId) {
-                if (groupId === null || groupId === '') {
-                    console.log('x')
-                    this.curGroup = {
-                        id: '',
-                        name: '',
-                        admin: [],
-                        create_by: '',
-                        create_name: '',
-                        create_time: ''
-                    }
-                    this.groupUsers = []
-                    this.curUserId = null
-                    this.dailysData.dailys = []
-                    this.rightIsUser = false
-                } else {
-                    const vm = this
-                    // 更改当前组信息
-                    this.groupsData.forEach(function (group) {
-                        if (group.id === groupId) {
-                            vm.curGroup = group
+            // 删除组
+            deleteGroup () {
+                console.log('clickDeleteGroup,groupId:', this.curGroupId)
+                this.$http.post('/delete_group/' + this.curGroupId + '/').then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    if (res.result) {
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        this.deleteGroupDialog.visible = false
+                        this.curGroupId = null
+                        this.curGroup = {
+                            id: '',
+                            name: '',
+                            admin: '',
+                            admin_list: [],
+                            create_by: '',
+                            create_name: '',
+                            create_time: ''
                         }
-                    })
-                    // 更改组用户
-                    this.getGroupUsers(groupId)
-                    // 更改界面为日期显示
-                    this.isUser = false
-                    // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.curDate = new Date()
-                    this.changeDate(this.curDate)
+                        this.dailyTemplates = []
+                        this.groupUsers = []
+                        this.curUser.isAdmin = false
+                        // 更新页面全部信息
+                        this.init()
+                    } else {
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                })
+            },
+            doApplyforGroup () {
+                const config = {
+                    offsetY: 80
                 }
+                this.$http.post(
+                    '/apply_for_group/',
+                    {
+                        group_id: this.applyForGroup.groupId
+                    }
+                ).then(res => {
+                    config.message = res.message
+                    if (res.result) {
+                        // 申请成功，重新获取（未申请、未在）的组列表
+                        config.theme = 'success'
+                        for (const i in this.availableApplyGroups) {
+                            if (this.availableApplyGroups[i].id === this.applyForGroup.groupId) {
+                                this.availableApplyGroups.splice(i, 1)
+                                break
+                            }
+                        }
+                        this.applyForGroup.dialogVisible = false
+                    } else {
+                        config.theme = 'error'
+                    }
+                    this.$bkMessage(config)
+                })
             },
-            datePickerOpenChange (state) {
-                this.isDatePickerOpen = state
+            // 新增日报模板
+            addDailyTemplate () {
+                console.log('addDailyTemplateData:', this.addDailyTemplateData.formData)
+                this.$http.post('/report_template/' + this.curGroup.id + '/', this.addDailyTemplateData.formData).then((res) => {
+                    const config = {}
+                    config.offsetY = 80
+                    if (res.result) {
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        // 更新模板内容
+                        this.getGroupTemplates(this.curGroup.id)
+                        this.addDailyTemplateDialog.visible = false
+                        this.addDailyTemplateData.formData = { name: '', content: '' }
+                    } else {
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                })
             },
-            // 根据日期获取当前组日报
-            changeDate (date) {
-                this.curUserId = null
-                this.rightIsUser = false
-                if (this.curGroupId === null || this.curGroupId === '') {
-                    console.log('curGroupId为空')
+            // 修改日报模板
+            editDailyTemplate () {
+                console.log('editDailyTemplateData', this.editDailyTemplateData)
+                this.$http.put('/report_template/' + this.curGroup.id + '/', this.editDailyTemplateData.formData).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    if (res.result) {
+                        config.message = res.message
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        this.editDailyTemplateDialog.visible = false
+                    } else {
+                        config.message = res.message
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                    // 更新模板信息
+                    this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
+                        // res.data.results
+                        this.dailyTemplates = res.data
+                        console.log('get_report_templates:', res.data)
+                    })
+                })
+            },
+            removeDailyTemplate (row) {
+                const templateId = row.id
+                this.$http.delete('/report_template/' + this.curGroup.id + '/?template_id=' + templateId, { 'template_id': 12
+                }).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = res.message
+                    if (res.result) {
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                    } else {
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                    // 更新模板信息
+                    this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
+                        // res.data.results
+                        this.dailyTemplates = res.data
+                        console.log('get_report_templates:', res.data)
+                    })
+                })
+            },
+            // 新增成员
+            addUser () {
+                const vm = this
+                this.bkUsers.forEach(function (user) {
+                    if (user.id === vm.addUserForm.id) {
+                        vm.addUserForm = user
+                    }
+                })
+                console.log('addUserForm', this.addUserForm)
+                this.$http.post('/add_user/' + this.curGroup.id + '/', this.addUserForm).then(res => {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = res.message
+                    if (res.result) {
+                        this.addUserDialog.visible = false
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        // 将提交的表单清空，因为当前（刚打开时的第一个元素）和它关联
+                        this.addUserForm = {}
+                        // 更新组-用户信息
+                        this.getGroupUsers(this.curGroup.id)
+                    } else {
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                })
+            },
+            // 将用户从组中移除
+            removeUser (row) {
+                // 检验删除的是否是管理员
+                if (this.curGroup.admin.indexOf(row.username) !== -1) {
+                    const config = {}
+                    config.offsetY = 80
+                    config.message = '不可移除管理员，可通过编辑组信息修改'
+                    config.theme = 'error'
+                    this.$bkMessage(config)
                 } else {
-                    console.log('curDate：', date)
-                    console.log('month', date.getMonth())
-                    const paramDate = date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-                    console.log('paramDate', paramDate)
-                    this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + paramDate).then(res => {
-                        // this.rightIsUser = false
+                    // props.row是当前行的遍历元素的全部信息=该行user
+                    console.log('row-user', row)
+                    const deletForm = { 'user_id': row.id }
+                    // 将用户从组里移除
+                    this.$http.post('/exit_group/' + this.curGroup.id + '/', deletForm).then(res => {
+                        const config = {}
+                        config.offsetY = 80
+                        config.message = res.message
                         if (res.result) {
-                            console.log('groupDailys', res.data)
-                            this.dailysData.count = res.data.length
-                            this.dailysData.dailys = res.data
+                            this.getGroupUsers(this.curGroup.id)
+                            config.theme = 'success'
+                            this.$bkMessage(config)
                         } else {
-                            const config = {}
-                            config.message = res.message
-                            config.offsetY = 80
                             config.theme = 'error'
                             this.$bkMessage(config)
                         }
                     })
                 }
             }
+
         }
     }
 </script>
 
 <style scoped>
-@import "./index.css";
-    #groupDailys /deep/ .content{
-        display: flex;
-        min-width: 1000px;
+    .myGroup-body{
+        border: 2px solid #EAEBF0 ;
+        width: 72%;
+        margin:0 auto;
+        padding: 20px 50px;
+        min-height: 770px;
     }
-    .container_title {
+    .line-container {
+        padding-bottom: 10px;
+    }
+    .line-container .container-label{
         font-size: 22px;
         font-weight: 700;
     }
-    .left_container{
-        width: 360px;
-        min-width: 358px;
-        border-right: 1px solid #EAEBF0 ;
-        padding-right: 10px;
+    .group-container{
+        display: flex;
+        flex-wrap: wrap;
     }
-    .select-bar{
+    .group-fun{
         width: 100%;
         display: flex;
         flex-wrap: wrap;
     }
-    .member-select{
+    .group-select{
         display: flex;
-        margin-right: 10px;
+        align-items: center;
+        margin-right: 20px;
     }
-    .member-select /deep/ .bk-select{
-        min-width: 110px;
+    .group-select span{
+        line-height: 52px;
+        width: 50px;
     }
-    .users_list{
-        margin-top: 10px;
+    .group-select .select-custom{
+        width: 100px;
+    }
+    .group-btns{
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
     }
-    .users_list .users_list_title{
-        font-size: 16px;
+    .group-btns /deep/ .bk-button{
+        margin-bottom: 5px;
+    }
+    .group-info-load{
         width: 100%;
-        height: 32px;
-        line-height: 32px;
+        height: 40px;
     }
-    .users_list /deep/ .bk-button{
-        margin-bottom: 10px;
-        
-    }
-    .right_container{
-        min-width: 380px;
-        width: 100%;
-        padding-left: 20px;
-    }
-    .no-report{
-        width: 100%;
-        height: 600px;
-        line-height: 600px;
+    .info-load{
+        height: 700px;
+        line-height: 300px;
+        border: 1px solid #eee;
         text-align: center;
     }
-    .right_container .report-info{
-        height: 40px;
-        line-height: 40px;
+    .group-info{
+        width: 100%;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
     }
-    .report-num-select{
+    .group-info .info-item{
+        margin-top:6px;
+        /* width: 100%; */
+    }
+    .group-info .manager-item{
+        margin-right:18px;
+        display:flex;
+    }
+    .group-info .info-item .item-title{
+        font-size: 14px;
+        min-width: 60px;
+        line-height: 32px;
+    }
+    .group-info .info-item .item-tag{
         display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
+        flex-wrap: wrap;
+
+        /* width: 90%; */
     }
-    .report-num-select span{
-        width: 112px;
-        margin-bottom: 10px;
+    .group-info .info-item .tags{
+        font-size: 16px;
+        margin: 4px 5px;
     }
-    .card{
-        float: left;
-        width: calc(46% - 5px);
-        margin-right: 18px;
+    .add-group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content{
+        width: 480px !important;
     }
-    .card /deep/ .bk-card-body{
-        height: 280px;
-        overflow-y: auto;
-        padding-top: 10px;
+    .add-group-dialog /deep/ .bk-dialog-body .bk-form-content{
+        margin-left: 120px !important;
+        width: 250px;
     }
-    .date_picker /deep/ .bk-date-picker-dropdown{
-        top: 32px !important;
-    }
-    .date_picker /deep/ .bk-date-picker{
-        width: 124px;
+    .line-container  /deep/ .bk-card .bk-card-body {
+        padding-top: 10px !important;
+        visibility:hidden;
+        visibility:visible;
     }
 </style>
