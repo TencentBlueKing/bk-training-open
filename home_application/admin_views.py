@@ -208,8 +208,8 @@ def remove_off(request, group_id, offday_id):
         return JsonResponse({"result": True, "code": 0, "message": "撤回成功", "data": []})
     except offday_id:
         return JsonResponse({"result": False, "code": 0, "message": "你没有请假", "data": []})
-    
-    
+
+
 @require_http_methods(["GET"])
 @is_group_member()
 def display_personnel_information(request, group_id):
