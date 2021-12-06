@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
@@ -9,7 +10,7 @@ from home_application.celery_task import (
     send_good_daily,
     send_unfinished_dairy,
 )
-from home_application.models import Daily, Group, GroupUser, User
+from home_application.models import Daily, Group, GroupUser, OffDay, User
 from home_application.utils.decorator import is_group_member
 
 
@@ -160,4 +161,92 @@ def send_evaluate_all(request, group_id):
         send_good_daily(request.user.username, all_username, date, daily_list)
         return JsonResponse({"result": True, "code": 0, "message": "发送成功", "data": []})
     else:
-        return JsonResponse({"result": True, "code": 0, "message": "这个组没有成员", "data": []})
+        return JsonResponse({"result": False, "code": 0, "message": "这个组没有成员", "data": []})
+
+
+@require_http_methods(["POST"])
+@is_group_member()
+def add_off_info(request):
+    """
+    请假
+    """
+    req = json.loads(request.body)
+    start_date = req.get("start_date")
+    end_date = req.get("end_date")
+    reason = req.get("reason")
+    # 判断是否已请假
+    username_list = [request.user.username]
+    if not check_off_status(username_list, start_date):
+        OffDay.objects.create(start_date=start_date, end_date=end_date, reason=reason, user=request.user.username)
+        return JsonResponse({"result": True, "code": 0, "message": "请假成功", "data": []})
+    else:
+        return JsonResponse({"result": False, "code": 0, "message": "休假日期重叠", "data": []})
+
+
+def check_off_status(username_list, date):
+    """
+    返回所有请假的人
+    :param username_list: username 数组
+    :param date: 日期字符串
+    """
+    # 直接筛选出请假记录，有请假记录即为请假的人
+    # 请假开始时间在日期之前，结束时间在日期之后 start <= date <= end
+    return OffDay.objects.filter(start_date__lte=date, end_date__gte=date, user__in=username_list).values_list(
+        "user", flat=True
+    )
+
+
+@require_http_methods(["DELETE"])
+@is_group_member()
+def remove_off(request, group_id, offday_id):
+    """
+    撤回请假条
+    不能撤回之前的e
+    主要作用与请假错误想撤回
+    """
+    try:
+        OffDay.objects.get(id=offday_id).delete()
+        return JsonResponse({"result": True, "code": 0, "message": "撤回成功", "data": []})
+    except offday_id:
+        return JsonResponse({"result": False, "code": 0, "message": "你没有请假", "data": []})
+
+
+@require_http_methods(["GET"])
+@is_group_member()
+def display_personnel_information(request, group_id):
+    """
+    展示未请假人和请假人
+    param sign：标记 1 返回未请假人 或 0返回请假人
+    """
+    date = request.GET.get("date")
+    sign = request.GET.get("sign")
+    # 组内所有人
+    user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    users = User.objects.filter(id__in=user_ids)
+    # 这个时间段所有请假的人
+    off_day_list = OffDay.objects.filter(
+        start_date__lte=date, end_date__gte=date, user__in=users.values_list("username", flat=True)
+    )
+    data = []
+    # 展示对应组对应日期请假的人
+    if sign == "0":
+        off_day_list_return = []
+        off_day_dict = list(
+            OffDay.objects.filter(
+                start_date__lte=date, end_date__gte=date, user__in=off_day_list.values_list("user", flat=True)
+            ).values()
+        )
+        user_list = list(
+            User.objects.filter(username__in=off_day_list.values_list("user", flat=True)).values_list("name", flat=True)
+        )
+        for i in range(0, len(off_day_dict)):
+            off_day_dict[i]["name"] = user_list[i]
+            off_day_list_return.append(off_day_dict[i])
+        data = off_day_list_return
+    elif sign == "1":
+        # 展示对应组对应日期未请假的人
+        at_work_usernames = set(users.values_list("username", flat=True)) - set(
+            off_day_list.values_list("user", flat=True)
+        )
+        data = [model_to_dict(user) for user in users.filter(username__in=at_work_usernames)]
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
