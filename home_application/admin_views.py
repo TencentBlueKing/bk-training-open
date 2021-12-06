@@ -176,24 +176,13 @@ def add_off_info(request):
     reason = req.get("reason")
     # 判断是否已请假
     username_list = [request.user.username]
-    if not check_off_status(username_list, start_date):
+    if not OffDay.objects.filter(start_date__lte=start_date, end_date__gte=start_date,
+                                 user__in=username_list).values_list(
+            "user", flat=True):
         OffDay.objects.create(start_date=start_date, end_date=end_date, reason=reason, user=request.user.username)
         return JsonResponse({"result": True, "code": 0, "message": "请假成功", "data": []})
     else:
         return JsonResponse({"result": False, "code": 0, "message": "休假日期重叠", "data": []})
-
-
-def check_off_status(username_list, date):
-    """
-    返回所有请假的人
-    :param username_list: username 数组
-    :param date: 日期字符串
-    """
-    # 直接筛选出请假记录，有请假记录即为请假的人
-    # 请假开始时间在日期之前，结束时间在日期之后 start <= date <= end
-    return OffDay.objects.filter(start_date__lte=date, end_date__gte=date, user__in=username_list).values_list(
-        "user", flat=True
-    )
 
 
 @require_http_methods(["DELETE"])
