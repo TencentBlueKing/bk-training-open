@@ -98,15 +98,43 @@ def send_apply_for_group_to_manager(user_name, group_admins, group_name):
     """
     将申请入组请求发送给管理员
     :param user_name:       用户名：username(name)
-    :param group_admins:    用户申请入组的所有管理员
+    :param group_admins:    用户申请入组的所有管理员(邮件接收人)
     :param group_name:   组名
     """
     logger.info(
         "将申请入组请求发送给管理员 \n username: %s \n group_admins: %s \n group_name: %s", user_name, group_admins, group_name
     )
     mail_title = "申请入组请求"
-    mail_content = "{}申请加入，您管理的组『{}』，快去处理吧~".format(user_name, group_name)
-    send_mail(receiver__username=group_admins, title=mail_title, content=mail_content)
+    mail_content = get_template("simple_notify.html").render(
+        {
+            "notify_title": mail_title,
+            "notify_content": "{}申请加入您管理的组『{}』，快去处理吧~".format(user_name, group_name),
+        }
+    )
+    send_mail(receiver__username=group_admins, title=mail_title, content=mail_content, body_format="Html")
+
+
+@task()
+def send_apply_for_group_result(username, group_name, status):
+    """
+    将申请入组请求发送给管理员
+    :param username:        用户名：username(邮件接收人)
+    :param group_name       组名
+    :param status:          处理结果：status=1(同意)、status=2(拒绝)
+    """
+    logger.info(
+        "将申请入组请求处理结果发送用户 \n username: %s \n group_name: %s \n status(status=1同意、status=2拒绝): %s",
+        username,
+        group_name,
+        status,
+    )
+    title = "申请入组请求处理结果"
+    if status == 1:
+        content = "您的申请入组『{}』请求被管理员通过~".format(group_name)
+    else:
+        content = "很遗憾，您的申请入组『{}』请求被管理员拒绝".format(group_name)
+    mail_content = get_template("simple_notify.html").render({"notify_title": title, "notify_content": content})
+    send_mail(receiver__username=username, title=title, content=mail_content, body_format="Html")
 
 
 @task()
