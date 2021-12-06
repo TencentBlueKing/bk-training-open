@@ -165,7 +165,7 @@ def send_evaluate_all(request, group_id):
 
 @require_http_methods(["POST"])
 @is_group_member()
-def add_off_info(request, group_id):
+def add_off_info(request):
     """
     请假
     """
@@ -220,12 +220,12 @@ def display_personnel_information(request, group_id):
     date = request.GET.get("date")
     sign = request.GET.get("sign")
     # 组内所有人
-    # 组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     username_list = User.objects.filter(id__in=user_id).values_list("username", flat=True)
-    # 展示对应组对应日期未请假的人
+    # 这个时间段所有请假的人
     off_day_list = check_off_status(username_list, date)
     if sign == 1:
+         # 展示对应组对应日期未请假的人
         list_at_work_user = []
         list_work_user = set(username_list) - set(off_day_list)
         list_work_user = User.objects.filter(username__in=list_work_user).values()
@@ -236,15 +236,16 @@ def display_personnel_information(request, group_id):
         else:
             return JsonResponse({"result": True, "code": 0, "message": "所有人都已请假", "data": []})
     else:
-        # 这个时间段所有请假的人
+    
+        # 展示对应组对应日期请假的人
         off_day_list_return = []
-        off_day_dict = OffDay.objects.filter(user__in=list(off_day_list)).values()
+        off_day_dict =OffDay.objects.filter(start_date__lte=date, end_date__gte=date, user__in=username_list).values()
         for off_day_dict in off_day_dict:
             off_day_dict["name"] = User.objects.filter(username=off_day_dict["user"]).values("name")[0]["name"]
             off_day_list_return.append(off_day_dict)
         if off_day_list_return:
             data = {
-                "off_day_list": off_day_list_return,  # 请假人信息
+                "off_day_list_return": off_day_list_return,  # 请假人信息
             }
             return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
         else:
