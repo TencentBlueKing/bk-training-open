@@ -236,6 +236,14 @@
                         username: ''
                     }
                 },
+                // 判断用户今天有没有写日报
+                myTodayReport: true,
+                defaultPaging: {
+                    current: 1,
+                    limit: 8,
+                    count: 0,
+                    limitList: [8, 16, 32, 64]
+                },
                 // 用户所有组信息
                 groupsData: [],
                 // 当前组信息
@@ -547,6 +555,15 @@
                             this.changeGroup(groupId)
                             this.editGroupDialog.visible = false
                         })
+                        this.defaultPaging.count = res.data.total_report_num
+                        this.dailysData.dailys = res.data.reports
+                        if (res.data.my_today_report !== undefined) {
+                            this.myTodayReport = res.data.my_today_report
+                        } else {
+                            // 响应无my_today_report参数为查看成员全部日报，不提示补签
+                            this.myTodayReport = true
+                        }
+                        this.classifyContent()
                     } else {
                         config.message = res.message
                         config.theme = 'error'
