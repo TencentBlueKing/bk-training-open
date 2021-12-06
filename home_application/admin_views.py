@@ -175,10 +175,9 @@ def add_off_info(request):
     end_date = req.get("end_date")
     reason = req.get("reason")
     # 判断是否已请假
-    username_list = [request.user.username]
-    if not OffDay.objects.filter(start_date__lte=start_date, end_date__gte=start_date,
-                                 user__in=username_list).values_list(
-            "user", flat=True):
+    has_off = OffDay.objects.filter(start_date__lte=start_date, end_date__gte=start_date,
+                                    user=request.user.username)
+    if not has_off.exists():
         OffDay.objects.create(start_date=start_date, end_date=end_date, reason=reason, user=request.user.username)
         return JsonResponse({"result": True, "code": 0, "message": "请假成功", "data": []})
     else:
