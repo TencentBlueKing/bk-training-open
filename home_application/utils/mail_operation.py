@@ -10,7 +10,7 @@ from celery.task import task
 from django.template.loader import get_template
 
 from blueking.component.shortcuts import get_client_by_user
-from home_application.models import Group
+from home_application.models import Daily, Group
 from home_application.utils.report_operation import (
     get_none_reported_user_of_group,
     get_report_info_by_group_and_date,
@@ -149,3 +149,5 @@ def notify_yesterday_report_info(report_date=None):
                 "date": report_date_str,
             }
         )
+    # 更新日报状态
+    Daily.objects.filter(date=report_date).update(send_status=True)

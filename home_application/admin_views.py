@@ -5,13 +5,10 @@ from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from home_application.celery_task import (
-    send_evaluate_daily,
-    send_good_daily,
-    send_unfinished_dairy,
-)
+from home_application.celery_task import send_evaluate_daily, send_good_daily
 from home_application.models import Daily, Group, GroupUser, OffDay, User
 from home_application.utils.decorator import is_group_member
+from home_application.utils.mail_operation import remind_to_write_daily
 
 
 @require_http_methods(["GET"])
@@ -87,11 +84,10 @@ def notice_non_report_users(request, group_id):
         "create_by", flat=True
     )
     non_report_users = set(group_users) - set(report_user_usernames)
-    username_str = ",".join(non_report_users)
     # 发送邮件
     if non_report_users:
-        # 放进celery里
-        send_unfinished_dairy.delay(username_str, date)
+        for username in non_report_users:
+            remind_to_write_daily.delay(username, date)
         return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "无未写日报成员", "data": []})
@@ -175,8 +171,7 @@ def add_off_info(request):
     end_date = req.get("end_date")
     reason = req.get("reason")
     # 判断是否已请假
-    has_off = OffDay.objects.filter(start_date__lte=start_date, end_date__gte=start_date,
-                                    user=request.user.username)
+    has_off = OffDay.objects.filter(start_date__lte=start_date, end_date__gte=start_date, user=request.user.username)
     if not has_off.exists():
         OffDay.objects.create(start_date=start_date, end_date=end_date, reason=reason, user=request.user.username)
         return JsonResponse({"result": True, "code": 0, "message": "请假成功", "data": []})
