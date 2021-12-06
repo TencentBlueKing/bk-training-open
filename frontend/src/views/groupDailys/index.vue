@@ -43,7 +43,7 @@
             <div class="right_container">
                 <div v-if="!myTodayReport" style="margin-bottom: 10px;">
                     <bk-alert type="warning" title="警告的提示文字">
-                        <bk-link theme="warning" slot="title" :href="'/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
+                        <bk-link theme="warning" slot="title" :href="'/Home/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
                     </bk-alert>
                 </div>
                 <bk-pagination style="margin-bottom: 10px;"
@@ -151,6 +151,7 @@
             },
             // 点击切换显示类型的按钮
             changeType () {
+                this.myTodayReport = true
                 this.isUser = !this.isUser
                 if (!this.isUser) {
                     this.changeGroup(this.curGroupId)
@@ -204,6 +205,9 @@
                             this.myTodayReport = res.data.my_today_report
                         } else {
                             // 响应无my_today_report参数为查看成员全部日报，不提示补签
+                            this.myTodayReport = true
+                        }
+                        if (this.isUser) {
                             this.myTodayReport = true
                         }
                         this.classifyContent()
@@ -269,7 +273,7 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.changeDateOrUser('', this.curDate)
+                    this.changeDateOrUser('', new Date())
                 }
             }
         }

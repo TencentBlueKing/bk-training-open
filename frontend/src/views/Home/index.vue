@@ -232,7 +232,7 @@
                         this.dailyDates = res.data
                         this.customOption = {
                             disabledDate: (date) => {
-                                if (this.dailyDates.includes(moment(date).format('YYYY-MM-DD')) || this.curDate < date) {
+                                if (moment(date).format('YYYY-MM-DD') !== moment(new Date()).format('YYYY-MM-DD') && (this.dailyDates.includes(moment(date).format('YYYY-MM-DD')) || date > new Date())) {
                                     return true
                                 }
                             }
@@ -274,8 +274,27 @@
                     this.cheakDailyDates()
                     if (Object.keys(res.data).length) {
                         this.hasWrittenToday = true
+                        this.dailyData.title = []
+                        this.dailyData.content = []
+                        this.dailyTemplates = []
+                        this.templateContent = []
+                        for (const key in res.data.content) {
+                            if (res.data.content[key] instanceof Array) {
+                                this.dailyData.title.push(key)
+                                this.dailyData.content.push(res.data.content[key])
+                            } else if (key === 'isPrivate') {
+                                this.dailyData.isPrivate = res.data.content[key]
+                            } else {
+                                this.dailyTemplates.push(key)
+                                this.templateContent.push(res.data.content[key])
+                            }
+                        }
                     } else {
+                        //   重新初始化
                         this.hasWrittenToday = false
+                        this.dailyData.title = ['今日任务', '明日计划']
+                        this.dailyData.content = [[], []]
+                        this.dailyData.isPrivate = false
                     }
                 })
             },
