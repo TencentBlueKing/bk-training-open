@@ -155,3 +155,17 @@ class Daily(TimeBasic):
             return False
         else:
             return True
+
+
+class Holiday(TimeBasic):
+    year = models.IntegerField(verbose_name="年份")
+    month = models.IntegerField(verbose_name="月份")
+    day = models.IntegerField(verbose_name="日期")
+    is_holiday = models.BooleanField(verbose_name="是否为节假日")
+    note = models.CharField(max_length=255, verbose_name="备注")
+
+    class Meta:
+        unique_together = ("year", "month", "day")
+
+    def __str__(self):
+        return "{}-{}-{} {}".format(self.year, self.month, self.day, self.note)

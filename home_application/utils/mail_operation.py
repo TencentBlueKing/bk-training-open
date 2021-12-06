@@ -110,17 +110,20 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
     return send_mail(receiver__username=admin_username, title="日报提醒助手", content=mail_content, body_format="Html")
 
 
-def notify_yesterday_report_info():
+def notify_yesterday_report_info(report_date=None):
     """
-    早上10点发送昨天日报概览给管理员
+    发送指定日期的日报概览给管理员
+    :param report_date: 日报信息对应的日期，默认为昨天
     """
     admin_group_map = {}
     group_ids = Group.objects.values_list("id", flat=True)
-    last_workday = str((datetime.datetime.today() - datetime.timedelta(days=1)).date())
+    if report_date is None:
+        report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
 
+    report_date_str = report_date.strftime("%Y-%m-%d")
     for g_id in group_ids:
         # 组信息
-        group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=last_workday)
+        group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=report_date)
         # 从组信息提取发送邮件需要的数据
         g_info_for_mail = {
             "group_name": group_info["name"],  # 组名字
@@ -128,7 +131,7 @@ def notify_yesterday_report_info():
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
             "people_in_vacation_count": 0,  # TODO 请假人数
             "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
-                last_workday, g_id
+                report_date_str, g_id
             ),  # 组管理页面
         }
 
@@ -143,6 +146,6 @@ def notify_yesterday_report_info():
             kwargs={
                 "admin_username": admin_username,
                 "group_infos": info,
-                "date": last_workday,
+                "date": report_date_str,
             }
         )
