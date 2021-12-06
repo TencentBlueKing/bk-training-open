@@ -25,7 +25,7 @@
                 <bk-button :theme="'primary'" style="display: inline-block" @click="saveDaily" class="mr30">
                     保存
                 </bk-button>
-                <bk-button :theme="'primary'" style="display: inline-block" @click="leaveManage" class="mr30">
+                <bk-button :theme="'primary'" style="display: inline-block" @click="leaveSetting.visible = true" class="mr30">
                     请假
                 </bk-button>
                 <bk-sideslider width="600"
@@ -50,15 +50,15 @@
                                             v-model="leaveFormData.dateTimeRange"
                                             class="mr15"
                                             :clearable="false"
-                                            :placeholder="'选择日期范围'"
-                                            :type="'daterange'"
+                                            placeholder="选择日期范围"
+                                            type="daterange"
                                             @clear="clearDate"
                                         ></bk-date-picker>
                                     </bk-form-item>
                                     <bk-form-item label="请假原因">
                                         <bk-input
                                             placeholder=""
-                                            :type="'textarea'"
+                                            type="textarea"
                                             :rows="3"
                                             :maxlength="255"
                                             v-model="leaveFormData.reason">
@@ -106,11 +106,6 @@
                                     <bk-table-column label="人员信息" prop="info" min-width="150" show-overflow-tooltip="true"></bk-table-column>
                                     <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
                                     <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true"></bk-table-column>
-                                    <bk-table-column label="操作">
-                                        <template slot-scope="props">
-                                            <bk-button class="mr10" theme="primary" text :disabled="currentUserName !== props.row.username" @click="cancelLeave(props.row)">取消</bk-button>
-                                        </template>
-                                    </bk-table-column>
                                 </bk-table>
                             </div>
                         </div>
@@ -188,10 +183,10 @@
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button v-if="isAdd" :theme="'primary'" :title="'分享'" @click="addRow">
+                            <bk-button v-if="isAdd" theme="primary" title="分享" @click="addRow">
                                 添加
                             </bk-button>
-                            <bk-button v-else :theme="'primary'" :title="'分享'" @click="changeRow">
+                            <bk-button v-else theme="primary" title="分享" @click="changeRow">
                                 修改
                             </bk-button>
                         </div>
@@ -209,14 +204,14 @@
                     <div>
                         <bk-input
                             placeholder="新增模板标题"
-                            :type="'text'"
+                            type="text"
                             v-model="newTitle"
                         >
                         </bk-input>
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button :theme="'primary'" :title="'分享'" @click="addTemplate">
+                            <bk-button theme="primary" title="分享" @click="addTemplate">
                                 添加
                             </bk-button>
                         </div>
@@ -227,13 +222,13 @@
                 <div :key="index">
                     <div style="display: flex;justify-content: space-between;margin: 10px 0">
                         <h2 style="display: inline-block;margin: 0">{{tem}}</h2>
-                        <bk-button v-if="index > 0" style="display: inline-block" :theme="'primary'" @click="deleteTemplate(index)">
+                        <bk-button v-if="index > 0" style="display: inline-block" theme="primary" @click="deleteTemplate(index)">
                             删除该模板
                         </bk-button>
                     </div>
                     <bk-input
                         placeholder="请输入"
-                        :type="'textarea'"
+                        type="textarea"
                         :rows="3"
                         v-model="templateContent[index]"
                     >
@@ -338,8 +333,7 @@
                 ],
                 activeTabIndex: 0, // 0是请假申请 1是请假管理
                 groupList: [],
-                selectedGroup: '',
-                currentUserName: ''
+                selectedGroup: ''
             }
         },
         created () {
@@ -398,15 +392,13 @@
             init () {
                 this.cheakDailyDates()
                 this.getDailyReport()
-                const vm = this
                 // 获取当前用户组信息
-                vm.$http.get('/get_user_groups/').then((res) => {
-                    vm.groupList = res.data
-                    if (vm.groupList.length !== 0) {
-                        vm.selectedGroup = vm.groupList[0].id
+                this.$http.get('/get_user_groups/').then((res) => {
+                    this.groupList = res.data
+                    if (this.groupList.length !== 0) {
+                        this.selectedGroup = this.groupList[0].id
                     }
                 })
-                vm.currentUserName = sessionStorage.getItem('username')
             },
             getDailyReport () {
                 const vm = this
@@ -514,10 +506,6 @@
             formateDate (date) {
                 return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
             },
-            // 打开请假管理
-            leaveManage () {
-                this.leaveSetting.visible = true
-            },
             // 获取请假管理表
             getLeaveList () {
                 this.isleaveTableLoad = true
@@ -583,21 +571,6 @@
                         this.$bkMessage({
                             'offsetY': 80,
                             'delay': 2000,
-                            'theme': 'warning',
-                            'message': res.message
-                        })
-                    }
-                })
-            },
-            // 取消假期事件
-            cancelLeave (row) {
-                const offdayId = row.offdayId
-                this.$http.delete('/remove_off/' + this.selectedGroup + '/' + offdayId + '/').then(res => {
-                    if (res.result) {
-                        this.getLeaveList()
-                    } else {
-                        this.$bkMessage({
-                            'offsetY': 80,
                             'theme': 'warning',
                             'message': res.message
                         })
