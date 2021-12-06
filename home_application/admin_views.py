@@ -121,7 +121,7 @@ def update_evaluate_daily(request, group_id, daily_id):
         daily = Daily.objects.get(id=daily_id)
     except Daily.DoesNotExist:
         return JsonResponse({"result": False, "code": 0, "message": "无此日报", "data": []})
-    evaluate_content = request.GET.get("evaluate_content")
+    evaluate_content = json.loads(request.body).get("evaluate_content")
     username = request.user.username
     daily.add_evaluate(username, evaluate_content)
     return JsonResponse({"result": True, "code": 0, "message": "修改成功", "data": []})
