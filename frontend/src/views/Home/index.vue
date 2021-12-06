@@ -1,116 +1,297 @@
 <template>
-    <contentWapper :pageid="pageId" :minheight="pageMinHeight">
-        <div class="left_container">
-            <div class="select-bar">
-                <div class="member-select">
-                    <bk-select :disabled="false" v-model="curGroupId"
-                        ext-cls="select-custom"
-                        ext-popover-cls="select-popover-custom"
-                        @change="changeGroup(curGroupId)"
-                        z-index="99"
-                        searchable>
-                        <bk-option v-for="group in groupsData"
-                            :key="group.id"
-                            :id="group.id"
-                            :name="group.name">
-                        </bk-option>
-                    </bk-select>
-                    <bk-button :theme="'primary'" type="submit" @click="changeType" style="margin-left:14px;">
-                        {{isUser ? '日期' : '成员'}}
-                    </bk-button>
-                </div>
-                <div class="date-select">
-                    <div v-if="isUser" class="users_list">
-                        <div>
-                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="changeDateOrUser(user.id, '')" class="mr10">
-                                {{user.name}}
-                            </bk-button>
-                        </div>
-                        <bk-button v-show="user.username !== 'admin'" v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" @click="clickUser(user.id)" class="mr10">
-                            {{user.username}}({{user.name}})
-                        </bk-button>
-                    </div>
-                    <div class="date_picker" style="margin-left:0px;" v-else>
-                        <bk-date-picker class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
-                            :placeholder="'选择日期'"
-                            :open="true"
-                            :ext-popover-cls="'custom-popover-cls'"
-                            :options="customOption">
-                        </bk-date-picker>
-                    </div>
-                </div>
-
-                <!-- 清除浮动，撑开盒子 -->
-                <div style="clear:both;"></div>
-            </div>
-            <div class="right_container">
-                <div v-if="!myTodayReport" style="margin-bottom: 10px;">
-                    <bk-alert type="warning" title="警告的提示文字">
-                        <bk-link theme="warning" slot="title" :href="'/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
-                    </bk-alert>
-                </div>
-                <bk-pagination style="margin-bottom: 10px;"
-                    @change="changePage"
-                    @limit-change="changeLimit"
-                    :current.sync="defaultPaging.current"
-                    :count.sync="defaultPaging.count"
-                    :limit="defaultPaging.limit"
-                    :limit-list="defaultPaging.limitList">
-                </bk-pagination>
-                <div v-if="defaultPaging.count === 0" style="margin: 200px auto;width:140px;">
-                    没有日报内容哟~
+    <div class="body">
+        <div class="container">
+            <div class="top_container">
+                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
+                <bk-date-picker class="mr15" v-model="reportDate"
+                    :clearable="false"
+                    :placeholder="'选择日期'"
+                    :ext-popover-cls="'custom-popover-cls'"
+                    :options="customOption"
+                    @change="changeDate(reportDate)"
+                >
+                </bk-date-picker>
+                <div>
+                    <h2 class="mr30 f20" style="margin: 0;">
+                        日报状态：
+                        <span v-if="hasWrittenToday" style="color: #3A84FF;font-size: 18px;">已写日报</span>
+                        <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
+                    </h2>
                 </div>
                 <div>
-                    <bk-card v-for="(daily, index) in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
-                        <div>日期：{{daily.date}}</div>
-                        <div>日报状态：{{daily.send_describe}}</div>
-                        <div v-for="(value, key) in dailysData.formatContent[index]" :key="key" style="font-size:18px">
-                            <p style="font-weight: bold">{{key}}</p>
-                            <pre>{{value}}</pre>
-                        </div>
-                    </bk-card>
-
+                    <span class="mr10 f20">隐私模式</span>
+                    <bk-switcher size="large" v-model="dailyData.isPrivate" class="mr30"></bk-switcher>
                 </div>
-
-                <!-- 清除浮动，撑开盒子 -->
-                <div style="clear:both;"></div>
+                <bk-button :theme="'primary'" style="display: inline-block" @click="saveDaily" class="mr30">
+                    保存
+                </bk-button>
+                <bk-button :theme="'primary'" style="display: inline-block" @click="leaveManage" class="mr30">
+                    请假
+                </bk-button>
+                <bk-sideslider width="600"
+                    :is-show.sync="leaveSetting.visible"
+                    :quick-close="true"
+                    @hidden="hiddenSlider"
+                    ext-cls="leave-slide">
+                    <div slot="header" class="slide-header">
+                        <div :class="{
+                            'header-tabs': true,
+                            'tabs-active': tindex === activeTabIndex
+                        }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(tindex)">
+                            {{title}}
+                        </div>
+                    </div>
+                    <div slot="content">
+                        <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabIndex === 0">
+                            <div class="leave-apply">
+                                <bk-form :label-width="80" form-type="horizontal">
+                                    <bk-form-item label="请假日期" :required="true">
+                                        <bk-date-picker
+                                            v-model="leaveFormData.dateTimeRange"
+                                            class="mr15"
+                                            :clearable="false"
+                                            :placeholder="'选择日期范围'"
+                                            :type="'daterange'"
+                                            @clear="clearDate"
+                                        ></bk-date-picker>
+                                    </bk-form-item>
+                                    <bk-form-item label="请假原因">
+                                        <bk-input
+                                            placeholder=""
+                                            :type="'textarea'"
+                                            :rows="3"
+                                            :maxlength="255"
+                                            v-model="leaveFormData.reason">
+                                        </bk-input>
+                                    </bk-form-item>
+                                    <bk-form-item class="mt20">
+                                        <bk-button
+                                            style="margin-right: 3px;"
+                                            theme="primary" title="提交"
+                                            @click.stop.prevent="submitLeave">提交</bk-button>
+                                    </bk-form-item>
+                                </bk-form>
+                            </div>
+                        </div>
+                        <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabIndex === 1">
+                            <div class="leave-manage">
+                                <div class="select-bar">
+                                    <div class="ptitle">选择组</div>
+                                    <bk-select :disabled="false" v-model="selectedGroup" style="width: 200px;"
+                                        ext-cls="select-custom"
+                                        ext-popover-cls="select-popover-custom"
+                                        @selected="handleSelectGroup"
+                                        searchable>
+                                        <bk-option v-for="goption in groupList"
+                                            :key="goption.id"
+                                            :id="goption.id"
+                                            :name="goption.name">
+                                        </bk-option>
+                                    </bk-select>
+                                </div>
+                                <div class="leave-load" v-show="isleaveTableLoad" v-bkloading="{ isLoading: isleaveTableLoad, theme: 'primary', zIndex: 10 }"></div>
+                                <bk-table
+                                    v-show="!isleaveTableLoad"
+                                    :virtual-render="false"
+                                    :data="leaveTableData.data"
+                                    :size="leaveTableData.size"
+                                    :outer-border="false"
+                                    :header-border="false"
+                                    :header-cell-style="{ background: '#fff' }"
+                                    @page-change="handlePageChange"
+                                    @page-limit-change="handlePageLimitChange">
+                                    <div slot="empty-text">
+                                        空数据
+                                    </div>
+                                    <bk-table-column label="人员信息" prop="info" min-width="150" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="操作" width="80">
+                                        <template slot-scope="props">
+                                            <bk-button class="mr10" theme="primary" text :disabled="currentUserName !== props.row.usernmae" @click="cancelLeave(props.row)">取消</bk-button>
+                                        </template>
+                                    </bk-table-column>
+                                </bk-table>
+                            </div>
+                        </div>
+                    </div>
+                </bk-sideslider>
+                <bk-button :theme="'success'" style="display: inline-block" @click="moreTemplateDialog.visible = true">
+                    添加模板
+                </bk-button>
             </div>
+            <div class="bottom_container">
+                <template v-for="(title, index) in dailyData.title">
+                    <div :key="index">
+                        <div style="display: flex;justify-content: space-between;margin: 10px 0">
+                            <h2 contenteditable="true" @input="changeTitleText(index)" :ref="'title' + index" style="display: inline-block;margin: 0">{{title}}</h2>
+                            <bk-button style="display: inline-block" :theme="'primary'" @click="dealAdd(index)">
+                                新增一条内容
+                            </bk-button>
+                        </div>
+                        <div>
+                            <bk-table
+                                style="margin-top: 15px;"
+                                :data="dailyData.content[index]"
+                                :virtual-render="true"
+                                height="175px">
+                                <bk-table-column prop="content" label="内容"></bk-table-column>
+                                <bk-table-column width="150" prop="cost" label="所花时间"></bk-table-column>
+                                <bk-table-column label="操作" width="150">
+                                    <template slot-scope="props">
+                                        <bk-button
+                                            theme="warning"
+                                            text
+                                            @click="changeContent(props.row, index)">
+                                            修改
+                                        </bk-button>
+                                        <bk-button
+                                            theme="danger"
+                                            text
+                                            @click="deleteContent(props.row, index)">
+                                            删除
+                                        </bk-button>
+                                    </template>
+                                </bk-table-column>
+                            </bk-table>
+                        </div>
+                    </div>
+                </template>
+                <bk-dialog
+                    v-model="addDialog.visible"
+                    title="新增内容"
+                    :header-position="addDialog.headerPosition"
+                    :width="addDialog.width"
+                    @value-change="addDialogChange"
+                    :position="{ top: 20, left: 100 }">
+                    <div>
+                        <h3>内容</h3>
+                        <bk-input
+                            placeholder="新内容"
+                            :type="'textarea'"
+                            :rows="3"
+                            v-model="newContent"
+                        >
+                        </bk-input>
+                        <h3>所花时间</h3>
+                        <bk-input
+                            placeholder="所花时间"
+                            type="number"
+                            v-model="newCost"
+                            :precision="1"
+                            :min="0"
+                        >
+                            <template slot="append">
+                                <div class="group-text">小时</div>
+                            </template>
+                        </bk-input>
+                    </div>
+                    <div slot="footer" class="dialog-foot">
+                        <div>
+                            <bk-button v-if="isAdd" :theme="'primary'" :title="'分享'" @click="addRow">
+                                添加
+                            </bk-button>
+                            <bk-button v-else :theme="'primary'" :title="'分享'" @click="changeRow">
+                                修改
+                            </bk-button>
+                        </div>
+                    </div>
+                </bk-dialog>
+                <bk-dialog
+                    v-model="moreTemplateDialog.visible"
+                    :header-position="moreTemplateDialog.headerPosition"
+                    :width="moreTemplateDialog.width"
+                    @value-change="moreTemplateDialogChange"
+                    :position="{ top: 20, left: 100 }">
+                    <div slot="header">
+                        <span class="mr30">新增模板标题</span>
+                    </div>
+                    <div>
+                        <bk-input
+                            placeholder="新增模板标题"
+                            :type="'text'"
+                            v-model="newTitle"
+                        >
+                        </bk-input>
+                    </div>
+                    <div slot="footer" class="dialog-foot">
+                        <div>
+                            <bk-button :theme="'primary'" :title="'分享'" @click="addTemplate">
+                                添加
+                            </bk-button>
+                        </div>
+                    </div>
+                </bk-dialog>
+            </div>
+            <template v-for="(tem,index) in dailyTemplates">
+                <div :key="index">
+                    <div style="display: flex;justify-content: space-between;margin: 10px 0">
+                        <h2 style="display: inline-block;margin: 0">{{tem}}</h2>
+                        <bk-button v-if="index > 0" style="display: inline-block" :theme="'primary'" @click="deleteTemplate(index)">
+                            删除该模板
+                        </bk-button>
+                    </div>
+                    <bk-input
+                        placeholder="请输入"
+                        :type="'textarea'"
+                        :rows="3"
+                        v-model="templateContent[index]"
+                    >
+                    </bk-input>
+                </div>
+            </template>
         </div>
-
-        <!-- 清除浮动，撑开盒子 -->
-        <div style="clear:both;"></div>
-    </contentWapper>
-
+    </div>
 </template>
 
 <script>
-    import { bkPagination } from 'bk-magic-vue'
     import moment from 'moment'
-
     export default {
-        components: {
-            bkPagination
-        },
         data () {
             return {
-                // 判断用户今天有没有写日报
-                myTodayReport: false,
-                defaultPaging: {
-                    current: 1,
-                    limit: 8,
-                    count: 0,
-                    limitList: [8, 16, 32, 64]
+                curDate: new Date(),
+                formatDate: '',
+                addDialog: {
+                    visible: false,
+                    width: 600,
+                    headerPosition: 'left'
                 },
-                groupsData: [],
-                curGroupId: null,
-                curGroup: {
-                    id: '',
-                    name: '',
-                    admin: [],
-                    create_by: '',
-                    create_name: '',
-                    create_time: ''
+                // 此次操作是增加一列还是修改一列
+                isAdd: true,
+                // 修改指定行的临时变量
+                targetRow: 0,
+                moreTemplateDialog: {
+                    visible: false,
+                    width: 600,
+                    headerPosition: 'left'
                 },
+                // 日报信息
+                dailyData: {
+                    title: ['今日任务', '明日计划'],
+                    content: [[], []],
+                    isPrivate: false
+                },
+                dailyDates: [],
+                // 新的内容和新花费时间的临时变量
+                newContent: '',
+                newCost: 0,
+                // 指向dailyData.content的下标
+                currentIndex: 0,
+                // 提交数据的格式化对象
+                postDaily: {
+                    date: null,
+                    content: {},
+                    template_id: 0,
+                    send_email: false,
+                    isPrivate: 0
+                },
+                // 新的模板标题及内容数组
+                dailyTemplates: ['感想'],
+                templateContent: [],
+                // 新标题临时变量
+                newTitle: '',
+                // 今日写日报状况（已写，未写）
+                hasWrittenToday: false,
                 customOption: {
                     disabledDate: function (date) {
                         if (date > new Date()) {
@@ -118,252 +299,368 @@
                         }
                     }
                 },
-                // 控制显示日期还是显示成员
-                isUser: false,
-                // 日期选择（当前正常，get时需要再次转化）,在点击成员时将其设为空字符串来判断当前分页调用哪个接口
-                curDate: moment(new Date()).format('YYYY-MM-DD'),
-                // 日报数据
-                dailysData: {
-                    count: 100,
-                    dailys: [],
-                    formatTitle: [],
-                    formatContent: []
+                leaveSetting: {
+                    visible: false
                 },
-                // 用户列表
-                groupUsers: [],
-                curUserId: null
+                isleaveTableLoad: true,
+                leaveTableData: {
+                    size: 'small',
+                    data: [],
+                    isAdmin: false,
+                    pagination: {
+                        current: 1,
+                        count: 0,
+                        limit: 10,
+                        'limit-list': [10, 20, 50]
+                    }
+                },
+                leaveFormData: {
+                    reason: '',
+                    dateTimeRange: [new Date(), new Date()]
+                },
+                slideTitleList: [
+                    '请假申请',
+                    '请假管理'
+                ],
+                activeTabIndex: 0, // 0是请假申请 1是请假管理
+                groupList: [],
+                selectedGroup: '',
+                currentUserName: ''
             }
         },
         created () {
-            // 初始化组id和日期
-            const groupIdInURL = this.$route.query.group
-            if (groupIdInURL !== undefined) {
-                this.curGroupId = parseInt(groupIdInURL)
+            this.formatDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+            const dateInURL = this.$route.query.date
+            if (dateInURL !== undefined) {
+                this.reportDate = new Date(dateInURL)
+                this.formatDate = dateInURL
+            } else {
+                this.reportDate = new Date()
             }
             this.init()
         },
         methods: {
-            // 每页日报数量
-            changeLimit (pageSize) {
-                this.defaultPaging.limit = pageSize
-                this.getDailys()
+            changeDate (date) {
+                this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
+                this.getDailyReport()
             },
-            // 切换页面
-            changePage (page) {
-                this.defaultPaging.current = page
-                this.getDailys()
-            },
-            // 点击切换显示类型的按钮
-            changeType () {
-                this.isUser = !this.isUser
-                if (!this.isUser) {
-                    this.changeGroup(this.curGroupId)
-                    document.querySelector('.left_container').style.minWidth = 290
-                    console.log('left_container == ', document.querySelector('.left_container').style.minWidth)
-                } else {
-                    document.querySelector('.left_container').style.minWidth = 350
-                }
-            },
-            // 获取组内成员
-            getGroupUsers (groupId) {
-                // 根据组id获取组成员
-                this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
-                    this.groupUsers = res.data
-                })
-            },
-            // 拆分日报内容
-            classifyContent () {
-                for (const index in this.dailysData.dailys) {
-                    const daily = this.dailysData.dailys[index]
-                    this.dailysData.formatContent[index] = {}
-                    for (const key in daily.content) {
-                        if (daily.content[key] instanceof Array) {
-                            let points = ''
-                            if (daily.content.isPrivate) {
-                                for (const point of daily.content[key]) {
-                                    points = points + point.content + ';\n'
-                                }
-                            } else {
-                                for (const point of daily.content[key]) {
-                                    points = points + point.content + ';-----(' + point.cost + ')\n'
+            cheakDailyDates () {
+                this.$http.get('/get_reports_dates/').then(res => {
+                    if (res.result) {
+                        this.dailyDates = res.data
+                        this.customOption = {
+                            disabledDate: (date) => {
+                                if (this.dailyDates.includes(moment(date).format('YYYY-MM-DD')) || this.curDate < date) {
+                                    return true
                                 }
                             }
-                            this.dailysData.formatTitle[index] = key
-                            this.dailysData.formatContent[index][key] = points
-                        } else if (key !== 'isPrivate') {
-                            this.dailysData.formatContent[index][key] = daily.content[key]
                         }
-                    }
-                }
-            },
-            // 修改日期或成员
-            changeDateOrUser (userId, date) {
-                this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
-                this.curUserId = userId
-                this.getDailys()
-            },
-            // 获取当前组日报
-            getDailys () {
-                this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
-                    if (res.result) {
-                        this.defaultPaging.count = res.data.total_report_num
-                        this.dailysData.dailys = res.data.reports
-                        this.myTodayReport = res.data.my_today_report
-                        this.classifyContent()
                     } else {
-                        const config = {
-                            message: res.message,
+                        this.$bkMessage({
                             offsetY: 80,
+                            message: res.message,
                             theme: 'error'
-                        }
-                        this.$bkMessage(config)
+                        })
                     }
                 })
             },
-            init () {
-                // 获取所有组列表
-                this.$http.get('/get_user_groups/').then((res) => {
-                    // 更新组信息
-                    this.groupsData = res.data
-                    // 初始化显示的组
-                    if (this.groupsData.length !== 0) {
-                        if (this.curGroupId !== null) {
-                            const vm = this
-                            this.groupsData.forEach(function (group) {
-                                if (group.id === vm.curGroupId) {
-                                    vm.curGroup = group
-                                    // 获取组内成员
-                                    vm.getGroupUsers(vm.curGroupId)
-                                    // 初始化组内所有日报（根据日期选择）
-                                    vm.changeDateOrUser('', vm.curDate)
-                                }
-                            })
-                        } else {
-                            this.curGroupId = this.groupsData[0].id
-                            this.curGroup = this.groupsData[0]
-                        }
-                    }
-                })
-            },
-            // 点击切换组
-            changeGroup (groupId) {
-                if (groupId === null || groupId === '') {
-                    this.curGroup = {
-                        id: '',
-                        name: '',
-                        admin: [],
-                        create_by: '',
-                        create_name: '',
-                        create_time: ''
-                    }
-                    this.groupUsers = []
-                    this.curUserId = null
-                    this.dailysData.dailys = []
-                } else {
-                    const vm = this
-                    // 更改当前组信息
-                    this.groupsData.forEach(function (group) {
-                        if (group.id === groupId) {
-                            vm.curGroup = group
-                        }
-                    })
-                    // 更改组用户
-                    this.getGroupUsers(groupId)
-                    // 更改界面为日期显示
-                    this.isUser = false
-                    // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.changeDateOrUser('', this.curDate)
+            changeTemplate () {
+                if (this.curTemplateId === null || this.curTemplateId === '') {
+                    this.curTemplate = []
+                    this.dailyData = []
                 }
+            },
+            // 切换模板
+            selectTemplate () {
+                this.dailyData = []
+                const vm = this
+                vm.templateList.forEach(function (template) {
+                    if (template.id === vm.curTemplateId) {
+                        vm.curTemplate = template.content.split(';')
+                    }
+                })
+            },
+            // 界面初始化
+            init () {
+                this.cheakDailyDates()
+                this.getDailyReport()
+                const vm = this
+                // 获取当前用户组信息
+                vm.$http.get('/get_user_groups/').then((res) => {
+                    console.log('init_group, groupsData:', res.data)
+                    vm.groupList = res.data
+                    if (vm.groupList.length !== 0) {
+                        vm.selectedGroup = vm.groupList[0].id
+                    }
+                })
+            },
+            getDailyReport () {
+                this.$http.get(
+                    '/daily_report/?date=' + this.formatDate
+                ).then(res => {
+                    this.cheakDailyDates()
+                    if (Object.keys(res.data).length) {
+                        this.hasWrittenToday = true
+                    } else {
+                        this.hasWrittenToday = false
+                    }
+                })
+            },
+            // 改变默认模板标题
+            changeTitleText (index) {
+                const title = 'title' + index
+                this.dailyData.title[index] = this.$refs[title][0].innerText
+            },
+            // 打开dialog, 增加一行
+            dealAdd (index) {
+                this.currentIndex = index
+                this.isAdd = true
+                this.addDialog.visible = true
+            },
+            // 保存增加表格中的一行新内容
+            addRow () {
+                const newObj = { 'content': this.newContent, 'cost': this.newCost + '小时' }
+                this.dailyData.content[this.currentIndex].push(newObj)
+                this.addDialog.visible = false
+            },
+            // 保存对指定行的修改
+            changeRow () {
+                const newObj = { 'content': this.newContent, 'cost': this.newCost + '小时' }
+                this.dailyData.content[this.currentIndex].splice(this.targetRow, 1, newObj)
+                this.addDialog.visible = false
+            },
+            // 打开dailog,改变表格中指定行内容
+            changeContent (row, changeIndex) {
+                this.currentIndex = changeIndex
+                this.newContent = row.content
+                this.newCost = parseFloat(row.cost)
+                this.targetRow = row.$index
+                this.isAdd = false
+                this.addDialog.visible = true
+            },
+            // 删除表格中的一行内容
+            deleteContent (row, removeIndex) {
+                this.dailyData.content[removeIndex].splice(row.$index, 1)
+                this.$bkMessage({
+                    theme: 'success',
+                    message: '移除成功'
+                })
+            },
+            // 保存日报
+            saveDaily () {
+                this.postDaily.date = this.formatDate
+                for (const index in this.dailyData.content) {
+                    this.postDaily.content[this.dailyData.title[index]] = this.dailyData.content[index]
+                }
+                for (const index in this.templateContent) {
+                    this.postDaily.content[this.dailyTemplates[index]] = this.templateContent[index]
+                }
+                this.postDaily.content['isPrivate'] = this.dailyData.isPrivate
+                this.$http.post(
+                    '/daily_report/', this.postDaily
+                ).then(res => {
+                    this.hasWrittenToday = true
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: res.message
+                    })
+                })
+            },
+            // 增加自定义模板标题
+            addTemplate () {
+                this.dailyTemplates.push(this.newTitle)
+                this.moreTemplateDialog.visible = false
+            },
+            // 删除自定义模板标题
+            deleteTemplate (index) {
+                this.dailyTemplates.splice(index, 1)
+            },
+            addDialogChange (val) {
+                if (val === false) {
+                    this.newContent = ''
+                    this.newCost = 0
+                }
+            },
+            moreTemplateDialogChange (val) {
+                if (val === false) {
+                    this.newTitle = ''
+                }
+            },
+            // 转化日期格式yyyy-MM-dd
+            formateDate (date) {
+                return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
+            },
+            // 打开请假管理
+            leaveManage () {
+                this.leaveSetting.visible = true
+            },
+            // 获取请假管理表
+            getLeaveList () {
+                this.isleaveTableLoad = true
+                this.leaveTableData.data = []
+                const todayDate = this.formateDate(new Date())
+                const groupId = this.selectedGroup
+                const sign = 0 // 1 返回未请假人 或 0 返回请假人
+                this.$http.get('/display_personnel_information/' + groupId
+                    + '/?date=' + todayDate
+                    + '&sign=' + sign
+                ).then(res => {
+                    if (res.data.off_day_list !== undefined) {
+                        res.data.off_day_list.map((item, index) => {
+                            this.leaveTableData.data.push({
+                                'offdayId': item.id,
+                                'leaveDate': item.start_date + '  ~  ' + item.end_date,
+                                'reason': item.reason,
+                                'info': item.user + '(' + item.name + ')',
+                                'usernmae': item.user
+                            })
+                        })
+                    }
+                }).finally(() => {
+                    this.isleaveTableLoad = false
+                })
+            },
+            // 请假滑窗关闭事件
+            hiddenSlider () {
+                this.leaveFormData.reason = ''
+                this.leaveFormData.dateTimeRange = [new Date(), new Date()]
+                this.activeTabIndex = 0
+            },
+            // 切换请假页签事件
+            changeTab (index) {
+                this.activeTabIndex = index
+                if (this.activeTabIndex === 1) {
+                    this.getLeaveList()
+                }
+            },
+            // 选择组
+            handleSelectGroup (value, option) {
+                this.getLeaveList()
+            },
+            // 清空请假日期
+            clearDate () {
+                this.leaveFormData.dateTimeRange = -1
+                console.log('this.leaveFormData.dateTimeRange == ', this.leaveFormData.dateTimeRange)
+            },
+            // 请假确认事件
+            submitLeave () {
+                const params = {}
+                params.start_date = this.formateDate(this.leaveFormData.dateTimeRange[0])
+                params.end_date = this.formateDate(this.leaveFormData.dateTimeRange[1])
+                params.reason = this.leaveFormData.reason
+                this.$http.post('/add_off_info/', params).then(res => {
+                    if (res.result) {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'success',
+                            'message': res.message
+                        })
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'warning',
+                            'message': res.message
+                        })
+                    }
+                })
+            },
+            // 取消假期事件
+            cancelLeave (row) {
+                const offdayId = row.offdayId
+                this.$http.delete('/remove_off/' + this.selectedGroup + '/' + offdayId + '/').then(res => {
+                    if (res.result) {
+                        this.getLeaveList()
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'theme': 'warning',
+                            'message': res.message
+                        })
+                    }
+                })
             }
         }
     }
 </script>
 
 <style scoped>
-@import "./index.css";
-    .body{
-        border: 2px solid #EAEBF0 ;
-        /* border-radius: 4px; */
-        margin:0 100px;
-        padding: 20px 50px;
-    }
-    .container_title {
-        font-size: 22px;
-        font-weight: 700;
-    }
-    .left_container{
-        width: 360px;
-        min-width: 358px;
-        border-right: 1px solid #EAEBF0 ;
-        padding-right: 10px;
-    }
-    .select-bar{
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-    }
-    .member-select{
-        display: flex;
-        margin-right: 10px;
-    }
-    .member-select /deep/ .bk-select{
-        min-width: 110px;
-    }
-    .users_list{
-        margin-top: 10px;
-        display: flex;
-        flex-wrap: wrap;
-    }
-    .users_list .users_list_title{
-        font-size: 16px;
-        width: 100%;
-        height: 32px;
-        line-height: 32px;
-    }
-    .users_list /deep/ .bk-button{
-        margin-bottom: 10px;
-    }
-    .right_container{
-        min-width: 380px;
-        width: 100%;
-        padding-left: 20px;
-    }
-    .no-report{
-        width: 100%;
-        height: 600px;
-        line-height: 600px;
-        text-align: center;
-    }
-    .right_container .report-info{
-        height: 40px;
-        line-height: 40px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-    .report-num-select{
+.body{
+    border: 2px solid #EAEBF0 ;
+    margin:0px 100px;
+    padding: 20px 50px;
+    min-height: 80vh;
+}
+.container_title {
+    font-size: 22px;
+    font-weight: 700;
+}
+.top_container{
+    width: 100%;
+    padding: 10px 0;
+    display: flex;
+    justify-content: flex-end;
+}
+.bottom_container{
+    width: 100%;
+    padding-top: 20px;
+}
+::-webkit-scrollbar{
+    display: none;
+}
+.leave-slide .slide-header{
         display: flex;
         flex-wrap: nowrap;
+    }
+    .leave-slide .slide-header .title{
+        height: 60px;
+        line-height: 60px;
+        border-bottom: 1px solid #dcdee5;
+        font-size: 16px;
+        font-weight: 700;
+        color: #666;
+    }
+    .leave-slide .slide-header .header-tabs{
+        width: 50%;
+        text-align:center
+    }
+    .leave-slide .slide-header .tabs-active{
+        border-bottom: 2px solid #3a84ff;
+        color: #3a84ff;
+    }
+    .leave-slide .slide-header .header-tabs:hover{
+        cursor: pointer;
+        color: #3a84ff;
+    }
+    .leave-slide .leave-manage .leave-load {
+        height: 300px;
+        line-height: 300px;
+        /* border: 1px solid #eee; */
+        text-align: center;
+    }
+    .leave-slide .leave-manage .select-bar{
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
-    }
-    .report-num-select span{
-        width: 112px;
-        margin-bottom: 10px;
-    }
-    .card{
-        float: left;
-        width: calc(46% - 5px);
-        margin-right: 18px;
-    }
-    .card /deep/ .bk-card-body{
-        height: 280px;
-        overflow-y: auto;
-        padding-top: 10px;
-    }
-    .date_picker /deep/ .bk-date-picker-dropdown{
-        top: 32px !important;
-    }
-    .demo-block.demo-alert .bk-alert{
         margin-bottom: 20px;
+    }
+    .leave-slide .leave-manage .select-bar .ptitle{
+        font-size: 14px;
+        font-weight: 400;
+        color: #63656e;
+        margin-right: 10px;
+    }
+    .leave-slide .leave-manage .loadbox{
+        height: 300px;
+        line-height: 300px;
+        border: 1px solid #eee;
+        text-align: center;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-form-control{
+        width: 94% !important;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
+        width: 200px;
     }
 </style>
