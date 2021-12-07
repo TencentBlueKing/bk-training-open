@@ -111,8 +111,10 @@ class DailyReportTemplate(models.Model):
 
 def daily_evaluate_default():
     return []
+
 def daily_content_default():
     return []
+
 
 # 日报表
 class Daily(TimeBasic):
