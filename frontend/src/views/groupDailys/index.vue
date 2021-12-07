@@ -43,7 +43,7 @@
             <div class="right_container">
                 <div v-if="!myTodayReport" style="margin-bottom: 10px;">
                     <bk-alert type="warning" title="警告的提示文字">
-                        <bk-link theme="warning" slot="title" :href="'/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
+                        <bk-link theme="warning" slot="title" :href="link">您当天未提交日报，可点击链接前往补签</bk-link>
                     </bk-alert>
                 </div>
                 <bk-pagination style="margin-bottom: 10px;"
@@ -72,7 +72,6 @@
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
             </div>
-
             <!-- 清除浮动，撑开盒子 -->
             <div style="clear:both;"></div>
         </div>
@@ -130,6 +129,11 @@
                 curUserId: null
             }
         },
+        computed: {
+            link () {
+                return window.PROJECT_CONFIG.SITE_URL + '/home/?date=' + this.curDate
+            }
+        },
         created () {
             // 初始化组id和日期
             const groupIdInURL = this.$route.query.group
@@ -142,15 +146,22 @@
             // 每页日报数量
             changeLimit (pageSize) {
                 this.defaultPaging.limit = pageSize
+                if (this.curUserId === '' && this.curDate === '') {
+                    this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
                 this.getDailys()
             },
             // 切换页面
             changePage (page) {
                 this.defaultPaging.current = page
+                if (this.curUserId === '' && this.curDate === '') {
+                    this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
                 this.getDailys()
             },
             // 点击切换显示类型的按钮
             changeType () {
+                this.myTodayReport = true
                 this.isUser = !this.isUser
                 if (!this.isUser) {
                     this.changeGroup(this.curGroupId)
@@ -192,6 +203,9 @@
             changeDateOrUser (userId, date) {
                 this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
                 this.curUserId = userId
+                if (this.curUserId === '' && this.curDate === '') {
+                    this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
                 this.getDailys()
             },
             // 获取当前组日报
@@ -204,6 +218,10 @@
                             this.myTodayReport = res.data.my_today_report
                         } else {
                             // 响应无my_today_report参数为查看成员全部日报，不提示补签
+                            this.myTodayReport = true
+                        }
+                        if (this.isUser) {
+                            // 查看某组员全部日报，不提示补签
                             this.myTodayReport = true
                         }
                         this.classifyContent()
@@ -269,7 +287,7 @@
                     // 更改界面为日期显示
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
-                    this.changeDateOrUser('', this.curDate)
+                    this.changeDateOrUser('', new Date())
                 }
             }
         }
