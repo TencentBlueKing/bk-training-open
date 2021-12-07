@@ -154,7 +154,7 @@ def send_evaluate_daily(daily_id, evaluate_content):
     name = Daily.objects.filter(id=daily_id).values("create_name", "date", "content")
     username = User.objects.filter(name=name[0]["create_name"]).values("username")
     content = Daily.objects.filter(id=daily_id).values("content")
-    content = ast.literal_eval(content[0]["content"])
+    content = content[0]["content"]
     mail_title = "{} 日报评价".format(name[0]["date"])
     mail_content = "Hi，管理员已查看并评论你{}的日报".format(name[0]["date"])
     username = str(username[0]["username"])
