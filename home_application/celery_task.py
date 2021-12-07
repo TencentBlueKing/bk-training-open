@@ -47,7 +47,8 @@ def morning_task():
 @task()
 def send_daily_immediately(user_name, group_admins, daily_content, report_date, report_id):
     """
-    TODO 更改为分管理员发送，用户补写日报后立刻发送给管理员
+    TODO 更改为分管理员发送，以及修改邮件内容
+    用户补写日报后立刻发送给管理员
     :param user_name:       用户名：username(name)
     :param group_admins:    用户所在组的所有管理员
     :param daily_content:   日报内容，json数据
@@ -77,20 +78,6 @@ def send_daily_immediately(user_name, group_admins, daily_content, report_date, 
         target_report = Daily.objects.get(id=report_id)
         target_report.send_status = True
         target_report.save()
-
-
-@task()
-def send_unfinished_dairy(user_name, date):
-    """
-    未完成日报提醒
-    :param user_name: 用户名：username string(多人以逗号连接)
-    :param date: 日期
-    """
-
-    mail_title = "{} 日报提醒".format(date)
-    mail_content = "Hi，你还未完成{}的日报".format(date)
-
-    send_mail(user_name, mail_title, mail_content)
 
 
 @task()
