@@ -65,7 +65,7 @@ def evaluate_daily(request):
         return JsonResponse({"result": False, "code": 1, "message": "日报不存在"})
     evaluate.append({"name": request.user.username, "evaluate": evaluate_content})
     Daily.objects.filter(id=daily_id).update(evaluate=evaluate)
-    send_evaluate_daily(daily_id, evaluate_content)
+    send_evaluate_daily.apply_async(kwargs={"daily_id": daily_id, "evaluate_content": evaluate_content})
     return JsonResponse({"result": True, "code": 0, "message": "点评成功", "data": []})
 
 
@@ -83,10 +83,15 @@ def notice_non_report_users(request, group_id):
     report_user_usernames = Daily.objects.filter(create_by__in=group_users, date=date).values_list(
         "create_by", flat=True
     )
-    non_report_users = set(group_users) - set(report_user_usernames)
+    # 管理员不用写日报
+    admin_list = Group.objects.get(id=group_id).admin_list
+    non_report_users = set(group_users) - set(report_user_usernames) - set(admin_list)
+    # 请假的人不用写日报
+    off_day_list = OffDay.objects.filter(start_date__lte=date, end_date__gte=date, user__in=non_report_users)
+    non_report_users = set(non_report_users) - set(off_day_list)
     # 发送邮件
     if non_report_users:
-        remind_to_write_daily.delay(list(non_report_users), date)
+        remind_to_write_daily.apply_async(kwargs={"username_list": list(non_report_users), "date": date})
         return JsonResponse({"result": True, "code": 0, "message": "一键提醒成功", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "无未写日报成员", "data": []})
@@ -152,8 +157,15 @@ def send_evaluate_all(request, group_id):
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
     if all_username:
         # 放进celery里
-        all_username = ",".join([user for user in all_username])
-        send_good_daily(request.user.username, all_username, date, daily_list)
+        all_username = ",".join(all_username)
+        send_good_daily.apply_async(
+            kwargs={
+                "username": request.user.username,
+                "user_name": all_username,
+                "date": date,
+                "daily_list": daily_list,
+            }
+        )
         return JsonResponse({"result": True, "code": 0, "message": "发送成功", "data": []})
     else:
         return JsonResponse({"result": False, "code": 0, "message": "这个组没有成员", "data": []})
