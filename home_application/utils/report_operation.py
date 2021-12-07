@@ -32,18 +32,24 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
         report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
     # 组
     group = Group.objects.get(id=group_id)
+    # 组内管理员
+    group_admin = group.admin_list
     # 组内用户
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids)
     # 日报信息
     reports = Daily.objects.filter(date=report_date)
-    report_users = group_users.filter(username__in=reports.values_list("create_by", flat=True))
-    none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True))
+    report_users = group_users.filter(username__in=reports.values_list("create_by", flat=True)).exclude(
+        username__in=group_admin
+    )
+    none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True)).exclude(
+        username__in=group_admin
+    )
     # 返回数据
     return {
         "id": group.id,  # 组id
         "name": group.name,  # 组名
-        "admin": group.admin_list,  # 组管理员数组
+        "admin": group_admin,  # 组管理员数组
         "report_users": report_users,  # 已完成日报成员 [User(0), User(1), ···]
         "none_report_users": none_report_users,  # 未完成日报成员 [User(0), User(1), ···]
         "reports": reports,  # 日报 [Daily(0), Daily(1), ···]

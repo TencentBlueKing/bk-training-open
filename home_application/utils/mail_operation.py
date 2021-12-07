@@ -10,7 +10,7 @@ from celery.task import task
 from django.template.loader import get_template
 
 from blueking.component.shortcuts import get_client_by_user
-from home_application.models import Group
+from home_application.models import Daily, Group
 from home_application.utils.report_operation import (
     get_none_reported_user_of_group,
     get_report_info_by_group_and_date,
@@ -52,12 +52,11 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
 
 
 @task()
-def remind_to_write_daily(username: str, date=None):
+def remind_to_write_daily(username_list: list, date=None):
     """
     提醒指定用户写指定日期的日报
-    :param username:    被提醒人用户名
-    :param date:        需要写日报的日期，默认为『今天』
-    :return:            发送邮件的返回值，即蓝鲸API调用结果
+    :param username_list:   被提醒人用户名list
+    :param date:            需要写日报的日期，默认为『今天』
     """
     if date is None:
         date = "今天"
@@ -68,7 +67,8 @@ def remind_to_write_daily(username: str, date=None):
     mail_content = get_template("simple_notify.html").render(
         {"notify_title": "日报提醒", "notify_content": notify_content, "link_text": link_text, "link_url": link_url}
     )
-    return send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
+    for username in username_list:
+        send_mail(receiver__username=username, title="日报提醒助手", content=mail_content, body_format="Html")
 
 
 def notify_none_reported_user():
@@ -79,8 +79,7 @@ def notify_none_reported_user():
     group_ids = Group.objects.values_list("id", flat=True)
     for group_id in group_ids:
         all_user_none_reported |= get_none_reported_user_of_group(group_id)
-    for username in all_user_none_reported:
-        remind_to_write_daily.apply_async(kwargs={"username": username})
+    remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
 
 @task()
@@ -110,17 +109,20 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
     return send_mail(receiver__username=admin_username, title="日报提醒助手", content=mail_content, body_format="Html")
 
 
-def notify_yesterday_report_info():
+def notify_yesterday_report_info(report_date=None):
     """
-    早上10点发送昨天日报概览给管理员
+    发送指定日期的日报概览给管理员
+    :param report_date: 日报信息对应的日期，默认为昨天
     """
     admin_group_map = {}
     group_ids = Group.objects.values_list("id", flat=True)
-    last_workday = str((datetime.datetime.today() - datetime.timedelta(days=1)).date())
+    if report_date is None:
+        report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
 
+    report_date_str = report_date.strftime("%Y-%m-%d")
     for g_id in group_ids:
         # 组信息
-        group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=last_workday)
+        group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=report_date)
         # 从组信息提取发送邮件需要的数据
         g_info_for_mail = {
             "group_name": group_info["name"],  # 组名字
@@ -128,7 +130,7 @@ def notify_yesterday_report_info():
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
             "people_in_vacation_count": 0,  # TODO 请假人数
             "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
-                last_workday, g_id
+                report_date_str, g_id
             ),  # 组管理页面
         }
 
@@ -143,6 +145,8 @@ def notify_yesterday_report_info():
             kwargs={
                 "admin_username": admin_username,
                 "group_infos": info,
-                "date": last_workday,
+                "date": report_date_str,
             }
         )
+    # 更新日报状态
+    Daily.objects.filter(date=report_date).update(send_status=True)

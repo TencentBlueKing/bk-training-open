@@ -25,6 +25,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from blueking.component.shortcuts import get_client_by_request
 from home_application.celery_task import (
+    send_apply_for_group_result,
     send_apply_for_group_to_manager,
     send_daily_immediately,
 )
@@ -443,6 +444,10 @@ def deal_join_group(request, group_id):
         # 更改申请入组状态
         ApplyForGroup.objects.filter(group_id=group_id, user_id=user_id).update(
             status=status, operator=request.user.id, update_time=datetime.now()
+        )
+        # 发送申请结果给用户
+        send_apply_for_group_result.apply_async(
+            kwargs={"username": user.username, "group_name": group_name, "status": status}
         )
     except User.DoesNotExist:
         return JsonResponse({"result": False, "code": 0, "message": u"用户(id={})不存在".format(user_id), "data": []})
