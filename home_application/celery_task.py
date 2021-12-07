@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # @Time     : 2021/11/2 17:42
 # @Remarks  : 定时任务
-import ast
 import datetime
 import logging
 
