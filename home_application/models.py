@@ -111,11 +111,12 @@ class DailyReportTemplate(models.Model):
 
 def daily_evaluate_default():
     return []
-
+def daily_content_default():
+    return []
 
 # 日报表
 class Daily(TimeBasic):
-    content = models.TextField(verbose_name="日报内容")
+    content = JSONField(verbose_name="日报内容", default=daily_content_default)
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     date = models.DateField(verbose_name="日报日期")
@@ -133,7 +134,7 @@ class Daily(TimeBasic):
             send_describe = "已保存"
         return {
             "id": self.id,
-            "content": ast.literal_eval(self.content),
+            "content": self.content,
             "date": str(self.date),
             "create_by": self.create_by,
             "create_name": self.create_name,

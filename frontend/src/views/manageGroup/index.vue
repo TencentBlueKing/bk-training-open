@@ -160,10 +160,15 @@
                                     <div v-else style="color: #63656E">未点评</div>
                                 </div>
                                 <div>
-                                    <div v-for="(val, key) in daily.content" :key="key">
-                                        <h2>{{key}}</h2>
-                                        <div style="font-size:18px">
-                                            <pre>{{val}}</pre>
+                                    <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
+                                        <h2>{{dailyContnet.title}}</h2>
+                                        <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
+                                            <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
+                                                <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="!row.isPrivate">----({{row.cost}})</span>
+                                            </div>
+                                        </div>
+                                        <div v-else>
+                                            {{dailyContnet.content}}
                                         </div>
                                     </div>
                                 </div>
@@ -495,11 +500,11 @@
                             this.formatDate
                         ).then(result => {
                             if (res.result) {
-                                this.dailyDetailDialog.visible = false
                                 this.$bkMessage({
                                     theme: 'success',
                                     message: res.message
                                 })
+                                this.dailyDetailDialog.visible = false
                             } else {
                                 this.$bkMessage({
                                     theme: 'error',
@@ -570,27 +575,6 @@
                     this.hasSubmitDaily = this.memberDaily.filter((daily) => {
                         return daily.write_status
                     })
-                    for (const daily of this.hasSubmitDaily) {
-                        const newContent = {}
-                        for (const key in daily.content) {
-                            if (daily.content[key] instanceof Array) {
-                                let points = ''
-                                if (daily.content.isPrivate) {
-                                    for (const point of daily.content[key]) {
-                                        points = points + point.content + ';\n'
-                                    }
-                                } else {
-                                    for (const point of daily.content[key]) {
-                                        points = points + point.content + ';-----(' + point.cost + ')\n'
-                                    }
-                                }
-                                newContent[key] = points
-                            } else if (key !== 'isPrivate') {
-                                newContent[key] = daily.content[key]
-                            }
-                        }
-                        daily.content = newContent
-                    }
                 })
             },
             // 改变日历的日期

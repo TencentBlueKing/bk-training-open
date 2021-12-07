@@ -5,8 +5,7 @@
                 <span style="display: inline-block;margin-left:50px;">选择日期：</span>
                 <bk-date-picker class="mr15" v-model="reportDate"
                     :clearable="false"
-                    :placeholder="'选择日期'"
-                    :ext-popover-cls="'custom-popover-cls'"
+                    placeholder="选择日期"
                     :options="customOption"
                     @change="changeDate(reportDate)"
                 >
@@ -18,33 +17,29 @@
                         <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
                     </h2>
                 </div>
-                <div>
-                    <span class="mr10 f20">隐私模式</span>
-                    <bk-switcher size="large" v-model="dailyData.isPrivate" class="mr30"></bk-switcher>
-                </div>
-                <bk-button :theme="'primary'" style="display: inline-block" @click="saveDaily" class="mr30">
+                <bk-button theme="primary" style="display: inline-block" @click="saveDaily" class="mr30">
                     保存
                 </bk-button>
-                <bk-button :theme="'success'" style="display: inline-block" @click="moreTemplateDialog.visible = true">
+                <bk-button theme="success" style="display: inline-block" @click="moreTemplateDialog.visible = true">
                     添加模板
                 </bk-button>
             </div>
             <div class="bottom_container">
-                <template v-for="(title, index) in dailyData.title">
+                <template v-for="(singleContent, index) in dailyDataContent">
                     <div :key="index">
                         <div style="display: flex;justify-content: space-between;margin: 10px 0">
-                            <h2 contenteditable="true" @input="changeTitleText(index)" :ref="'title' + index" style="display: inline-block;margin: 0">{{title}}</h2>
-                            <bk-button style="display: inline-block" :theme="'primary'" @click="dealAdd(index)">
+                            <h2 contenteditable="true" @input="changeTitleText(index)" :ref="'title' + index" style="display: inline-block;margin: 0">{{singleContent.title}}</h2>
+                            <bk-button style="display: inline-block" theme="primary" @click="dealAdd(index)">
                                 新增一条内容
                             </bk-button>
                         </div>
                         <div>
                             <bk-table
                                 style="margin-top: 15px;"
-                                :data="dailyData.content[index]"
+                                :data="singleContent.content"
                                 :virtual-render="true"
                                 height="175px">
-                                <bk-table-column prop="content" label="内容"></bk-table-column>
+                                <bk-table-column prop="text" label="内容"></bk-table-column>
                                 <bk-table-column width="150" prop="cost" label="所花时间"></bk-table-column>
                                 <bk-table-column label="操作" width="150">
                                     <template slot-scope="props">
@@ -77,12 +72,18 @@
                         <h3>内容</h3>
                         <bk-input
                             placeholder="新内容"
-                            :type="'textarea'"
+                            type="textarea"
                             :rows="3"
                             v-model="newContent"
                         >
                         </bk-input>
-                        <h3>所花时间</h3>
+                        <div style="display: flex;justify-content: space-between;margin: 10px 0">
+                            <h3 style="margin: 0">所花时间</h3>
+                            <div>
+                                <span class="mr10 f10">隐私模式</span>
+                                <bk-switcher v-model="isPrivate" class="mr30"></bk-switcher>
+                            </div>
+                        </div>
                         <bk-input
                             placeholder="所花时间"
                             type="number"
@@ -97,10 +98,10 @@
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button v-if="isAdd" :theme="'primary'" :title="'分享'" @click="addRow">
+                            <bk-button v-if="isAdd" theme="primary" title="分享" @click="addRow">
                                 添加
                             </bk-button>
-                            <bk-button v-else :theme="'primary'" :title="'分享'" @click="changeRow">
+                            <bk-button v-else theme="primary" title="分享" @click="changeRow">
                                 修改
                             </bk-button>
                         </div>
@@ -118,14 +119,14 @@
                     <div>
                         <bk-input
                             placeholder="新增模板标题"
-                            :type="'text'"
+                            type="text"
                             v-model="newTitle"
                         >
                         </bk-input>
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button :theme="'primary'" :title="'分享'" @click="addTemplate">
+                            <bk-button theme="primary" title="添加" @click="addTemplate">
                                 添加
                             </bk-button>
                         </div>
@@ -136,15 +137,15 @@
                 <div :key="index">
                     <div style="display: flex;justify-content: space-between;margin: 10px 0">
                         <h2 style="display: inline-block;margin: 0">{{tem}}</h2>
-                        <bk-button v-if="index > 0" style="display: inline-block" :theme="'primary'" @click="deleteTemplate(index)">
+                        <bk-button v-if="index > 0" style="display: inline-block" theme="primary" @click="deleteTemplate(index)">
                             删除该模板
                         </bk-button>
                     </div>
                     <bk-input
                         placeholder="请输入"
-                        :type="'textarea'"
+                        type="textarea"
                         :rows="3"
-                        v-model="templateContent[index]"
+                        v-model="newTemplateContent[index]['content']"
                     >
                     </bk-input>
                 </div>
@@ -159,8 +160,14 @@
         data () {
             return {
                 curDate: new Date(),
+                reportDate: new Date(),
                 formatDate: '',
                 addDialog: {
+                    visible: false,
+                    width: 600,
+                    headerPosition: 'left'
+                },
+                moreTemplateDialog: {
                     visible: false,
                     width: 600,
                     headerPosition: 'left'
@@ -169,36 +176,28 @@
                 isAdd: true,
                 // 修改指定行的临时变量
                 targetRow: 0,
-                moreTemplateDialog: {
-                    visible: false,
-                    width: 600,
-                    headerPosition: 'left'
-                },
                 // 日报信息
-                dailyData: {
-                    title: ['今日任务', '明日计划'],
-                    content: [[], []],
-                    isPrivate: false
-                },
+                dailyDataTitle: ['今日任务', '明日计划'],
+                dailyDataContent: [],
+                isPrivate: false,
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
                 newCost: 0,
+                // 新的模板标题及内容数组
+                dailyTemplates: ['感想'],
+                newTemplateContent: [],
+                // 新标题临时变量
+                newTitle: '',
                 // 指向dailyData.content的下标
                 currentIndex: 0,
                 // 提交数据的格式化对象
-                postDaily: {
+                newPostDaily: {
                     date: null,
-                    content: {},
+                    content: [],
                     template_id: 0,
-                    send_email: false,
-                    isPrivate: 0
+                    send_email: false
                 },
-                // 新的模板标题及内容数组
-                dailyTemplates: ['感想'],
-                templateContent: [],
-                // 新标题临时变量
-                newTitle: '',
                 // 今日写日报状况（已写，未写）
                 hasWrittenToday: false,
                 customOption: {
@@ -222,6 +221,17 @@
             this.init()
         },
         methods: {
+            // 界面初始化
+            init () {
+                for (const tableTitle of this.dailyDataTitle) {
+                    this.dailyDataContent.push({ 'title': tableTitle, 'type': 'table', 'content': [] })
+                }
+                for (const textTitle of this.dailyTemplates) {
+                    this.newTemplateContent.push({ 'title': textTitle, 'type': 'text', 'content': '' })
+                }
+                this.cheakDailyDates()
+                this.getDailyReport()
+            },
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
                 this.getDailyReport()
@@ -262,11 +272,6 @@
                     }
                 })
             },
-            // 界面初始化
-            init () {
-                this.cheakDailyDates()
-                this.getDailyReport()
-            },
             getDailyReport () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
@@ -301,7 +306,7 @@
             // 改变默认模板标题
             changeTitleText (index) {
                 const title = 'title' + index
-                this.dailyData.title[index] = this.$refs[title][0].innerText
+                this.dailyDataTitle[index] = this.$refs[title][0].innerText
             },
             // 打开dialog, 增加一行
             dealAdd (index) {
@@ -311,20 +316,20 @@
             },
             // 保存增加表格中的一行新内容
             addRow () {
-                const newObj = { 'content': this.newContent, 'cost': this.newCost + '小时' }
-                this.dailyData.content[this.currentIndex].push(newObj)
+                const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
+                this.dailyDataContent[this.currentIndex]['content'].push(newObj)
                 this.addDialog.visible = false
             },
             // 保存对指定行的修改
             changeRow () {
-                const newObj = { 'content': this.newContent, 'cost': this.newCost + '小时' }
-                this.dailyData.content[this.currentIndex].splice(this.targetRow, 1, newObj)
+                const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
+                this.dailyDataContent[this.currentIndex]['content'].splice(this.targetRow, 1, newObj)
                 this.addDialog.visible = false
             },
             // 打开dailog,改变表格中指定行内容
             changeContent (row, changeIndex) {
                 this.currentIndex = changeIndex
-                this.newContent = row.content
+                this.newContent = row.text
                 this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
                 this.isAdd = false
@@ -332,7 +337,7 @@
             },
             // 删除表格中的一行内容
             deleteContent (row, removeIndex) {
-                this.dailyData.content[removeIndex].splice(row.$index, 1)
+                this.dailyDataContent[removeIndex]['content'].splice(row.$index, 1)
                 this.$bkMessage({
                     theme: 'success',
                     message: '移除成功'
@@ -340,16 +345,19 @@
             },
             // 保存日报
             saveDaily () {
-                this.postDaily.date = this.formatDate
-                for (const index in this.dailyData.content) {
-                    this.postDaily.content[this.dailyData.title[index]] = this.dailyData.content[index]
+                this.newPostDaily.date = this.formatDate
+                for (const index in this.dailyDataContent) {
+                    this.dailyDataContent[index].title = this.dailyDataTitle[index]
                 }
-                for (const index in this.templateContent) {
-                    this.postDaily.content[this.dailyTemplates[index]] = this.templateContent[index]
+                for (const tableContent of this.dailyDataContent) {
+                    this.newPostDaily.content.push(tableContent)
                 }
-                this.postDaily.content['isPrivate'] = this.dailyData.isPrivate
+                for (const textContent of this.newTemplateContent) {
+                    this.newPostDaily.content.push(textContent)
+                }
+                console.log('newPostDaily', this.newPostDaily)
                 this.$http.post(
-                    '/daily_report/', this.postDaily
+                    '/daily_report/', this.newPostDaily
                 ).then(res => {
                     this.hasWrittenToday = true
                     this.$bkMessage({
@@ -361,11 +369,13 @@
             // 增加自定义模板标题
             addTemplate () {
                 this.dailyTemplates.push(this.newTitle)
+                this.newTemplateContent.push({ 'title': this.newTitle, 'type': 'text', 'content': '' })
                 this.moreTemplateDialog.visible = false
             },
             // 删除自定义模板标题
             deleteTemplate (index) {
                 this.dailyTemplates.splice(index, 1)
+                this.newTemplateContent.splice(index, 1)
             },
             addDialogChange (val) {
                 if (val === false) {
