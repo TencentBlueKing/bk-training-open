@@ -269,6 +269,10 @@
                 this.isUser = !this.isUser
                 if (!this.isUser) {
                     this.changeGroup(this.curGroupId)
+                    document.querySelector('.left_container').style.minWidth = 290
+                    console.log('left_container == ', document.querySelector('.left_container').style.minWidth)
+                } else {
+                    document.querySelector('.left_container').style.minWidth = 350
                 }
             },
             // 获取组内成员
@@ -446,7 +450,30 @@
     .right_container{
         float: right;
         min-width: 380px;
-        width: calc(100% - 380px);
+        width: 100%;
+        padding-left: 20px;
+    }
+    .no-report{
+        width: 100%;
+        height: 600px;
+        line-height: 600px;
+        text-align: center;
+    }
+    .right_container .report-info{
+        height: 40px;
+        line-height: 40px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .report-num-select{
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+    .report-num-select span{
+        width: 112px;
+        margin-bottom: 10px;
     }
     .card{
         float: left;
