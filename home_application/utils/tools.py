@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.paginator import Paginator
 
 
@@ -26,3 +28,10 @@ def apply_info_to_json(apply_info):
         "name": apply_info.name,
         "apply_date": apply_info.update_time.strftime("%Y-%m-%d %H:%M:%S"),
     }
+
+
+def get_yesterday():
+    today = datetime.date.today()
+    oneday = datetime.timedelta(days=1)
+    yesterday = today - oneday
+    return yesterday

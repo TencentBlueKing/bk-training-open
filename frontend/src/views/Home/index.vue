@@ -1,6 +1,9 @@
 <template>
     <div class="body">
         <div class="container">
+            <div v-if="!yesterDayDaliy">
+                <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
+            </div>
             <div class="top_container">
                 <span style="display: inline-block;margin-left:50px;">选择日期：</span>
                 <bk-date-picker class="mr15" v-model="reportDate"
@@ -155,7 +158,12 @@
 
 <script>
     import moment from 'moment'
+    import { bkAlert } from 'bk-magic-vue'
+
     export default {
+        components: {
+            bkAlert
+        },
         data () {
             return {
                 curDate: new Date(),
@@ -252,6 +260,13 @@
                     this.dailyData = []
                 }
             },
+            checkYesterdayDaliy () {
+                this.$http.get(
+                    '/check_yesterday_daliy/'
+                ).then(res => {
+                    this.yesterDayDaliy = !!res.data
+                })
+            },
             // 切换模板
             selectTemplate () {
                 this.dailyData = []
@@ -266,6 +281,7 @@
             init () {
                 this.cheakDailyDates()
                 this.getDailyReport()
+                this.checkYesterdayDaliy()
             },
             getDailyReport () {
                 this.$http.get(
@@ -389,9 +405,8 @@
     padding: 20px 50px;
     min-height: 80vh;
 }
-.container_title {
-    font-size: 22px;
-    font-weight: 700;
+.demo-block.demo-alert .bk-alert{
+    margin-bottom: 20px;
 }
 .top_container{
     width: 100%;
