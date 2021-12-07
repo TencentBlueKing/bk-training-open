@@ -43,7 +43,7 @@
             <div class="right_container">
                 <div v-if="!myTodayReport" style="margin-bottom: 10px;">
                     <bk-alert type="warning" title="警告的提示文字">
-                        <bk-link theme="warning" slot="title" :href="warningLink">您当天未提交日报，可点击链接前往补签</bk-link>
+                        <bk-link theme="warning" slot="title" :href="link">您当天未提交日报，可点击链接前往补签</bk-link>
                     </bk-alert>
                 </div>
                 <bk-pagination style="margin-bottom: 10px;"
@@ -88,7 +88,6 @@
         },
         data () {
             return {
-                warningLink: '/Home/?date=' + this.curDate,
                 // 判断用户今天有没有写日报
                 myTodayReport: true,
                 defaultPaging: {
@@ -128,6 +127,11 @@
                 // 用户列表
                 groupUsers: [],
                 curUserId: null
+            }
+        },
+        computed: {
+            link () {
+                return window.PROJECT_CONFIG.SITE_URL + '/home/?date=' + this.curDate
             }
         },
         created () {
@@ -198,7 +202,6 @@
             // 修改日期或成员
             changeDateOrUser (userId, date) {
                 this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
-                this.warningLink = window.PROJECT_CONFIG.SITE_URL + '/Home/?date=' + this.curDate
                 this.curUserId = userId
                 if (this.curUserId === '' && this.curDate === '') {
                     this.curDate = moment(new Date()).format('YYYY-MM-DD')
@@ -255,7 +258,6 @@
                             this.curGroup = this.groupsData[0]
                         }
                     }
-                    this.warningLink = window.PROJECT_CONFIG.SITE_URL + '/Home/?date=' + this.curDate
                 })
             },
             // 点击切换组
