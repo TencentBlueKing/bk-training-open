@@ -12,10 +12,10 @@ import preload from '@/common/preload'
 Vue.use(VueRouter)
 
 const MainEntry = () => import(/* webpackChunkName: 'entry' */ '@/views')
-const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/home')
-const groupDailys = () => import(/* webpackChunkName: 'example2' */ '@/views/group-dailys')
-const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/my-group')
-const manageGroup = () => import(/* webpackChunkName: 'example4' */ '@/views/manage-group')
+const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/Home')
+const groupDailys = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys')
+const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/mygroup')
+const manageGroup = () => import(/* webpackChunkName: 'example4' */ '@/views/managegroup')
 const NotFound = () => import(/* webpackChunkName: 'none' */ '@/views/404')
 
 const routes = [
