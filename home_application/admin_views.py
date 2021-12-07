@@ -157,7 +157,7 @@ def send_evaluate_all(request, group_id):
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
     if all_username:
         # 放进celery里
-        all_username = ",".join([user for user in all_username])
+        all_username = ",".join(all_username)
         send_good_daily.apply_async(
             kwargs={
                 "username": request.user.username,
