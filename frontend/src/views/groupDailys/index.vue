@@ -43,7 +43,7 @@
             <div class="right_container">
                 <div v-if="!myTodayReport" style="margin-bottom: 10px;">
                     <bk-alert type="warning" title="警告的提示文字">
-                        <bk-link theme="warning" slot="title" :href="'/Home/?date=' + curDate">您当天未提交日报，可点击链接前往补签</bk-link>
+                        <bk-link theme="warning" slot="title" :href="warningLink">您当天未提交日报，可点击链接前往补签</bk-link>
                     </bk-alert>
                 </div>
                 <bk-pagination style="margin-bottom: 10px;"
@@ -72,7 +72,6 @@
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
             </div>
-
             <!-- 清除浮动，撑开盒子 -->
             <div style="clear:both;"></div>
         </div>
@@ -89,6 +88,7 @@
         },
         data () {
             return {
+                warningLink: '/Home/?date=' + this.curDate,
                 // 判断用户今天有没有写日报
                 myTodayReport: true,
                 defaultPaging: {
@@ -142,11 +142,17 @@
             // 每页日报数量
             changeLimit (pageSize) {
                 this.defaultPaging.limit = pageSize
+                if (this.curUserId === '' && this.curDate === '') {
+                    this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
                 this.getDailys()
             },
             // 切换页面
             changePage (page) {
                 this.defaultPaging.current = page
+                if (this.curUserId === '' && this.curDate === '') {
+                    this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
                 this.getDailys()
             },
             // 点击切换显示类型的按钮
@@ -192,7 +198,11 @@
             // 修改日期或成员
             changeDateOrUser (userId, date) {
                 this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
+                this.warningLink = window.PROJECT_CONFIG.SITE_URL + '/Home/?date=' + this.curDate
                 this.curUserId = userId
+                if (this.curUserId === '' && this.curDate === '') {
+                    this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
                 this.getDailys()
             },
             // 获取当前组日报
@@ -244,6 +254,7 @@
                             this.curGroup = this.groupsData[0]
                         }
                     }
+                    this.warningLink = window.PROJECT_CONFIG.SITE_URL + '/Home/?date=' + this.curDate
                 })
             },
             // 点击切换组
