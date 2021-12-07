@@ -98,7 +98,7 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
                                 "daily_count": 10,              # 写了日报的人数
                                 "none_write_daily_count": 1,    # 没写日报的人数，包含请假的人
                                 "people_in_vacation_count": 0,  # 请假人数
-                                "group_link": "https://***/manageGroup?date=2021-12-3&group=1"  # 组管理页面
+                                "group_link": "https://***/manage-group?date=2021-12-3&group=1"  # 组管理页面
                             },]
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
@@ -133,7 +133,7 @@ def notify_yesterday_report_info(report_date=None):
             "daily_count": len(group_info["report_users"]),  # 写了日报的人数
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
             "people_in_vacation_count": 0,  # TODO 请假人数
-            "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
+            "group_link": "https://paas-edu.bktencent.com/t/train-test/manage-group?date={}&group={}".format(
                 report_date_str, g_id
             ),  # 组管理页面
         }
