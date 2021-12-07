@@ -218,6 +218,7 @@
                             this.myTodayReport = true
                         }
                         if (this.isUser) {
+                            // 查看某组员全部日报，不提示补签
                             this.myTodayReport = true
                         }
                         this.classifyContent()
