@@ -10,7 +10,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import ast
 
 from django.db import models
 from django_mysql.models import JSONField
@@ -111,6 +110,7 @@ class DailyReportTemplate(models.Model):
 
 def daily_evaluate_default():
     return []
+
 
 def daily_content_default():
     return []
