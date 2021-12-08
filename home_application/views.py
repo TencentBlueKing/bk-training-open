@@ -10,6 +10,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import datetime as python_datetime
 import json
 import math
 from datetime import timedelta
@@ -28,7 +29,6 @@ from blueking.component.shortcuts import get_client_by_request
 from home_application.celery_task import (
     send_apply_for_group_result,
     send_apply_for_group_to_manager,
-    send_daily_immediately,
 )
 from home_application.models import (
     ApplyForGroup,
@@ -562,35 +562,26 @@ def daily_report(request):
         except Daily.DoesNotExist:
             # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
             create_name = User.objects.get(username=request.user.username).name
-            target_report = Daily.objects.create(
+
+            # 如果是补签之前的日报直接修改发送状态为'已发送'，但是在当天10点之前补签昨天的日报仍为'未发送'
+            datetime_now = datetime.now()
+            if datetime_now.hour < 10:
+                send_status = report_date < (datetime_now - python_datetime.timedelta(days=1)).date()
+            else:
+                send_status = report_date < datetime_now.date()
+
+            Daily.objects.create(
                 content=report_content,
                 create_by=request.user.username,
                 create_name=create_name,
                 date=report_date,
                 template_id=template_id,
-                send_status=False,
+                send_status=send_status,
             )
-            message = "保存日报成功"
-        # 补写日报时可选发送邮件给管理员
-        if req.get("send_email"):
-            # 循环他所在的组
-            user_groups_id = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
-            user_groups = Group.objects.filter(id__in=user_groups_id)
-            group_admins = set()
-            for g in user_groups:
-                # 获取admin的list
-                g_admin = g.admin_list
-                group_admins.update(g_admin)
-            user_name = User.objects.get(id=request.user.id).name
-            send_daily_immediately.apply_async(
-                kwargs={
-                    "user_name": "{}({})".format(request.user.username, user_name),
-                    "group_admins": ",".join(group_admins),
-                    "daily_content": report_content,
-                    "report_date": report_date_str,
-                    "report_id": target_report.id,
-                }
-            )
+            if send_status:
+                message = "补写日报成功"
+            else:
+                message = "保存日报成功"
         return JsonResponse({"result": True, "code": 0, "message": message, "data": []})
 
 
