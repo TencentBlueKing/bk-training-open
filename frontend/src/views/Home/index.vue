@@ -1,7 +1,7 @@
 <template>
     <div class="body">
         <div class="container">
-            <div v-if="!yesterDayDaliy">
+            <div v-if="!yesterdayDaliy">
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
             <div class="top_container">
@@ -166,6 +166,7 @@
         },
         data () {
             return {
+                yesterdayDaliy: true,
                 curDate: new Date(),
                 formatDate: '',
                 addDialog: {
@@ -264,7 +265,7 @@
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterDayDaliy = !!res.data
+                    this.yesterdayDaliy = !!res.data
                 })
             },
             // 切换模板

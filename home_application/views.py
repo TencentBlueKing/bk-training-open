@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import math
+from datetime import timedelta
 
 from django.db import IntegrityError
 from django.db.models import Q
@@ -40,12 +41,7 @@ from home_application.models import (
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import (
-    apply_info_to_json,
-    check_param,
-    get_paginator,
-    get_yesterday,
-)
+from home_application.utils.tools import apply_info_to_json, check_param, get_paginator
 
 
 def home(request):
@@ -672,12 +668,11 @@ def get_reports_dates(request):
 @require_GET
 def check_yesterday_daliy(request):
     """检查工作日日报是否已填写"""
-    yesterday = get_yesterday()
+    yesterday = datetime.now() - timedelta(days=1)
     if CalendarHandler(yesterday).is_holiday:
         return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": True})
     try:
-        date = datetime.strptime(str(yesterday), "%Y-%m-%d").date()
-        Daily.objects.get(create_by=request.user.username, date=date)
+        Daily.objects.get(create_by=request.user.username, date=yesterday)
     except Daily.DoesNotExist:
         return JsonResponse({"result": True, "code": 0, "message": "昨天没有写日报", "data": False})
     return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": True})
