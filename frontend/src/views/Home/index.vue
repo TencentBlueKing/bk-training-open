@@ -1,6 +1,9 @@
 <template>
     <div class="body">
         <div class="container">
+            <div v-if="!yesterdayDaliy">
+                <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
+            </div>
             <div class="top_container">
                 <span style="display: inline-block;margin-left:50px;">选择日期：</span>
                 <bk-date-picker class="mr15" v-model="reportDate"
@@ -156,9 +159,15 @@
 
 <script>
     import moment from 'moment'
+    import { bkAlert } from 'bk-magic-vue'
+
     export default {
+        components: {
+            bkAlert
+        },
         data () {
             return {
+                yesterdayDaliy: true,
                 curDate: new Date(),
                 reportDate: new Date(),
                 formatDate: '',
@@ -225,11 +234,6 @@
             this.init()
         },
         methods: {
-            // 界面初始化
-            init () {
-                this.cheakDailyDates()
-                this.getDailyReport()
-            },
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
                 this.getDailyReport()
@@ -253,6 +257,35 @@
                         })
                     }
                 })
+            },
+            changeTemplate () {
+                if (this.curTemplateId === null || this.curTemplateId === '') {
+                    this.curTemplate = []
+                    this.dailyData = []
+                }
+            },
+            checkYesterdayDaliy () {
+                this.$http.get(
+                    '/check_yesterday_daliy/'
+                ).then(res => {
+                    this.yesterdayDaliy = !!res.data
+                })
+            },
+            // 切换模板
+            selectTemplate () {
+                this.dailyData = []
+                const vm = this
+                vm.templateList.forEach(function (template) {
+                    if (template.id === vm.curTemplateId) {
+                        vm.curTemplate = template.content.split(';')
+                    }
+                })
+            },
+            // 界面初始化
+            init () {
+                this.cheakDailyDates()
+                this.getDailyReport()
+                this.checkYesterdayDaliy()
             },
             getDailyReport () {
                 this.$http.get(
@@ -385,9 +418,8 @@
     padding: 20px 50px;
     min-height: 80vh;
 }
-.container_title {
-    font-size: 22px;
-    font-weight: 700;
+.demo-block.demo-alert .bk-alert{
+    margin-bottom: 20px;
 }
 .top_container{
     width: 100%;

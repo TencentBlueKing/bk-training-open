@@ -44,42 +44,6 @@ def morning_task():
 
 
 @task()
-def send_daily_immediately(user_name, group_admins, daily_content, report_date, report_id):
-    """
-    TODO 更改为分管理员发送，以及修改邮件内容
-    用户补写日报后立刻发送给管理员
-    :param user_name:       用户名：username(name)
-    :param group_admins:    用户所在组的所有管理员
-    :param daily_content:   日报内容，json数据
-    :param report_date:     日报日期，str
-    :param report_id:       日报id，用于发送后更新状态
-    """
-    mail_title = "日报补写提醒"
-    mail_subhead = "您所管理的组有成员补写了『%s』的日报" % report_date
-    group_reports = [
-        {
-            "report_user": user_name,
-            "report_content": daily_content,
-        }
-    ]
-    html_template = get_template("daily_report.html")
-    mail_content = html_template.render(
-        {"mail_title": mail_title, "mail_subhead": mail_subhead, "group_reports": group_reports}
-    )
-    send_res = send_mail(
-        receiver__username=group_admins,
-        title=mail_title,
-        content=mail_content,
-        body_format="Html",
-    )
-    if send_res["result"]:
-        # 更新日报状态
-        target_report = Daily.objects.get(id=report_id)
-        target_report.send_status = True
-        target_report.save()
-
-
-@task()
 def send_apply_for_group_to_manager(user_name, group_admins, group_name):
     """
     将申请入组请求发送给管理员
