@@ -17,8 +17,8 @@
                         <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
                     </h2>
                 </div>
-                <bk-button theme="primary" style="display: inline-block" @click="saveDaily" class="mr30">
-                    保存
+                <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily" class="mr30">
+                    {{ hasWrittenToday ? '修改' : '保存' }}
                 </bk-button>
                 <bk-button theme="success" style="display: inline-block" @click="moreTemplateDialog.visible = true">
                     添加模板
@@ -98,10 +98,10 @@
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
-                            <bk-button v-if="isAdd" theme="primary" title="分享" @click="addRow">
+                            <bk-button v-if="isAdd" theme="primary" title="分享" @click="addRow(currentIndex)">
                                 添加
                             </bk-button>
-                            <bk-button v-else theme="primary" title="分享" @click="changeRow">
+                            <bk-button v-else theme="primary" title="分享" @click="changeRow(currentIndex)">
                                 修改
                             </bk-button>
                         </div>
@@ -133,10 +133,10 @@
                     </div>
                 </bk-dialog>
             </div>
-            <template v-for="(tem,index) in dailyTemplates">
+            <template v-for="(tem,index) in newTemplateContent">
                 <div :key="index">
                     <div style="display: flex;justify-content: space-between;margin: 10px 0">
-                        <h2 style="display: inline-block;margin: 0">{{tem}}</h2>
+                        <h2 style="display: inline-block;margin: 0">{{tem.title}}</h2>
                         <bk-button v-if="index > 0" style="display: inline-block" theme="primary" @click="deleteTemplate(index)">
                             删除该模板
                         </bk-button>
@@ -145,7 +145,7 @@
                         placeholder="请输入"
                         type="textarea"
                         :rows="3"
-                        v-model="newTemplateContent[index]['content']"
+                        v-model="tem.text"
                     >
                     </bk-input>
                 </div>
@@ -178,15 +178,19 @@
                 targetRow: 0,
                 // 日报信息
                 dailyDataTitle: ['今日任务', '明日计划'],
-                dailyDataContent: [],
+                dailyDataContent: [
+                    { 'title': '今日任务', 'type': 'table', 'content': [] },
+                    { 'title': '明日计划', 'type': 'table', 'content': [] }
+                ],
                 isPrivate: false,
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
                 newCost: 0,
                 // 新的模板标题及内容数组
-                dailyTemplates: ['感想'],
-                newTemplateContent: [],
+                newTemplateContent: [
+                    { 'title': '感想', 'type': 'text', 'text': '' }
+                ],
                 // 新标题临时变量
                 newTitle: '',
                 // 指向dailyData.content的下标
@@ -223,12 +227,6 @@
         methods: {
             // 界面初始化
             init () {
-                for (const tableTitle of this.dailyDataTitle) {
-                    this.dailyDataContent.push({ 'title': tableTitle, 'type': 'table', 'content': [] })
-                }
-                for (const textTitle of this.dailyTemplates) {
-                    this.newTemplateContent.push({ 'title': textTitle, 'type': 'text', 'content': '' })
-                }
                 this.cheakDailyDates()
                 this.getDailyReport()
             },
@@ -256,51 +254,36 @@
                     }
                 })
             },
-            changeTemplate () {
-                if (this.curTemplateId === null || this.curTemplateId === '') {
-                    this.curTemplate = []
-                    this.dailyData = []
-                }
-            },
-            // 切换模板
-            selectTemplate () {
-                this.dailyData = []
-                const vm = this
-                vm.templateList.forEach(function (template) {
-                    if (template.id === vm.curTemplateId) {
-                        vm.curTemplate = template.content.split(';')
-                    }
-                })
-            },
             getDailyReport () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
-                    this.cheakDailyDates()
                     if (Object.keys(res.data).length) {
                         this.hasWrittenToday = true
-                        this.dailyData.title = []
-                        this.dailyData.content = []
-                        this.dailyTemplates = []
-                        this.templateContent = []
-                        for (const key in res.data.content) {
-                            if (res.data.content[key] instanceof Array) {
-                                this.dailyData.title.push(key)
-                                this.dailyData.content.push(res.data.content[key])
-                            } else if (key === 'isPrivate') {
-                                this.dailyData.isPrivate = res.data.content[key]
+                        this.dailyDataTitle = []
+                        this.dailyDataContent = []
+                        this.newTemplateContent = []
+                        for (const singleContent of res.data.content) {
+                            if (singleContent.type === 'table') {
+                                this.dailyDataTitle.push(singleContent.title)
+                                this.dailyDataContent.push(singleContent)
                             } else {
-                                this.dailyTemplates.push(key)
-                                this.templateContent.push(res.data.content[key])
+                                this.newTemplateContent.push((singleContent))
                             }
                         }
                     } else {
                         //   重新初始化
                         this.hasWrittenToday = false
-                        this.dailyData.title = ['今日任务', '明日计划']
-                        this.dailyData.content = [[], []]
-                        this.dailyData.isPrivate = false
+                        this.dailyDataTitle = ['今日任务', '明日计划']
+                        this.dailyDataContent = [
+                            { 'title': '今日任务', 'type': 'table', 'content': [] },
+                            { 'title': '明日计划', 'type': 'table', 'content': [] }
+                        ]
+                        this.newTemplateContent = [
+                            { 'title': '感想', 'type': 'text', 'text': '' }
+                        ]
                     }
+                    this.cheakDailyDates()
                 })
             },
             // 改变默认模板标题
@@ -315,15 +298,15 @@
                 this.addDialog.visible = true
             },
             // 保存增加表格中的一行新内容
-            addRow () {
+            addRow (index) {
                 const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
-                this.dailyDataContent[this.currentIndex]['content'].push(newObj)
+                this.dailyDataContent[index]['content'].push(newObj)
                 this.addDialog.visible = false
             },
             // 保存对指定行的修改
-            changeRow () {
+            changeRow (index) {
                 const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
-                this.dailyDataContent[this.currentIndex]['content'].splice(this.targetRow, 1, newObj)
+                this.dailyDataContent[index]['content'].splice(this.targetRow, 1, newObj)
                 this.addDialog.visible = false
             },
             // 打开dailog,改变表格中指定行内容
@@ -355,11 +338,16 @@
                 for (const textContent of this.newTemplateContent) {
                     this.newPostDaily.content.push(textContent)
                 }
-                console.log('newPostDaily', this.newPostDaily)
                 this.$http.post(
                     '/daily_report/', this.newPostDaily
                 ).then(res => {
                     this.hasWrittenToday = true
+                    this.newPostDaily = {
+                        date: null,
+                        content: [],
+                        template_id: 0,
+                        send_email: false
+                    }
                     this.$bkMessage({
                         theme: 'success',
                         message: res.message
@@ -368,13 +356,11 @@
             },
             // 增加自定义模板标题
             addTemplate () {
-                this.dailyTemplates.push(this.newTitle)
-                this.newTemplateContent.push({ 'title': this.newTitle, 'type': 'text', 'content': '' })
+                this.newTemplateContent.push({ 'title': this.newTitle, 'type': 'text', 'text': '' })
                 this.moreTemplateDialog.visible = false
             },
             // 删除自定义模板标题
             deleteTemplate (index) {
-                this.dailyTemplates.splice(index, 1)
                 this.newTemplateContent.splice(index, 1)
             },
             addDialogChange (val) {

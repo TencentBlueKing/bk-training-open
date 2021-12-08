@@ -168,7 +168,7 @@
                                             </div>
                                         </div>
                                         <div v-else>
-                                            {{dailyContnet.content}}
+                                            {{dailyContnet.text}}
                                         </div>
                                     </div>
                                 </div>
