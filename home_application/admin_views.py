@@ -45,7 +45,7 @@ def list_member_daily(request, group_id):
             daily = dailies.get(create_by=user.username).to_json()
             daily["write_status"] = True
         except Daily.DoesNotExist:
-            daily = Daily(date=date, create_by=user.username, create_name=user.name, content="{}").to_json()
+            daily = Daily(date=date, create_by=user.username, create_name=user.name, content="[]").to_json()
             daily["write_status"] = False
         data.append(daily)
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})

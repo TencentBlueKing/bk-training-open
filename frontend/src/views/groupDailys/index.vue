@@ -58,15 +58,21 @@
                     没有日报内容哟~
                 </div>
                 <div>
-                    <bk-card v-for="(daily, index) in dailysData.dailys" :key="daily.id" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
+                    <bk-card v-for="(daily, index) in dailysData.dailys" :key="index" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
                         <div>日期：{{daily.date}}</div>
                         <div>日报状态：{{daily.send_describe}}</div>
-                        <div v-for="(value, key) in dailysData.formatContent[index]" :key="key" style="font-size:18px">
-                            <p style="font-weight: bold">{{key}}</p>
-                            <pre>{{value}}</pre>
+                        <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
+                            <h2>{{dailyContnet.title}}</h2>
+                            <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
+                                <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
+                                    <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                </div>
+                            </div>
+                            <div v-else>
+                                {{dailyContnet.text}}
+                            </div>
                         </div>
                     </bk-card>
-
                 </div>
 
                 <!-- 清除浮动，撑开盒子 -->
@@ -120,13 +126,12 @@
                 // 日报数据
                 dailysData: {
                     count: 100,
-                    dailys: [],
-                    formatTitle: [],
-                    formatContent: []
+                    dailys: []
                 },
                 // 用户列表
                 groupUsers: [],
-                curUserId: null
+                curUserId: null,
+                curUserName: this.$store.state.user.username
             }
         },
         computed: {
@@ -174,31 +179,6 @@
                     this.groupUsers = res.data
                 })
             },
-            // 拆分日报内容
-            classifyContent () {
-                for (const index in this.dailysData.dailys) {
-                    const daily = this.dailysData.dailys[index]
-                    this.dailysData.formatContent[index] = {}
-                    for (const key in daily.content) {
-                        if (daily.content[key] instanceof Array) {
-                            let points = ''
-                            if (daily.content.isPrivate) {
-                                for (const point of daily.content[key]) {
-                                    points = points + point.content + ';\n'
-                                }
-                            } else {
-                                for (const point of daily.content[key]) {
-                                    points = points + point.content + ';-----(' + point.cost + ')\n'
-                                }
-                            }
-                            this.dailysData.formatTitle[index] = key
-                            this.dailysData.formatContent[index][key] = points
-                        } else if (key !== 'isPrivate') {
-                            this.dailysData.formatContent[index][key] = daily.content[key]
-                        }
-                    }
-                }
-            },
             // 修改日期或成员
             changeDateOrUser (userId, date) {
                 this.curDate = date === '' ? '' : moment(date).format('YYYY-MM-DD')
@@ -224,7 +204,6 @@
                             // 查看某组员全部日报，不提示补签
                             this.myTodayReport = true
                         }
-                        this.classifyContent()
                     } else {
                         const config = {
                             message: res.message,

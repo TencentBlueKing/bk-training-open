@@ -537,8 +537,6 @@ def daily_report(request):
     report_content = req.get("content")
     report_date_str = req.get("date")
     template_id = req.get("template_id")
-    if not isinstance(report_content, dict):
-        return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
     try:
         template_id = int(template_id)
         report_date = datetime.strptime(report_date_str, "%Y-%m-%d").date()
