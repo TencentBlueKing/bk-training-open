@@ -136,7 +136,7 @@
         },
         computed: {
             link () {
-                return window.PROJECT_CONFIG.SITE_URL + '/home/?date=' + this.curDate
+                return window.PROJECT_CONFIG.SITE_URL + 'home?date=' + this.curDate
             }
         },
         created () {
