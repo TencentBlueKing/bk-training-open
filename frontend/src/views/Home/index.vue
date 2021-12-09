@@ -36,13 +36,13 @@
                     <div slot="header" class="slide-header">
                         <div :class="{
                             'header-tabs': true,
-                            'tabs-active': tindex === activeTabIndex
-                        }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(tindex)">
+                            'tabs-active': title === activeTabTitle
+                        }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(title)">
                             {{title}}
                         </div>
                     </div>
                     <div slot="content">
-                        <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabIndex === 0">
+                        <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabTitle === slideTitleList[0]">
                             <div class="leave-apply">
                                 <bk-form :label-width="80" form-type="horizontal">
                                     <bk-form-item label="请假日期" :required="true">
@@ -73,7 +73,7 @@
                                 </bk-form>
                             </div>
                         </div>
-                        <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabIndex === 1">
+                        <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabTitle === slideTitleList[1]">
                             <div class="leave-manage">
                                 <div class="select-bar">
                                     <div class="ptitle">选择组</div>
@@ -315,13 +315,7 @@
                 leaveTableData: {
                     size: 'small',
                     data: [],
-                    isAdmin: false,
-                    pagination: {
-                        current: 1,
-                        count: 0,
-                        limit: 10,
-                        'limit-list': [10, 20, 50]
-                    }
+                    isAdmin: false
                 },
                 leaveFormData: {
                     reason: '',
@@ -331,7 +325,7 @@
                     '请假申请',
                     '请假管理'
                 ],
-                activeTabIndex: 0, // 0是请假申请 1是请假管理
+                activeTabTitle: '请假申请',
                 groupList: [],
                 selectedGroup: ''
             }
@@ -536,12 +530,12 @@
             hiddenSlider () {
                 this.leaveFormData.reason = ''
                 this.leaveFormData.dateTimeRange = [new Date(), new Date()]
-                this.activeTabIndex = 0
+                this.activeTabTitle = '请假申请'
             },
             // 切换请假页签事件
-            changeTab (index) {
-                this.activeTabIndex = index
-                if (this.activeTabIndex === 1) {
+            changeTab (title) {
+                this.activeTabTitle = title
+                if (this.activeTabTitle === '请假管理') {
                     this.getLeaveList()
                 }
             },
