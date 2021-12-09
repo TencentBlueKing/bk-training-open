@@ -671,15 +671,8 @@ def check_yesterday_daliy(request):
 
 
 @is_group_member(admin_needed=["PUT"])
-def update_daily_perfect_status(request, group_id):
+def update_daily_perfect_status(request, group_id, daily_id):
     """修改日报的优秀状态"""
-    # 校验参数
-    req = json.loads(request.body)
-    params = {"daily_id": "日报id"}
-    check_result, message = check_param(params, req)
-    if not check_result:
-        return JsonResponse({"result": False, "code": 1, "message": message})
-    daily_id = req.get("daily_id")
     try:
         daily = Daily.objects.get(id=daily_id)
         Daily.objects.filter(id=daily_id).update(is_perfect=not daily.is_perfect)
