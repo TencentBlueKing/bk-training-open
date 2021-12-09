@@ -1,5 +1,8 @@
 <template>
     <div class="body">
+        <bk-divider align="left" style="margin-bottom:30px;">
+            <div class="container_title">日报查看</div>
+        </bk-divider>
         <div class="container">
             <div class="left_container">
                 <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
@@ -167,10 +170,6 @@
                 this.isUser = !this.isUser
                 if (!this.isUser) {
                     this.changeGroup(this.curGroupId)
-                    document.querySelector('.left_container').style.minWidth = 290
-                    console.log('left_container == ', document.querySelector('.left_container').style.minWidth)
-                } else {
-                    document.querySelector('.left_container').style.minWidth = 350
                 }
             },
             // 获取组内成员
@@ -282,9 +281,6 @@
         margin:0 100px;
         padding: 20px 50px;
     }
-    .container{
-        display: flex;
-    }
     .container_title {
         font-size: 22px;
         font-weight: 700;
@@ -293,7 +289,6 @@
         float: left;
         width: 360px;
         padding-left: 20px;
-        min-width: 358px;
         border-right: 1px solid #EAEBF0 ;
     }
     .member-select{
@@ -319,30 +314,7 @@
     }
     .right_container{
         min-width: 380px;
-        width: 100%;
-        padding-left: 20px;
-    }
-    .no-report{
-        width: 100%;
-        height: 600px;
-        line-height: 600px;
-        text-align: center;
-    }
-    .right_container .report-info{
-        height: 40px;
-        line-height: 40px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-    .report-num-select{
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
-    }
-    .report-num-select span{
-        width: 112px;
-        margin-bottom: 10px;
+        width: calc(100% - 380px);
     }
     .card{
         float: left;
