@@ -27,7 +27,6 @@ def evening_task():
     """
     today = datetime.date.today()
     if not CalendarHandler(today).is_holiday:
-        logger.info("定时任务：每晚8点提醒没写日报的同学")
         notify_none_reported_user()
 
 
@@ -39,7 +38,6 @@ def morning_task():
     today_date = datetime.date.today()
     today_info = CalendarHandler(today_date)
     if not today_info.is_holiday:
-        logger.info("定时任务：每早10点告知管理员上一个工作日的日报情况")
         notify_yesterday_report_info(today_info.last_workday)
 
 
