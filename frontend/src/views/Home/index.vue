@@ -537,15 +537,11 @@
                     this.newTitle = ''
                 }
             },
-            // 转化日期格式yyyy-MM-dd
-            formateDate (date) {
-                return date.getFullYear() + '-' + (date.getMonth() >= 9 ? (date.getMonth() + 1) : '0' + (date.getMonth() + 1)) + '-' + (date.getDate() > 9 ? (date.getDate()) : '0' + (date.getDate()))
-            },
             // 获取请假管理表
             getLeaveList () {
                 this.isleaveTableLoad = true
                 this.leaveTableData.data = []
-                const todayDate = this.formateDate(new Date())
+                const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
                 const groupId = this.selectedGroup
                 const sign = 0 // 1 返回未请假人 或 0 返回请假人
                 this.$http.get('/display_personnel_information/' + groupId
@@ -591,8 +587,8 @@
             // 请假确认事件
             submitLeave () {
                 const params = {}
-                params.start_date = this.formateDate(this.leaveFormData.dateTimeRange[0])
-                params.end_date = this.formateDate(this.leaveFormData.dateTimeRange[1])
+                params.start_date = moment(this.leaveFormData.dateTimeRange[0]).format(moment.HTML5_FMT.DATE)
+                params.end_date = moment(this.leaveFormData.dateTimeRange[1]).format(moment.HTML5_FMT.DATE)
                 params.reason = this.leaveFormData.reason
                 this.$http.post('/add_off_info/', params).then(res => {
                     if (res.result) {
