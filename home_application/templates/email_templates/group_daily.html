@@ -1,0 +1,35 @@
+<div style="max-width: 800px; margin: 40px auto;">
+    <div style="text-align: center; font-weight:bold; font-size:2em">
+        {{ notify_title }}
+    </div>
+
+    <!-- 最小重复单元 START -->
+    {% for item in group_dailies %}
+    <div>
+        <div style="margin: 20px 0; background-color: #d9ecff; height: 2px;"></div>
+        <table style="width: 100%; font-size: 1.2em;">
+            <tr>
+                <td colspan="3" style="font-size: 16px;">
+                    <strong>{{ item.group_name }}</strong>
+                </td>
+                <td width=80 style="font-size: 16px;">
+                    <a style="color: #177EE6"  href="{{ item.group_link }}">查看</a>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 30%; font-size: 16px">
+                    日报： {{ item.daily_count }}
+                </td>
+                <td style="width: 30%; font-size: 16px">
+                    未写： {{ item.none_write_daily_count }}
+                </td>
+                <td style="width: 30%; font-size: 16px">
+                    请假： {{ item.people_in_vacation_count }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endfor %}
+    <!-- 最小重复单元 END -->
+
+</div>

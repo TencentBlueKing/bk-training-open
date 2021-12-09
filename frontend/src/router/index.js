@@ -15,6 +15,8 @@ const MainEntry = () => import(/* webpackChunkName: 'entry' */ '@/views')
 const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/Home')
 const groupDailys = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys')
 const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/myGroup')
+const manageGroup = () => import(/* webpackChunkName: 'example4' */ '@/views/manageGroup')
+
 const NotFound = () => import(/* webpackChunkName: 'none' */ '@/views/404')
 
 const routes = [
@@ -25,20 +27,25 @@ const routes = [
         alias: '',
         children: [
             {
-                path: 'Home',
+                path: 'home',
                 name: 'Home',
                 alias: '',
                 component: Home
             },
             {
-                path: 'groupDailys',
-                name: 'groupDailys',
+                path: 'group-dailys',
+                name: 'GroupDailys',
                 component: groupDailys
             },
             {
-                path: 'myGroup',
-                name: 'myGroup',
+                path: 'my-group',
+                name: 'MyGroup',
                 component: myGroup
+            },
+            {
+                path: 'manage-group',
+                name: 'ManageGroup',
+                component: manageGroup
             }
         ]
     },

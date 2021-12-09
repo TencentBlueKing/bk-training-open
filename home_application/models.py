@@ -10,7 +10,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import ast
 
 from django.db import models
 from django_mysql.models import JSONField
@@ -29,7 +28,7 @@ class TimeBasic(models.Model):
 # 组
 class Group(TimeBasic):
     name = models.CharField(max_length=128, unique=True, verbose_name="组名字")
-    # 多个管理员用户名拼接成的字符串
+    # 逗号分隔，一个或多个管理员用户名拼接成的字符串
     admin = models.CharField(max_length=255, verbose_name="管理员们")
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
@@ -113,9 +112,13 @@ def daily_evaluate_default():
     return []
 
 
+def daily_content_default():
+    return []
+
+
 # 日报表
 class Daily(TimeBasic):
-    content = models.TextField(verbose_name="日报内容")
+    content = JSONField(verbose_name="日报内容", default=daily_content_default)
     create_by = models.CharField(max_length=128, verbose_name="创建人")
     create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
     date = models.DateField(verbose_name="日报日期")
@@ -133,7 +136,7 @@ class Daily(TimeBasic):
             send_describe = "已保存"
         return {
             "id": self.id,
-            "content": ast.literal_eval(self.content),
+            "content": self.content,
             "date": str(self.date),
             "create_by": self.create_by,
             "create_name": self.create_name,
@@ -141,3 +144,58 @@ class Daily(TimeBasic):
             "template_id": self.template_id,
             "evaluate": self.evaluate,
         }
+
+    def add_evaluate(self, username, content):
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.evaluate.append({"name": username, "evaluate": content})
+        self.save()
+
+    def remove_evaluate(self, username):
+        sign = self.evaluate
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.save()
+        if self.evaluate == sign:
+            return False
+        else:
+            return True
+
+
+# 请假表
+class OffDay(TimeBasic):
+    start_date = models.DateField(verbose_name="请假开始日期")
+    end_date = models.DateField(verbose_name="请假结束日期")
+    reason = models.TextField(verbose_name="请假理由")
+    user = models.CharField(max_length=128, verbose_name="请假人用户名")
+
+    class Meta:
+        unique_together = (
+            "start_date",
+            "user",
+            "end_date",
+        )
+
+    def __str__(self):
+        return "请假日期：" + str(self.start_date) + str(self.end_date) + " 请假理由：" + self.reason + "请假人用户名" + self.user
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "start_date": self.start_date.strftime("%Y-%m-%d"),
+            "end_date": self.start_date.strftime("%Y-%m-%d"),
+            "reason": self.reason,
+            "user": self.user,
+        }
+
+
+class Holiday(TimeBasic):
+    year = models.IntegerField(verbose_name="年份")
+    month = models.IntegerField(verbose_name="月份")
+    day = models.IntegerField(verbose_name="日期")
+    is_holiday = models.BooleanField(verbose_name="是否为节假日")
+    note = models.CharField(max_length=255, verbose_name="备注")
+
+    class Meta:
+        unique_together = ("year", "month", "day")
+
+    def __str__(self):
+        return "{}-{}-{} {}".format(self.year, self.month, self.day, self.note)

@@ -1,0 +1,29 @@
+<meta charset="utf-8">
+<table class="content-wrap" style="margin: 0 auto; max-width: 600px;">
+    <tr>
+        <td style="margin: 0 auto; overflow: hidden; padding: 0; border: 0 dotted rgb(238, 238, 238);">
+            <!--logo图片-->
+            <!--用户日志-->
+            <div style="margin: 0 auto; max-width: 600px;">
+            <p>
+             {% for group_reports in group_reports %}
+                {% for key,val in group_reports.content.items%}
+                   <b>{{key}}:</b>{{ val }} <br>
+                    {% endfor %}
+            <b>评价人：</b>{{ group_reports.username}}<br>
+             <b>评价：</b> {{group_reports.evaluate_content}}
+            {% endfor %}>
+            </p>
+            </div>
+            <!--分隔线-->
+            <div style="border: #CCCCCC 1px solid"></div>
+            <!--蓝鲸智云-->
+            <div style="text-align:center; word-break: break-word; line-height: 20px; font-size: 12px; margin: 0;">
+                <a style="color: rgb(136, 136, 136); text-decoration: underline; font-weight: normal;"
+                   href="https://bk.tencent.com/" target="_blank" rel="noopener noreferrer">
+                    &nbsp蓝鲸智云 — 开创运维新局面&nbsp;
+                </a>
+            </div>
+        </td>
+    </tr>
+</table>

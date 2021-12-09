@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # @Time     : 2020-07-06 10:24:59
 # @Remarks  : 日报的相关处理
+import datetime
+
+from home_application.models import Daily, Group, GroupUser, User
 
 
 def content_format_as_json(daily_reports):
@@ -19,28 +22,56 @@ def content_format_as_json(daily_reports):
     return report_list
 
 
-def data_to_table(table_style: str, data_style: str, data_list: list, data_count_every_row=3):
+def get_report_info_by_group_and_date(group_id: int, report_date=None):
     """
-    将数据构造成HTML邮件模板中的table
-    :param table_style: table的css样式
-    :param data_style: 单元格的css样式
-    :param data_list: 数据列表
-    :param data_count_every_row: table中每行元素的个数
-    :return: 构造好的HTML代码
+    获取指定日期指定组的日报信息
+    :param group_id: 组id
+    :param report_date: 日期，格式为2021-11-26，默认为昨天
     """
-    table_header = '<table class="%s">' % table_style
-    table_end = "</table>"
+    if report_date is None:
+        report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
+    # 组
+    group = Group.objects.get(id=group_id)
+    # 组内管理员
+    group_admin = group.admin_list
+    # 组内用户
+    group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    group_users = User.objects.filter(id__in=group_user_ids)
+    # 日报信息
+    reports = Daily.objects.filter(date=report_date)
+    report_users = group_users.filter(username__in=reports.values_list("create_by", flat=True)).exclude(
+        username__in=group_admin
+    )
+    none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True)).exclude(
+        username__in=group_admin
+    )
+    # 返回数据
+    return {
+        "id": group.id,  # 组id
+        "name": group.name,  # 组名
+        "admin": group_admin,  # 组管理员数组
+        "report_users": report_users,  # 已完成日报成员 [User(0), User(1), ···]
+        "none_report_users": none_report_users,  # 未完成日报成员 [User(0), User(1), ···]
+        "reports": reports,  # 日报 [Daily(0), Daily(1), ···]
+    }
 
-    table_rows = []
-    table_data = []
-    for index in range(len(data_list)):
-        table_data.append('<td class="{}">{}</td>'.format(data_style, data_list[index]))
-        # 达到指定数量后构造一行table数据
-        if (index + 1) % data_count_every_row == 0:
-            table_rows.append("<tr>\n%s\n</tr>" % "\n".join(table_data))
-            table_data.clear()
-    # 检查table_data是否有遗漏
-    if len(table_data) != 0:
-        table_rows.append("<tr>\n%s\n</tr>" % "\n".join(table_data))
-    table_body = "\n".join(table_rows)
-    return "\n".join([table_header, table_body, table_end])
+
+def get_none_reported_user_of_group(group_id: int, date=None):
+    """
+    获取一个组里边没写日报的用户，管理员无需写日报
+    :param group_id:    组id
+    :param date:        日期，默认为今天
+    :return:            用户名set
+    """
+    group = Group.objects.get(id=group_id)
+    if date is None:
+        date = datetime.datetime.today().date()
+    # 成员列表
+    member_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    member_usernames = User.objects.filter(id__in=member_ids).values_list("username", flat=True)
+    # 写了日报的用户
+    write_report_usernames = Daily.objects.filter(create_by__in=member_usernames, date=date).values_list(
+        "create_by", flat=True
+    )
+    # 做差集得到没写日报的用户
+    return set(member_usernames) - set(write_report_usernames) - set(group.admin_list)
