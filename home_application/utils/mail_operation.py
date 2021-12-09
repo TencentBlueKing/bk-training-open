@@ -83,6 +83,7 @@ def notify_none_reported_user():
             start_date__lte=datetime.date.today(), end_date__gte=datetime.date.today(), user__in=all_user_none_reported
         )
         all_user_none_reported = set(all_user_none_reported) - set(off_day_list)
+    logger.info("定时任务：每晚8点提醒未写日报的用户：%s" % all_user_none_reported)
     remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
 
@@ -144,6 +145,7 @@ def notify_yesterday_report_info(report_date=None):
                 admin_group_map[admin_username] = []
             admin_group_map[admin_username].append(g_info_for_mail)
 
+    logger.info("定时任务：工作日早10点告知管理员上个工作日的日报信息：%s" % admin_group_map)
     for admin_username, info in admin_group_map.items():
         notify_admin_group_info.apply_async(
             kwargs={
