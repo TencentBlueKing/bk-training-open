@@ -577,7 +577,7 @@ def daily_report(request):
                 date=report_date,
                 template_id=template_id,
                 send_status=send_status,
-                is_normal=bool(1 - send_status),
+                is_normal=not send_status,
             )
             if send_status:
                 message = "补写日报成功"
@@ -670,7 +670,8 @@ def check_yesterday_daliy(request):
     return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": True})
 
 
-def update_daily_perfect_status(request):
+@is_group_member(admin_needed=["PUT"])
+def update_daily_perfect_status(request, group_id):
     """修改日报的优秀状态"""
     # 校验参数
     req = json.loads(request.body)
@@ -681,7 +682,7 @@ def update_daily_perfect_status(request):
     daily_id = req.get("daily_id")
     try:
         daily = Daily.objects.get(id=daily_id)
-        Daily.objects.filter(id=daily_id).update(is_perfect=bool(1 - daily.is_perfect))
+        Daily.objects.filter(id=daily_id).update(is_perfect=not daily.is_perfect)
     except Daily.DoesNotExist:
         return JsonResponse({"result": False, "code": 1, "message": "日报不存在", "data": []})
     return JsonResponse({"result": True, "code": 0, "message": "修改日报是否优秀状态成功", "data": []})
@@ -696,7 +697,7 @@ def get_prefect_dailys(request, group_id):
     member_usernames = User.objects.filter(id__in=member_ids).values_list("username", flat=True)
     select_type = request.GET.get("select_type")
     # 查询日报
-    if select_type == "0":
+    if select_type == "all":
         # 查询所有优秀日报
         daily_list = Daily.objects.filter(create_by__in=member_usernames, is_perfect=True).order_by("-date")
         # 日报数量
@@ -705,7 +706,7 @@ def get_prefect_dailys(request, group_id):
         page = request.GET.get("page")
         size = request.GET.get("size")
         daily_list = get_paginator(daily_list, page=page, size=size)
-    elif select_type == "1":
+    elif select_type == "month":
         # 查询某月优秀日报
         year = request.GET.get("year")
         month = request.GET.get("month")
