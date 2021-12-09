@@ -449,6 +449,7 @@
                     if (vm.groupList.length !== 0) {
                         vm.selectedGroup = vm.groupList[0].id
                     }
+                    this.cheakDailyDates()
                 })
             },
             // 改变默认模板标题
@@ -754,4 +755,26 @@
     .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
         width: 200px;
     }
+.body{
+    border: 2px solid #EAEBF0 ;
+    margin:0px 100px;
+    padding: 20px 50px;
+    min-height: 80vh;
+}
+.demo-block.demo-alert .bk-alert{
+    margin-bottom: 20px;
+}
+.top_container{
+    width: 100%;
+    padding: 10px 0;
+    display: flex;
+    justify-content: flex-end;
+}
+.bottom_container{
+    width: 100%;
+    padding-top: 20px;
+}
+::-webkit-scrollbar{
+    display: none;
+}
 </style>

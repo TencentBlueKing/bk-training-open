@@ -10,8 +10,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import datetime as python_datetime
 import json
 import math
+from datetime import timedelta
 
 from django.db import IntegrityError
 from django.db.models import Q
@@ -27,7 +29,6 @@ from blueking.component.shortcuts import get_client_by_request
 from home_application.celery_task import (
     send_apply_for_group_result,
     send_apply_for_group_to_manager,
-    send_daily_immediately,
 )
 from home_application.models import (
     ApplyForGroup,
@@ -37,6 +38,7 @@ from home_application.models import (
     GroupUser,
     User,
 )
+from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
 from home_application.utils.tools import apply_info_to_json, check_param, get_paginator
@@ -535,8 +537,6 @@ def daily_report(request):
     report_content = req.get("content")
     report_date_str = req.get("date")
     template_id = req.get("template_id")
-    if not isinstance(report_content, dict):
-        return JsonResponse({"result": False, "code": -1, "message": "日报内容格式错误", "data": []})
     try:
         template_id = int(template_id)
         report_date = datetime.strptime(report_date_str, "%Y-%m-%d").date()
@@ -560,35 +560,26 @@ def daily_report(request):
         except Daily.DoesNotExist:
             # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
             create_name = User.objects.get(username=request.user.username).name
-            target_report = Daily.objects.create(
+
+            # 如果是补签之前的日报直接修改发送状态为'已发送'，但是在当天10点之前补签昨天的日报仍为'未发送'
+            datetime_now = datetime.now()
+            if datetime_now.hour < 10:
+                send_status = report_date < (datetime_now - python_datetime.timedelta(days=1)).date()
+            else:
+                send_status = report_date < datetime_now.date()
+
+            Daily.objects.create(
                 content=report_content,
                 create_by=request.user.username,
                 create_name=create_name,
                 date=report_date,
                 template_id=template_id,
-                send_status=False,
+                send_status=send_status,
             )
-            message = "保存日报成功"
-        # 补写日报时可选发送邮件给管理员
-        if req.get("send_email"):
-            # 循环他所在的组
-            user_groups_id = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
-            user_groups = Group.objects.filter(id__in=user_groups_id)
-            group_admins = set()
-            for g in user_groups:
-                # 获取admin的list
-                g_admin = g.admin_list
-                group_admins.update(g_admin)
-            user_name = User.objects.get(id=request.user.id).name
-            send_daily_immediately.apply_async(
-                kwargs={
-                    "user_name": "{}({})".format(request.user.username, user_name),
-                    "group_admins": ",".join(group_admins),
-                    "daily_content": report_content,
-                    "report_date": report_date_str,
-                    "report_id": target_report.id,
-                }
-            )
+            if send_status:
+                message = "补写日报成功"
+            else:
+                message = "保存日报成功"
         return JsonResponse({"result": True, "code": 0, "message": message, "data": []})
 
 
@@ -638,10 +629,11 @@ def report_filter(request, group_id):
     total_report_num = member_report.count()
     # 查找自己的日报
     get_my_report = True
-    try:
-        Daily.objects.get(date=report_date, create_by=request.user.username)
-    except Exception:
-        get_my_report = False
+    if not CalendarHandler(report_date).is_holiday:
+        try:
+            Daily.objects.get(date=report_date, create_by=request.user.username)
+        except Daily.DoesNotExist:
+            get_my_report = False
     # 分页
     member_report = get_paginator(member_report, page, page_size)
     # 查询完毕返回数据
@@ -655,6 +647,21 @@ def report_filter(request, group_id):
 
 @require_GET
 def get_reports_dates(request):
-    """获取用户写过所有日报的日期"""
-    member_dates = Daily.objects.filter(create_by=request.user.username).values_list("date", flat=True)
+    """获取用户已提交的所有日报日期"""
+    member_dates = Daily.objects.filter(create_by=request.user.username, send_status=True).values_list(
+        "date", flat=True
+    )
     return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": list(member_dates)})
+
+
+@require_GET
+def check_yesterday_daliy(request):
+    """检查工作日日报是否已填写"""
+    yesterday = datetime.now() - timedelta(days=1)
+    if CalendarHandler(yesterday).is_holiday:
+        return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": True})
+    try:
+        Daily.objects.get(create_by=request.user.username, date=yesterday)
+    except Daily.DoesNotExist:
+        return JsonResponse({"result": True, "code": 0, "message": "昨天没有写日报", "data": False})
+    return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": True})

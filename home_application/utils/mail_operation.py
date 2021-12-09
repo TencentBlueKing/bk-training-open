@@ -10,7 +10,7 @@ from celery.task import task
 from django.template.loader import get_template
 
 from blueking.component.shortcuts import get_client_by_user
-from home_application.models import Daily, Group
+from home_application.models import Daily, Group, OffDay
 from home_application.utils.report_operation import (
     get_none_reported_user_of_group,
     get_report_info_by_group_and_date,
@@ -79,6 +79,11 @@ def notify_none_reported_user():
     group_ids = Group.objects.values_list("id", flat=True)
     for group_id in group_ids:
         all_user_none_reported |= get_none_reported_user_of_group(group_id)
+        off_day_list = OffDay.objects.filter(
+            start_date__lte=datetime.date.today(), end_date__gte=datetime.date.today(), user__in=all_user_none_reported
+        )
+        all_user_none_reported = set(all_user_none_reported) - set(off_day_list)
+    logger.info("定时任务：每晚8点提醒未写日报的用户：%s" % all_user_none_reported)
     remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
 
@@ -94,7 +99,7 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
                                 "daily_count": 10,              # 写了日报的人数
                                 "none_write_daily_count": 1,    # 没写日报的人数，包含请假的人
                                 "people_in_vacation_count": 0,  # 请假人数
-                                "group_link": "https://***/manageGroup?date=2021-12-3&group=1"  # 组管理页面
+                                "group_link": "https://***/manage-group?date=2021-12-3&group=1"  # 组管理页面
                             },]
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
@@ -129,7 +134,7 @@ def notify_yesterday_report_info(report_date=None):
             "daily_count": len(group_info["report_users"]),  # 写了日报的人数
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
             "people_in_vacation_count": 0,  # TODO 请假人数
-            "group_link": "https://paas-edu.bktencent.com/t/train-test/manageGroup?date={}&group={}".format(
+            "group_link": "https://paas-edu.bktencent.com/t/train-test/manage-group?date={}&group={}".format(
                 report_date_str, g_id
             ),  # 组管理页面
         }
@@ -140,6 +145,7 @@ def notify_yesterday_report_info(report_date=None):
                 admin_group_map[admin_username] = []
             admin_group_map[admin_username].append(g_info_for_mail)
 
+    logger.info("定时任务：工作日早10点告知管理员上个工作日的日报信息：%s" % admin_group_map)
     for admin_username, info in admin_group_map.items():
         notify_admin_group_info.apply_async(
             kwargs={
