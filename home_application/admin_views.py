@@ -160,6 +160,7 @@ def send_evaluate_all(request, group_id):
 
 
 @require_http_methods(["POST"])
+@is_group_member()
 def add_off_info(request):
     """
     请假
