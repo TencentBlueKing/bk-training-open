@@ -389,10 +389,9 @@
             // 切换模板
             selectTemplate () {
                 this.dailyData = []
-                const vm = this
-                vm.templateList.forEach(function (template) {
-                    if (template.id === vm.curTemplateId) {
-                        vm.curTemplate = template.content.split(';')
+                this.templateList.forEach(function (template) {
+                    if (template.id === this.curTemplateId) {
+                        this.curTemplate = template.content.split(';')
                     }
                 })
             },
@@ -410,7 +409,6 @@
                 this.checkYesterdayDaliy()
             },
             getDailyReport () {
-                const vm = this
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
                 ).then(res => {
@@ -443,11 +441,10 @@
                 })
 
                 // 获取当前用户组信息
-                vm.$http.get('/get_user_groups/').then((res) => {
-                    console.log('init_group, groupsData:', res.data)
-                    vm.groupList = res.data
-                    if (vm.groupList.length !== 0) {
-                        vm.selectedGroup = vm.groupList[0].id
+                this.$http.get('/get_user_groups/').then((res) => {
+                    this.groupList = res.data
+                    if (this.groupList.length !== 0) {
+                        this.selectedGroup = this.groupList[0].id
                     }
                     this.cheakDailyDates()
                 })
