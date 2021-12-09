@@ -23,7 +23,93 @@
                 <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily" class="mr30">
                     {{ hasWrittenToday ? '修改' : '保存' }}
                 </bk-button>
-                <bk-button theme="success" style="display: inline-block" @click="moreTemplateDialog.visible = true">
+                <bk-button :theme="'primary'" style="display: inline-block" @click="leaveSetting.visible = true" class="mr30">
+                    请假
+                </bk-button>
+                <bk-sideslider width="600"
+                    :is-show.sync="leaveSetting.visible"
+                    :quick-close="true"
+                    @hidden="hiddenSlider"
+                    ext-cls="leave-slide">
+                    <div slot="header" class="slide-header">
+                        <div :class="{
+                            'header-tabs': true,
+                            'tabs-active': title === activeTabTitle
+                        }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(title)">
+                            {{title}}
+                        </div>
+                    </div>
+                    <div slot="content">
+                        <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabTitle === slideTitleList[0]">
+                            <div class="leave-apply">
+                                <bk-form :label-width="80" form-type="horizontal">
+                                    <bk-form-item label="请假日期" :required="true">
+                                        <bk-date-picker
+                                            v-model="leaveFormData.dateTimeRange"
+                                            class="mr15"
+                                            :clearable="false"
+                                            placeholder="选择日期范围"
+                                            type="daterange"
+                                            @clear="clearDate"
+                                        ></bk-date-picker>
+                                    </bk-form-item>
+                                    <bk-form-item label="请假原因">
+                                        <bk-input
+                                            placeholder=""
+                                            type="textarea"
+                                            :rows="3"
+                                            :maxlength="255"
+                                            v-model="leaveFormData.reason">
+                                        </bk-input>
+                                    </bk-form-item>
+                                    <bk-form-item class="mt20">
+                                        <bk-button
+                                            style="margin-right: 3px;"
+                                            theme="primary" title="提交"
+                                            @click.stop.prevent="submitLeave">提交</bk-button>
+                                    </bk-form-item>
+                                </bk-form>
+                            </div>
+                        </div>
+                        <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabTitle === slideTitleList[1]">
+                            <div class="leave-manage">
+                                <div class="select-bar">
+                                    <div class="ptitle">选择组</div>
+                                    <bk-select :disabled="false" v-model="selectedGroup" style="width: 200px;"
+                                        ext-cls="select-custom"
+                                        ext-popover-cls="select-popover-custom"
+                                        @selected="handleSelectGroup"
+                                        searchable>
+                                        <bk-option v-for="goption in groupList"
+                                            :key="goption.id"
+                                            :id="goption.id"
+                                            :name="goption.name">
+                                        </bk-option>
+                                    </bk-select>
+                                </div>
+                                <div class="leave-load" v-show="isleaveTableLoad" v-bkloading="{ isLoading: isleaveTableLoad, theme: 'primary', zIndex: 10 }"></div>
+                                <bk-table
+                                    v-show="!isleaveTableLoad"
+                                    :virtual-render="false"
+                                    :data="leaveTableData.data"
+                                    :size="leaveTableData.size"
+                                    :outer-border="false"
+                                    :header-border="false"
+                                    :header-cell-style="{ background: '#fff' }"
+                                    @page-change="handlePageChange"
+                                    @page-limit-change="handlePageLimitChange">
+                                    <div slot="empty-text">
+                                        空数据
+                                    </div>
+                                    <bk-table-column label="人员信息" prop="info" min-width="150" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true"></bk-table-column>
+                                </bk-table>
+                            </div>
+                        </div>
+                    </div>
+                </bk-sideslider>
+                <bk-button :theme="'success'" style="display: inline-block" @click="moreTemplateDialog.visible = true">
                     添加模板
                 </bk-button>
             </div>
@@ -159,10 +245,19 @@
 
 <script>
     import moment from 'moment'
-    import { bkAlert } from 'bk-magic-vue'
+    import { bkInput, bkDatePicker, bkTable, bkTableColumn, bkButton, bkSideslider, bkForm, bkFormItem, bkAlert } from 'bk-magic-vue'
 
     export default {
+        name: '',
         components: {
+            bkInput,
+            bkDatePicker,
+            bkTable,
+            bkTableColumn,
+            bkButton,
+            bkSideslider,
+            bkForm,
+            bkFormItem,
             bkAlert
         },
         data () {
@@ -219,7 +314,27 @@
                             return true
                         }
                     }
-                }
+                },
+                leaveSetting: {
+                    visible: false
+                },
+                isleaveTableLoad: true,
+                leaveTableData: {
+                    size: 'small',
+                    data: [],
+                    isAdmin: false
+                },
+                leaveFormData: {
+                    reason: '',
+                    dateTimeRange: [new Date(), new Date()]
+                },
+                slideTitleList: [
+                    '请假申请',
+                    '请假管理'
+                ],
+                activeTabTitle: '请假申请',
+                groupList: [],
+                selectedGroup: ''
             }
         },
         created () {
@@ -274,10 +389,9 @@
             // 切换模板
             selectTemplate () {
                 this.dailyData = []
-                const vm = this
-                vm.templateList.forEach(function (template) {
-                    if (template.id === vm.curTemplateId) {
-                        vm.curTemplate = template.content.split(';')
+                this.templateList.forEach(function (template) {
+                    if (template.id === this.curTemplateId) {
+                        this.curTemplate = template.content.split(';')
                     }
                 })
             },
@@ -285,6 +399,13 @@
             init () {
                 this.cheakDailyDates()
                 this.getDailyReport()
+                // 获取当前用户组信息
+                this.$http.get('/get_user_groups/').then((res) => {
+                    this.groupList = res.data
+                    if (this.groupList.length !== 0) {
+                        this.selectedGroup = this.groupList[0].id
+                    }
+                })
                 this.checkYesterdayDaliy()
             },
             getDailyReport () {
@@ -315,6 +436,15 @@
                         this.newTemplateContent = [
                             { 'title': '感想', 'type': 'text', 'text': '' }
                         ]
+                    }
+                    this.cheakDailyDates()
+                })
+
+                // 获取当前用户组信息
+                this.$http.get('/get_user_groups/').then((res) => {
+                    this.groupList = res.data
+                    if (this.groupList.length !== 0) {
+                        this.selectedGroup = this.groupList[0].id
                     }
                     this.cheakDailyDates()
                 })
@@ -406,12 +536,218 @@
                 if (val === false) {
                     this.newTitle = ''
                 }
+            },
+            // 获取请假管理表
+            getLeaveList () {
+                this.isleaveTableLoad = true
+                this.leaveTableData.data = []
+                const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+                const groupId = this.selectedGroup
+                const sign = 0 // 1 返回未请假人 或 0 返回请假人
+                this.$http.get('/display_personnel_information/' + groupId
+                    + '/?date=' + todayDate
+                    + '&sign=' + sign
+                ).then(res => {
+                    if (res.data !== undefined && res.data.length !== 0) {
+                        res.data.map((item, index) => {
+                            this.leaveTableData.data.push({
+                                'offdayId': item.off_info.id,
+                                'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                'reason': item.off_info.reason,
+                                'info': item.username + '(' + item.name + ')',
+                                'username': item.username
+                            })
+                        })
+                    }
+                }).finally(() => {
+                    this.isleaveTableLoad = false
+                })
+            },
+            // 请假滑窗关闭事件
+            hiddenSlider () {
+                this.leaveFormData.reason = ''
+                this.leaveFormData.dateTimeRange = [new Date(), new Date()]
+                this.activeTabTitle = '请假申请'
+            },
+            // 切换请假页签事件
+            changeTab (title) {
+                this.activeTabTitle = title
+                if (this.activeTabTitle === '请假管理') {
+                    this.getLeaveList()
+                }
+            },
+            // 选择组
+            handleSelectGroup (value, option) {
+                this.getLeaveList()
+            },
+            // 清空请假日期
+            clearDate () {
+                this.leaveFormData.dateTimeRange = -1
+            },
+            // 请假确认事件
+            submitLeave () {
+                const params = {}
+                params.start_date = moment(this.leaveFormData.dateTimeRange[0]).format(moment.HTML5_FMT.DATE)
+                params.end_date = moment(this.leaveFormData.dateTimeRange[1]).format(moment.HTML5_FMT.DATE)
+                params.reason = this.leaveFormData.reason
+                this.$http.post('/add_off_info/', params).then(res => {
+                    if (res.result) {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'success',
+                            'message': res.message
+                        })
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'warning',
+                            'message': res.message
+                        })
+                    }
+                })
             }
         }
     }
 </script>
 
 <style scoped>
+    .body{
+        border: 2px solid #EAEBF0 ;
+        margin:0px 100px;
+        padding: 20px 50px;
+        min-height: 80vh;
+    }
+    .demo-block.demo-alert .bk-alert{
+        margin-bottom: 20px;
+    }
+    .top_container{
+        width: 100%;
+        padding: 10px 0;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .bottom_container{
+        width: 100%;
+        padding-top: 20px;
+    }
+    ::-webkit-scrollbar{
+        display: none;
+    }
+    .leave-slide .slide-header{
+            display: flex;
+            flex-wrap: nowrap;
+    }
+    .leave-slide .slide-header .title{
+        height: 60px;
+        line-height: 60px;
+        border-bottom: 1px solid #dcdee5;
+        font-size: 16px;
+        font-weight: 700;
+        color: #666;
+    }
+    .leave-slide .slide-header .header-tabs{
+        width: 50%;
+        text-align:center
+    }
+    .leave-slide .slide-header .tabs-active{
+        border-bottom: 2px solid #3a84ff;
+        color: #3a84ff;
+    }
+    .leave-slide .slide-header .header-tabs:hover{
+        cursor: pointer;
+        color: #3a84ff;
+    }
+    .leave-slide .leave-manage .leave-load {
+        height: 300px;
+        line-height: 300px;
+        text-align: center;
+    }
+    .leave-slide .leave-manage /deep/ .bk-table .bk-table-header-wrapper .bk-table-header{
+        width: 100% !important;
+    }
+    .leave-slide .leave-manage /deep/ .bk-table .bk-table-body-wrapper .bk-table-body{
+        width: 100% !important;
+    }
+    .leave-slide .leave-manage .select-bar{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .leave-slide .leave-manage .select-bar .ptitle{
+        font-size: 14px;
+        font-weight: 400;
+        color: #63656e;
+        margin-right: 10px;
+    }
+    .leave-slide .leave-manage .loadbox{
+        height: 300px;
+        line-height: 300px;
+        border: 1px solid #eee;
+        text-align: center;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-form-control{
+        width: 94% !important;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
+        width: 200px;
+    }
+    .leave-slide .slide-header{
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .leave-slide .slide-header .title{
+        height: 60px;
+        line-height: 60px;
+        border-bottom: 1px solid #dcdee5;
+        font-size: 16px;
+        font-weight: 700;
+        color: #666;
+    }
+    .leave-slide .slide-header .header-tabs{
+        width: 50%;
+        text-align:center
+    }
+    .leave-slide .slide-header .tabs-active{
+        border-bottom: 2px solid #3a84ff;
+        color: #3a84ff;
+    }
+    .leave-slide .slide-header .header-tabs:hover{
+        cursor: pointer;
+        color: #3a84ff;
+    }
+    .leave-slide .leave-manage .leave-load {
+        height: 300px;
+        line-height: 300px;
+        /* border: 1px solid #eee; */
+        text-align: center;
+    }
+    .leave-slide .leave-manage .select-bar{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .leave-slide .leave-manage .select-bar .ptitle{
+        font-size: 14px;
+        font-weight: 400;
+        color: #63656e;
+        margin-right: 10px;
+    }
+    .leave-slide .leave-manage .loadbox{
+        height: 300px;
+        line-height: 300px;
+        border: 1px solid #eee;
+        text-align: center;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-form-control{
+        width: 94% !important;
+    }
+    .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
+        width: 200px;
+    }
 .body{
     border: 2px solid #EAEBF0 ;
     margin:0px 100px;

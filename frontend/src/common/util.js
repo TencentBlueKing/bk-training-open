@@ -173,8 +173,8 @@ export function json2Query (param, key) {
     let paramStr = ''
 
     if (param instanceof String || typeof param === 'string'
-            || param instanceof Number || typeof param === 'number'
-            || param instanceof Boolean || typeof param === 'boolean'
+        || param instanceof Number || typeof param === 'number'
+        || param instanceof Boolean || typeof param === 'boolean'
     ) {
         paramStr += separator + key + mappingOperator + encodeURIComponent(param)
     } else {
@@ -319,6 +319,18 @@ export function getWindowHeight () {
         : document.body.clientHeight
 
     return windowHeight
+}
+
+/**
+ * 判断某个元素是否有滚动条
+ *
+ * @return {boolean} 有还是没有
+ */
+export function hasScroll (node) {
+    if (node.scrollHeight !== null && node.clientHeight !== null) {
+        return node.scrollHeight > node.clientHeight
+    }
+    return false
 }
 
 /**

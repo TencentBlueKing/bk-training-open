@@ -174,14 +174,30 @@ body{
 .bk-navigation .bk-navigation-wrapper {
   height: calc(100vh - 252px) !important;
 }
-.bk-select >>> .bk-select-name{
+.bk-select /deep/ .bk-select-name{
   display:none;
 }
-.bk-navigation >>>.bk-icon{
+.bk-navigation /deep/ bk-icon{
   display:none;
 }
 /* 以上样式是为了适应例子父级的宽高而设置 */
 
+/* 修复footer高度问题 */
+html {
+  height: 100%;
+}
+.monitor-navigation{
+  height: 100%;
+}
+/* 以上样修复footer高度问题 */
+.body-wapper{
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+.bk-navigation .bk-navigation-header{
+  z-index: 100 !important;
+}
 .monitor-navigation-header {
   -webkit-box-flex: 1;
   -ms-flex: 1;
@@ -386,8 +402,6 @@ body{
   color: #d3d9e4;
 }
 .monitor-navigation-content {
-  height: calc(100% - 84px);
-  overflow-y: auto;
   background: #ffffff;
   -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
@@ -579,4 +593,8 @@ body{
   -webkit-box-shadow: none;
   box-shadow: none;
 }
+.tippy-popper{
+    z-index: 2910 !important;
+}
+
 </style>
