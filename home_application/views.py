@@ -564,8 +564,10 @@ def daily_report(request):
             # 如果是补签之前的日报直接修改发送状态为'已发送'，但是在当天10点之前补签昨天的日报仍为'未发送'
             datetime_now = datetime.now()
             if datetime_now.hour < 10:
+                # 填写日期在10点前，日报日期在昨天(今天-1天)之前就是补签
                 send_status = report_date < (datetime_now - python_datetime.timedelta(days=1)).date()
             else:
+                # 填写日期在10点后，日报日期小于当天就是补签
                 send_status = report_date < datetime_now.date()
 
             Daily.objects.create(
@@ -575,6 +577,7 @@ def daily_report(request):
                 date=report_date,
                 template_id=template_id,
                 send_status=send_status,
+                is_normal=bool(1 - send_status),
             )
             if send_status:
                 message = "补写日报成功"
@@ -665,3 +668,57 @@ def check_yesterday_daliy(request):
     except Daily.DoesNotExist:
         return JsonResponse({"result": True, "code": 0, "message": "昨天没有写日报", "data": False})
     return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": True})
+
+
+def update_daily_perfect_status(request):
+    """修改日报的优秀状态"""
+    # 校验参数
+    req = json.loads(request.body)
+    params = {"daily_id": "日报id"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    daily_id = req.get("daily_id")
+    try:
+        daily = Daily.objects.get(id=daily_id)
+        Daily.objects.filter(id=daily_id).update(is_perfect=bool(1 - daily.is_perfect))
+    except Daily.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "日报不存在", "data": []})
+    return JsonResponse({"result": True, "code": 0, "message": "修改日报是否优秀状态成功", "data": []})
+
+
+@require_GET
+@is_group_member()
+def get_prefect_dailys(request, group_id):
+    """获取组内优秀日报"""
+    # 根据组查询组所有成员用户名
+    member_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    member_usernames = User.objects.filter(id__in=member_ids).values_list("username", flat=True)
+    select_type = request.GET.get("select_type")
+    # 查询日报
+    if select_type == "0":
+        # 查询所有优秀日报
+        daily_list = Daily.objects.filter(create_by__in=member_usernames, is_perfect=True).order_by("-date")
+        # 日报数量
+        total_num = daily_list.count()
+        # 分页
+        page = request.GET.get("page")
+        size = request.GET.get("size")
+        daily_list = get_paginator(daily_list, page=page, size=size)
+    elif select_type == "1":
+        # 查询某月优秀日报
+        year = request.GET.get("year")
+        month = request.GET.get("month")
+        daily_list = Daily.objects.filter(
+            create_by__in=member_usernames, is_perfect=True, date__year=year, date__month=month
+        ).order_by("-date")
+        # 日报数量
+        total_num = daily_list.count()
+    else:
+        return JsonResponse({"result": False, "code": 1, "message": "查询优秀日报类型出错", "data": []})
+    # 返回日报数据
+    res_data = {
+        "total_num": total_num,
+        "daily_list": content_format_as_json(daily_list),
+    }
+    return JsonResponse({"result": True, "code": 0, "message": "获取优秀日报成功", "data": res_data})

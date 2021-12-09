@@ -49,4 +49,6 @@ urlpatterns = (
     path("display_personnel_information/<int:group_id>/", admin_views.display_personnel_information),
     path("remove_off/<int:group_id>/<int:offday_id>/", admin_views.remove_off),
     path("check_yesterday_daliy/", views.check_yesterday_daliy),
+    url(r"^update_daily_perfect_status/$", views.update_daily_perfect_status),
+    path("get_prefect_dailys/<int:group_id>/", views.get_prefect_dailys),
 )
