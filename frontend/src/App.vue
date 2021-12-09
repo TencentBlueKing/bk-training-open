@@ -99,25 +99,25 @@
                         {
                             name: '填写日报',
                             id: 1,
-                            url: 'Home',
+                            url: '/home',
                             show: true
                         },
                         {
                             name: '日报查看',
                             id: 2,
-                            url: 'groupDailys',
+                            url: '/group-dailys',
                             show: true
                         },
                         {
                             name: '我的小组',
                             id: 3,
-                            url: 'myGroup',
+                            url: '/my-group',
                             show: true
                         },
                         {
                             name: '管理组',
                             id: 4,
-                            url: 'manageGroup',
+                            url: '/manage-group',
                             show: true
                         }
                     ],
