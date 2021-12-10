@@ -125,6 +125,8 @@ class Daily(TimeBasic):
     send_status = models.BooleanField(verbose_name="发送状态", default=False)
     template_id = models.IntegerField(verbose_name="模板id")
     evaluate = JSONField(verbose_name="评价", default=daily_evaluate_default)
+    is_normal = models.BooleanField(verbose_name="是否为当天日报（补签）", default=True)
+    is_perfect = models.BooleanField(verbose_name="是否为优秀日报", default=False)
 
     def __str__(self):
         return "创建人：" + self.create_by + " 日报时间：" + str(self.date)
@@ -143,6 +145,8 @@ class Daily(TimeBasic):
             "send_describe": send_describe,
             "template_id": self.template_id,
             "evaluate": self.evaluate,
+            "is_normal": self.is_normal,
+            "is_perfect": self.is_perfect,
         }
 
     def add_evaluate(self, username, content):
