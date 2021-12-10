@@ -634,7 +634,7 @@ def report_filter(request, group_id):
     get_my_report = True
     group_ids = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
     user_name = request.user.username
-    # 判断用户是否在所有组皆为管理员，为0时不需要写日报，为-1时需要写日报
+    # 判断用户是否在所有组皆为管理员，0时不需要写日报，-1时需要写日报
     admin_key = 0
     for g in group_ids:
         admin = Group.objects.get(id=g).admin
