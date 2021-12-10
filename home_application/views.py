@@ -41,7 +41,12 @@ from home_application.models import (
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import apply_info_to_json, check_param, get_paginator
+from home_application.utils.tools import (
+    apply_info_to_json,
+    check_param,
+    check_user_is_admin,
+    get_paginator,
+)
 
 
 def home(request):
@@ -632,21 +637,12 @@ def report_filter(request, group_id):
     total_report_num = member_report.count()
     # 查找自己的日报
     get_my_report = True
-    group_ids = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
-    user_name = request.user.username
-    # 判断用户是否在所有组皆为管理员，0时不需要写日报，-1时需要写日报
-    admin_key = 0
-    for g in group_ids:
-        admin = Group.objects.get(id=g).admin
-        if user_name not in admin:
-            admin_key = -1
-            break
     if not CalendarHandler(report_date).is_holiday:
         try:
             Daily.objects.get(date=report_date, create_by=request.user.username)
         except Daily.DoesNotExist:
             get_my_report = False
-    if admin_key == 0:
+    if check_user_is_admin(request) == 0:
         get_my_report = True
     # 分页
     member_report = get_paginator(member_report, page, page_size)
@@ -672,16 +668,7 @@ def get_reports_dates(request):
 def check_yesterday_daliy(request):
     """检查工作日日报是否已填写"""
     yesterday = datetime.now() - timedelta(days=1)
-    group_ids = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
-    user_name = request.user.username
-    # 判断用户是否在所有组皆为管理员，为0时不需要写日报，为-1时需要写日报
-    admin_key = 0
-    for g in group_ids:
-        admin = Group.objects.get(id=g).admin
-        if user_name not in admin:
-            admin_key = -1
-            break
-    if admin_key == 0:
+    if check_user_is_admin(request) == 0:
         return JsonResponse({"result": True, "code": 0, "message": "管理员不需写日报", "data": True})
     if CalendarHandler(yesterday).is_holiday:
         return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": True})
