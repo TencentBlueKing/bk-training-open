@@ -37,6 +37,6 @@ def check_user_is_admin(request):
     admin_key = 0
     groups = Group.objects.filter(id__in=group_ids)
     for g in groups:
-        if user_name not in g.admin.split(","):
+        if user_name not in g.admin:
             admin_key = -1
     return admin_key
