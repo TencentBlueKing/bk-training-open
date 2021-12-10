@@ -48,7 +48,10 @@ urlpatterns = (
     path("add_off_info/", admin_views.add_off_info),
     path("display_personnel_information/<int:group_id>/", admin_views.display_personnel_information),
     path("remove_off/<int:group_id>/<int:offday_id>/", admin_views.remove_off),
-    path("check_yesterday_daliy/", views.check_yesterday_daliy),
+    path("check_yesterday_daliy/", views.check_yesterday_daily),
     path("update_daily_perfect_status/<int:group_id>/<int:daily_id>/", views.update_daily_perfect_status),
     path("get_prefect_dailys/<int:group_id>/", views.get_prefect_dailys),
+    path("free_time/", views.free_time),
+    path("free_time/<int:free_time_id>", views.free_time),
+    path("group_free_time/<int:group_id>", views.group_free_time),
 )
