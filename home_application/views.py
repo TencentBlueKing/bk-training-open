@@ -711,8 +711,8 @@ def get_prefect_dailys(request, group_id):
     return JsonResponse({"result": True, "code": 0, "message": "获取优秀日报成功", "data": res_data})
 
 
-@require_http_methods(["GET", "POST", "PATCH", "DELETE"])
-def free_time(request, free_time_id=None):
+@require_http_methods(["GET", "POST"])
+def free_time_get_post(request):
     """空闲时间的增删改查"""
     # 查
     if request.method == "GET":
@@ -722,6 +722,8 @@ def free_time(request, free_time_id=None):
         try:
             start_date = python_datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
             end_date = python_datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            if start_date > end_date:
+                return JsonResponse({"result": False, "code": 1, "message": "结束日期不得早于起始日期", "data": []})
         except ValueError:
             return JsonResponse({"result": False, "code": 1, "message": "日期格式错误", "data": []})
         res_data = FreeTime.objects.get_free_time([request.user.username], start_date, end_date)[0]["free_time"]
@@ -738,20 +740,20 @@ def free_time(request, free_time_id=None):
                 f_time["start_time"] = python_datetime.datetime.strptime(f_time["start_time"], "%Y-%m-%d %H:%M")
                 f_time["end_time"] = python_datetime.datetime.strptime(f_time["end_time"], "%Y-%m-%d %H:%M")
 
-            # 新增数据
-            if FreeTime.objects.add_free_time(request.user.username, free_times):
-                return JsonResponse({"result": True, "code": 0, "message": "添加空闲时间成功", "data": []})
+            # 新增数据，添加成功则无返回值，为None，失败则返回失败的详细信息（字符串）
+            add_res = FreeTime.objects.add_free_time(request.user.username, free_times)
+            if isinstance(add_res, str):
+                return JsonResponse({"result": False, "code": 2, "message": add_res, "data": []})
             else:
-                return JsonResponse({"result": False, "code": 2, "message": "当前时间存在冲突或与已有空闲时间冲突，请仔细核对", "data": []})
+                return JsonResponse({"result": True, "code": 0, "message": "添加空闲时间成功", "data": []})
         except ValueError:
             return JsonResponse({"result": False, "code": 1, "message": "时间格式错误", "data": []})
         except KeyError:
             return JsonResponse({"result": False, "code": 1, "message": "参数格式错误，缺少start_time或end_time", "data": []})
 
-    # 改和删需要指定free_time_id
-    if free_time_id is None:
-        return JsonResponse({"result": False, "code": 1, "message": "缺少待修改时间段id", "data": []})
 
+@require_http_methods(["PATCH", "DELETE"])
+def free_time_patch_delete(request, free_time_id):
     # 改
     if request.method == "PATCH":
         req = json.loads(request.body)
@@ -761,12 +763,15 @@ def free_time(request, free_time_id=None):
             free_time_obj = FreeTime.objects.get(id=free_time_id)
             free_time_obj.start_time = python_datetime.datetime.strptime(new_start_time, "%Y-%m-%d %H:%M")
             free_time_obj.end_time = python_datetime.datetime.strptime(new_end_time, "%Y-%m-%d %H:%M")
-            free_time_obj.save()
+            save_res = free_time_obj.save()
+            # 保存出错的会返回出错原因（str）
+            if isinstance(save_res, str):
+                return JsonResponse({"result": False, "code": 2, "message": save_res, "data": []})
             return JsonResponse({"result": True, "code": 0, "message": "修改成功", "data": []})
         except FreeTime.DoesNotExist:
             return JsonResponse({"result": False, "code": 2, "message": "修改失败，未找到对应的空闲时间", "data": []})
         except ValueError:
-            return JsonResponse({"result": False, "code": 1, "message": "修改失败，时间不合法或与其他时间段冲突", "data": []})
+            return JsonResponse({"result": False, "code": 1, "message": "修改失败，时间格式错误", "data": []})
     # 删
     if request.method == "DELETE":
         try:
@@ -785,6 +790,8 @@ def group_free_time(request, group_id):
         end_date = request.GET.get("end_date", "")
         start_date = python_datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
         end_date = python_datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+        if start_date > end_date:
+            return JsonResponse({"result": False, "code": 1, "message": "结束日期不得早于起始日期", "data": []})
     except ValueError:
         return JsonResponse({"result": False, "code": 1, "message": "日期格式错误", "data": []})
 
