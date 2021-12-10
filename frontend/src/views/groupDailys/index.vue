@@ -1,8 +1,5 @@
 <template>
     <div class="body">
-        <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">日报查看</div>
-        </bk-divider>
         <div class="container">
             <div class="left_container">
                 <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
@@ -341,6 +338,8 @@
                         // 获取优秀日报
                         this.getPerfectReport()
                     }
+                    // 获取优秀日报
+                    this.getPerfectReport()
                 })
             },
             // 点击切换组
