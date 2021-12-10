@@ -1,8 +1,5 @@
 <template>
     <div class="body">
-        <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">日报查看</div>
-        </bk-divider>
         <div class="container">
             <div class="left_container">
                 <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
@@ -46,35 +43,113 @@
                         <bk-link theme="warning" slot="title" :href="link">您当天未提交日报，可点击链接前往补签</bk-link>
                     </bk-alert>
                 </div>
-                <bk-pagination style="margin-bottom: 10px;"
-                    @change="changePage"
-                    @limit-change="changeLimit"
-                    :current.sync="defaultPaging.current"
-                    :count.sync="defaultPaging.count"
-                    :limit="defaultPaging.limit"
-                    :limit-list="defaultPaging.limitList">
-                </bk-pagination>
-                <div v-if="defaultPaging.count === 0" style="margin: 200px auto;width:140px;">
-                    没有日报内容哟~
+                <div class="report-tabs">
+                    <div :class="{
+                        'header-tabs': true,
+                        'tabs-active': title === activeTabTitle
+                    }" v-for="(title,tindex) in tabTitleList" :key="tindex" @click="activeTabTitle = title">
+                        {{title}}
+                    </div>
                 </div>
-                <div>
-                    <bk-card v-for="(daily, index) in dailysData.dailys" :key="index" :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'" class="card" style="float:left;margin-bottom:10px;">
-                        <div>日期：{{daily.date}}</div>
-                        <div>日报状态：{{daily.send_describe}}</div>
-                        <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
-                            <h2>{{dailyContnet.title}}</h2>
-                            <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
-                                <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                    <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                <div class="all-report-wapper report-wapper" v-if="activeTabTitle === tabTitleList[0]">
+                    <div v-if="defaultPaging.count === 0" class="all-empty">
+                        没有日报内容哟~
+                    </div>
+                    <div class="all-report-body">
+                        <bk-card class="all-report-card card"
+                            v-for="(daily, index) in dailysData.dailys"
+                            :key="index"
+                            :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'">
+                            <div>日期：{{daily.date}}</div>
+                            <div>日报状态：{{daily.send_describe}}</div>
+                            <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
+                                <h2>{{dailyContnet.title}}</h2>
+                                <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
+                                    <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
+                                        <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                    </div>
+                                </div>
+                                <div v-else>
+                                    {{dailyContnet.text}}
                                 </div>
                             </div>
-                            <div v-else>
-                                {{dailyContnet.text}}
-                            </div>
-                        </div>
-                    </bk-card>
+                        </bk-card>
+                    </div>
+                    <bk-pagination
+                        @change="changePage"
+                        @limit-change="changeLimit"
+                        ext-cls="bottom-paging"
+                        show-total-count="true"
+                        :current.sync="defaultPaging.current"
+                        :count.sync="defaultPaging.count"
+                        :limit="defaultPaging.limit"
+                        :limit-list="defaultPaging.limitList">
+                    </bk-pagination>
                 </div>
-
+                <div class="perfect-report-wapper report-wapper" v-else>
+                    <div class="right-top-bar">
+                        <div class="select-bar">
+                            <bk-select :disabled="false" v-model="perfectShowType" style="width: 150px;"
+                                ext-cls="select-type"
+                                behavior="simplicity"
+                                placeholder="请选择查看类型"
+                                ext-popover-cls="select-popover-custom"
+                                @change="changeShowType"
+                                placement="bottom-end">
+                                <bk-option v-for="option in pecfectTypeList"
+                                    :key="option.id"
+                                    :id="option.id"
+                                    :name="option.name">
+                                </bk-option>
+                            </bk-select>
+                        </div>
+                        <bk-date-picker
+                            :disabled="perfectSetting.perfectShowType === 1"
+                            behavior="simplicity"
+                            :type="perfectSetting.DateSelectType"
+                            :format="perfectSetting.DateType"
+                            ext-cls="perfect-date-picker"
+                            v-model="perfectDate"
+                            @change="perfectDateChange"
+                            :placeholder="'选择日期'">
+                        </bk-date-picker>
+                    </div>
+                    <div class="perfect-body">
+                        <div v-if="perfectPaging.count === 0" class="perfect-empty">
+                            没有日报内容哟~
+                        </div>
+                        <div class="perfect-cards">
+                            <bk-card class="perfect-report-card card"
+                                v-for="(pdaily, pindex) in perfectDailysData.daily_list"
+                                :key="pindex"
+                                :title="pdaily.create_by + '(' + (pdaily.create_name) + ')' + '-' + '日报'">
+                                <div>日期：{{pdaily.date}}</div>
+                                <div>日报状态：{{pdaily.send_describe}}</div>
+                                <div v-for="(perfectContnet, innerIndex) in pdaily.content" :key="innerIndex">
+                                    <h2>{{perfectContnet.title}}</h2>
+                                    <div v-if="perfectContnet.type === 'table'" style="font-size: 18px">
+                                        <div v-for="(row, iiIndex) in perfectContnet.content" :key="iiIndex">
+                                            <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        {{perfectContnet.text}}
+                                    </div>
+                                </div>
+                            </bk-card>
+                        </div>
+                    </div>
+                    <bk-pagination
+                        @change="changePerfectPage"
+                        @limit-change="changePerfectLimit"
+                        ext-cls="bottom-paging"
+                        show-total-count="true"
+                        :current.sync="perfectPaging.current"
+                        :count.sync="perfectPaging.count"
+                        :limit="perfectPaging.limit"
+                        :limit-list="perfectPaging.limitList">
+                    </bk-pagination>
+                </div>
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
             </div>
@@ -85,12 +160,12 @@
 </template>
 
 <script>
-    import { bkPagination } from 'bk-magic-vue'
+    import { bkPagination, bkSelect, bkOption, bkDatePicker } from 'bk-magic-vue'
     import moment from 'moment'
 
     export default {
         components: {
-            bkPagination
+            bkPagination, bkSelect, bkOption, bkDatePicker
         },
         data () {
             return {
@@ -131,7 +206,31 @@
                 // 用户列表
                 groupUsers: [],
                 curUserId: null,
-                curUserName: this.$store.state.user.username
+                curUserName: this.$store.state.user.username,
+                tabTitleList: [
+                    '所有日报',
+                    '优秀日报'
+                ],
+                activeTabTitle: '所有日报',
+                pecfectTypeList: [
+                    { id: 1, name: '全部' },
+                    { id: 2, name: '按月' }
+                ],
+                perfectDate: new Date(),
+                perfectSetting: {
+                    perfectShowType: 1,
+                    DateType: 'yyyy-MM',
+                    DateSelectType: 'month'
+                },
+                perfectPaging: {
+                    current: 1,
+                    limit: 8,
+                    count: 0,
+                    limitList: [8, 16, 32, 64]
+                },
+                perfectDailysData: {
+                    daily_list: []
+                }
             }
         },
         computed: {
@@ -237,6 +336,8 @@
                             this.curGroup = this.groupsData[0]
                         }
                     }
+                    // 获取优秀日报
+                    this.getPerfectReport()
                 })
             },
             // 点击切换组
@@ -267,7 +368,56 @@
                     this.isUser = false
                     // 初始化组内所有日报（根据日期选择）,设置日期为今天的前一天
                     this.changeDateOrUser('', new Date())
+                    // 获取该组所有优秀日报
+                    this.getPerfectReport()
                 }
+            },
+            // 优秀日报展示模型切换
+            changeShowType (newValue, oldValue) {
+                this.perfectSetting.perfectShowType = newValue
+                if (this.pecfectTypeList[newValue - 1].name === '按月') {
+                    this.perfectSetting.DateType = 'yyyy-MM'
+                    this.perfectSetting.DateSelectType = 'month'
+                } else if (this.pecfectTypeList[newValue - 1].name === '全部') {
+                    this.getPerfectReport()
+                }
+            },
+            // 获取优秀日报
+            getPerfectReport () {
+                const selectType = this.perfectSetting.perfectShowType === 1 ? 'all' : 'month'
+                this.$http.get('/get_prefect_dailys/' + this.curGroupId
+                    + '/?select_type=' + selectType
+                    + '&page=' + this.perfectPaging.current
+                    + '&size=' + this.perfectPaging.limit
+                    + '&year=' + moment(this.perfectDate).format('YYYY')
+                    + '&month=' + moment(this.perfectDate).format('MM')
+                ).then((res) => {
+                    if (res.result) {
+                        this.perfectDailysData = res.data
+                        this.perfectPaging.count = res.data.total_num
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'warning',
+                            'message': res.message
+                        })
+                    }
+                })
+            },
+            // 优秀日报年份切换
+            perfectDateChange (date, type) {
+                this.getPerfectReport()
+            },
+            // 优秀日报每页日报数量
+            changePerfectLimit (pageSize) {
+                this.perfectPaging.limit = pageSize
+                this.getPerfectReport()
+            },
+            // 优秀日报切换页面
+            changePerfectPage (page) {
+                this.perfectPaging.current = page
+                this.getPerfectReport()
             }
         }
     }
@@ -277,9 +427,8 @@
 @import "./index.css";
     .body{
         border: 2px solid #EAEBF0 ;
-        /* border-radius: 4px; */
         margin:0 100px;
-        padding: 20px 50px;
+        padding: 20px 30px;
     }
     .container_title {
         font-size: 22px;
@@ -287,7 +436,7 @@
     }
     .left_container{
         float: left;
-        width: 360px;
+        width: 306px;
         padding-left: 20px;
         border-right: 1px solid #EAEBF0 ;
     }
@@ -305,7 +454,7 @@
         margin-right: 18px;
     }
     .card >>> .bk-card-body{
-        height: 280px;
+        height: 260px;
         overflow-y: auto;
         padding-top: 10px;
     }
@@ -314,5 +463,104 @@
     }
     .demo-block.demo-alert .bk-alert{
         margin-bottom: 20px;
+    }
+
+    .right_container .report-tabs{
+        display: flex;
+        width: 100%;
+    }
+    .right_container .report-tabs .header-tabs{
+        width: 50%;
+        height: 30px;
+        text-align:center;
+        border-bottom: 1px solid rgb(196, 198, 204);
+    }
+    .right_container .report-tabs .tabs-active{
+        border-bottom: 2px solid #3a84ff;
+        color: #3a84ff;
+    }
+    .right_container .report-tabs .header-tabs:hover{
+        cursor: pointer;
+        color: #3a84ff;
+    }
+    .right_container .report-wapper .bottom-paging{
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        align-items: center;
+        height: 50px;
+    }
+    .right_container .perfect-report-wapper .perfect-body{
+        width: 100%;
+        height: 630px;
+    }
+    .right_container .perfect-report-wapper .perfect-body .perfect-empty{
+        line-height: 600px;
+        text-align: center;
+    }
+    .right_container .perfect-report-wapper .perfect-cards .perfect-report-card{
+        width: 200px !important;
+    }
+    .right_container .perfect-report-wapper .perfect-cards .perfect-report-card /deep/ .bk-card-head{
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        font-size: 16px;
+        width: 100% !important;
+    }
+    .right_container .report-wapper{
+        display: flex;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    .right_container .all-report-wapper{
+        padding-top: 14px;
+    }
+    .right_container .all-report-wapper .all-empty{
+        width: 100%;
+        height: 600px;
+        line-height: 600px;
+        text-align: center;
+        padding-top: 10px;
+    }
+    .right_container .all-report-wapper .all-report-body{
+        height: 650px;
+    }
+    .right_container .all-report-wapper .all-report-body .all-report-card{
+        float: left;
+        margin-bottom: 10px;
+        width: 200px;
+    }
+    .right_container .all-report-wapper .all-report-body .all-report-card /deep/ .bk-card-head{
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        font-size: 16px;
+        width: 100% !important;
+    }
+    .right_container .perfect-report-wapper .right-top-bar{
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        align-items: center;
+        height: 50px;
+    }
+    .right_container .perfect-report-wapper .perfect-date-picker{
+        width: 112px !important;
+    }
+    .right_container .report-wapper .select-bar{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .right_container .report-wapper .select-bar .select-type{
+        width: 120px !important;
+    }
+    .right_container .report-wapper .right-bottom-bar{
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        align-items: center;
+        height: 50px;
     }
 </style>

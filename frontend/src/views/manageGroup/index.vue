@@ -152,12 +152,16 @@
                 </div>
                 <div v-else>
                     <div class="cards">
-                        <div v-for="daily in hasSubmitDaily" :key="daily" class="flexcard">
+                        <div v-for="(daily, dindex) in hasSubmitDaily" :key="daily" class="flexcard">
                             <bk-card class="card" :show-head="true" :show-foot="true">
                                 <div slot="header" class="head-main">
                                     <div class="mr20">{{daily.create_name}}的日报</div>
-                                    <div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div>
-                                    <div v-else style="color: #63656E">未点评</div>
+                                    <div class="state-bar">
+                                        <bk-tag class="mr15" v-show="!daily.is_normal" theme="warning">补签</bk-tag>
+                                        <div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div>
+                                        <div v-else style="color: #63656E">未点评</div>
+                                    </div>
+                                    
                                 </div>
                                 <div>
                                     <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
@@ -198,6 +202,14 @@
                                             size="small"
                                             @click="openDialog(daily)">
                                             去点评
+                                        </bk-button>
+                                        <bk-button
+                                            theme="primary"
+                                            title="去点评"
+                                            class="mr10"
+                                            size="small"
+                                            @click="setPerfect(daily, dindex)">
+                                            {{daily.is_perfect ? '取消优秀' : '设为优秀'}}
                                         </bk-button>
                                     </div>
                                 </div>
@@ -620,6 +632,21 @@
                 if (val === false) {
                     this.myComment = ''
                 }
+            },
+            // 设置/取消优秀日报
+            setPerfect (daily, index) {
+                this.$http.patch(
+                    '/update_daily_perfect_status/' + this.selectGroupId + '/' + daily.id + '/'
+                ).then(res => {
+                    if (res.result) {
+                        this.hasSubmitDaily[index].is_perfect = !daily.is_perfect
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
+                    }
+                })
             }
         }
     }
@@ -651,6 +678,14 @@
     display: flex;
     justify-content: space-between;
     overflow: hidden;
+    
+}
+.head-main .state-bar{
+    display: flex;
+    align-items: center;
+}
+.head-main .state-bar .mr15{
+    font-size: 14px !important;
 }
 .cards{
     display: flex;
