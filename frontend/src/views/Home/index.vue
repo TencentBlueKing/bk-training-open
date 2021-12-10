@@ -373,12 +373,6 @@
                     }
                 })
             },
-            changeTemplate () {
-                if (this.curTemplateId === null || this.curTemplateId === '') {
-                    this.curTemplate = []
-                    this.dailyData = []
-                }
-            },
             checkYesterdayDaliy () {
                 this.$http.get(
                     '/check_yesterday_daliy/'
@@ -458,6 +452,7 @@
             dealAdd (index) {
                 this.currentIndex = index
                 this.isAdd = true
+                this.isPrivate = false
                 this.addDialog.visible = true
             },
             // 保存增加表格中的一行新内容
@@ -478,6 +473,7 @@
                 this.newContent = row.text
                 this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
+                this.isPrivate = row.isPrivate
                 this.isAdd = false
                 this.addDialog.visible = true
             },
