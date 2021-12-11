@@ -45,10 +45,24 @@ def list_member_daily(request, group_id):
             daily = dailies.get(create_by=user.username).to_json()
             daily["write_status"] = True
         except Daily.DoesNotExist:
-            daily = Daily(date=date, create_by=user.username, create_name=user.name, content="[]").to_json()
+            daily = Daily(date=date, create_by=user.username, create_name=user.name, content=[]).to_json()
             daily["write_status"] = False
         data.append(daily)
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
+
+
+@require_http_methods(["GET"])
+@is_group_member(admin_needed=["GET"])
+def list_group_admin(request, group_id):
+    """
+    获取组内管理员列表
+    """
+    # 组内成员
+    try:
+        admins = Group.objects.get(id=group_id).admin_list
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "组不存在", "data": []})
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": admins})
 
 
 @require_http_methods(["POST"])

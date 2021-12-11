@@ -341,13 +341,15 @@
                 shareAllIdList: [],
                 hasSharedIdList: [],
                 currentUserName: this.$store.state.user.username,
-                hasSubmitDaily: []
+                hasSubmitDaily: [],
+                // 该组的管理员们
+                groupAdmins: []
             }
         },
         computed: {
             hasNotSubmitMember () {
                 return this.memberDaily.filter((item) => {
-                    return !item.write_status
+                    return !item.write_status && !this.groupAdmins.includes(item.create_by)
                 })
             }
         },
@@ -586,6 +588,18 @@
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
+                this.$http.get(
+                    'list_group_admin/' + selectGroupId + '/'
+                ).then(res => {
+                    if (res.result) {
+                        this.groupAdmins = res.data
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
+                    }
+                })
                 this.shareAllList = []
                 // 发送请求，获取选定组的信息
                 this.getDaily(this.selectGroupId, this.formatDate)
