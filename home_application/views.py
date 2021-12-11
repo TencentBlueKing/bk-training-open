@@ -671,12 +671,12 @@ def check_yesterday_daliy(request):
     if check_user_is_admin(request) == 0:
         return JsonResponse({"result": True, "code": 0, "message": "管理员不需写日报", "data": True})
     if CalendarHandler(yesterday).is_holiday:
-        return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": True})
+        return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": []})
     try:
         Daily.objects.get(create_by=request.user.username, date=yesterday)
     except Daily.DoesNotExist:
-        return JsonResponse({"result": True, "code": 0, "message": "昨天没有写日报", "data": False})
-    return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": True})
+        return JsonResponse({"result": False, "code": 0, "message": "昨天没有写日报", "data": []})
+    return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": []})
 
 
 @is_group_member(admin_needed=["PATCH"])
