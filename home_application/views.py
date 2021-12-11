@@ -651,9 +651,12 @@ def report_filter(request, group_id):
 @require_GET
 def get_reports_dates(request):
     """获取用户已提交的所有日报日期"""
-    member_dates = Daily.objects.filter(create_by=request.user.username, send_status=True).values_list(
-        "date", flat=True
-    )
+    try:
+        member_dates = Daily.objects.filter(create_by=request.user.username, send_status=True).values_list(
+            "date", flat=True
+        )
+    except Daily.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "日报不存在", "data": []})
     return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": list(member_dates)})
 
 
