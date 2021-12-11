@@ -10,7 +10,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import datetime as python_datetime
 import json
 import math
 from datetime import timedelta
@@ -34,6 +33,7 @@ from home_application.models import (
     ApplyForGroup,
     Daily,
     DailyReportTemplate,
+    FreeTime,
     Group,
     GroupUser,
     User,
@@ -41,7 +41,12 @@ from home_application.models import (
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
-from home_application.utils.tools import apply_info_to_json, check_param, get_paginator
+from home_application.utils.tools import (
+    apply_info_to_json,
+    check_param,
+    check_user_is_admin,
+    get_paginator,
+)
 
 
 def home(request):
@@ -565,7 +570,7 @@ def daily_report(request):
             datetime_now = datetime.now()
             if datetime_now.hour < 10:
                 # 填写日期在10点前，日报日期在昨天(今天-1天)之前就是补签
-                send_status = report_date < (datetime_now - python_datetime.timedelta(days=1)).date()
+                send_status = report_date < (datetime_now - timedelta(days=1)).date()
             else:
                 # 填写日期在10点后，日报日期小于当天就是补签
                 send_status = report_date < datetime_now.date()
@@ -637,6 +642,8 @@ def report_filter(request, group_id):
             Daily.objects.get(date=report_date, create_by=request.user.username)
         except Daily.DoesNotExist:
             get_my_report = False
+    if check_user_is_admin(request):
+        get_my_report = True
     # 分页
     member_report = get_paginator(member_report, page, page_size)
     # 查询完毕返回数据
@@ -661,9 +668,11 @@ def get_reports_dates(request):
 
 
 @require_GET
-def check_yesterday_daliy(request):
+def check_yesterday_daily(request):
     """检查工作日日报是否已填写"""
     yesterday = datetime.now() - timedelta(days=1)
+    if check_user_is_admin(request):
+        return JsonResponse({"result": True, "code": 0, "message": "管理员不需写日报", "data": True})
     if CalendarHandler(yesterday).is_holiday:
         return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": []})
     try:
@@ -711,3 +720,93 @@ def get_prefect_dailys(request, group_id):
         "daily_list": content_format_as_json(daily_list),
     }
     return JsonResponse({"result": True, "code": 0, "message": "获取优秀日报成功", "data": res_data})
+
+
+@require_http_methods(["GET", "POST"])
+def free_time_get_post(request):
+    """空闲时间的增删改查"""
+    # 查
+    if request.method == "GET":
+        # 要查询空闲时间的起止日期
+        start_date = request.GET.get("start_date", "")
+        end_date = request.GET.get("end_date", "")
+        try:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            if start_date > end_date:
+                return JsonResponse({"result": False, "code": 1, "message": "结束日期不得早于起始日期", "data": []})
+        except ValueError:
+            return JsonResponse({"result": False, "code": 1, "message": "日期格式错误", "data": []})
+        res_data = FreeTime.objects.get_free_time([request.user.username], start_date, end_date)[0]["free_time"]
+        return JsonResponse({"result": True, "code": 0, "message": "", "data": res_data})
+    # 增
+    if request.method == "POST":
+        req = json.loads(request.body)
+        try:
+            # 核验参数
+            free_times = req["free_times"]
+            if not isinstance(free_times, list):
+                return JsonResponse({"result": False, "code": 1, "message": "参数格式错误，缺少free_times", "data": []})
+            for f_time in free_times:
+                f_time["start_time"] = datetime.strptime(f_time["start_time"], "%Y-%m-%d %H:%M")
+                f_time["end_time"] = datetime.strptime(f_time["end_time"], "%Y-%m-%d %H:%M")
+
+            # 新增数据，添加成功则无返回值，为None，失败则返回失败的详细信息（字符串）
+            add_status, add_msg = FreeTime.objects.add_free_time(request.user.username, free_times)
+            if not add_status:
+                return JsonResponse({"result": False, "code": 2, "message": add_msg, "data": []})
+            else:
+                return JsonResponse({"result": True, "code": 0, "message": "添加空闲时间成功", "data": []})
+        except ValueError:
+            return JsonResponse({"result": False, "code": 1, "message": "时间格式错误", "data": []})
+        except KeyError:
+            return JsonResponse({"result": False, "code": 1, "message": "参数格式错误，缺少start_time或end_time", "data": []})
+
+
+@require_http_methods(["PATCH", "DELETE"])
+def free_time_patch_delete(request, free_time_id):
+    # 改
+    if request.method == "PATCH":
+        req = json.loads(request.body)
+        new_start_time = req.get("new_start_date", "")
+        new_end_time = req.get("new_end_date", "")
+        try:
+            free_time_obj = FreeTime.objects.get(id=free_time_id)
+            free_time_obj.start_time = datetime.strptime(new_start_time, "%Y-%m-%d %H:%M")
+            free_time_obj.end_time = datetime.strptime(new_end_time, "%Y-%m-%d %H:%M")
+            save_status, save_msg = free_time_obj.save()
+            # 保存出错则直接返回出错原因
+            if not save_status:
+                return JsonResponse({"result": False, "code": 2, "message": save_msg, "data": []})
+            return JsonResponse({"result": True, "code": 0, "message": "修改成功", "data": []})
+        except FreeTime.DoesNotExist:
+            return JsonResponse({"result": False, "code": 2, "message": "修改失败，未找到对应的空闲时间", "data": []})
+        except ValueError:
+            return JsonResponse({"result": False, "code": 1, "message": "修改失败，时间格式错误", "data": []})
+    # 删
+    if request.method == "DELETE":
+        try:
+            FreeTime.objects.get(id=free_time_id, username=request.user.username).delete()
+            return JsonResponse({"result": True, "code": 0, "message": "删除成功", "data": []})
+        except FreeTime.DoesNotExist:
+            return JsonResponse({"result": False, "code": 1, "message": "删除失败，未找到对应的空闲时间", "data": []})
+
+
+@require_GET
+@is_group_member()
+def group_free_time(request, group_id):
+    # 要查询空闲时间的起止日期
+    try:
+        start_date = request.GET.get("start_date", "")
+        end_date = request.GET.get("end_date", "")
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        if start_date > end_date:
+            return JsonResponse({"result": False, "code": 1, "message": "结束日期不得早于起始日期", "data": []})
+    except ValueError:
+        return JsonResponse({"result": False, "code": 1, "message": "日期格式错误", "data": []})
+
+    user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    usernames = User.objects.filter(id__in=user_ids).values_list("username", flat=True)
+    free_times = FreeTime.objects.get_free_time(usernames, start_date, end_date)
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": free_times})

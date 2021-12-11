@@ -337,6 +337,10 @@
                     this.bkUsers = res.data.results
                 })
             },
+            // 判断用户是否是当前组的管理员
+            isManager () {
+
+            },
             // 获取组信息，并检查当前用户是否为该组管理员
             getGroupInfo (groupId) {
                 this.$http.get('/get_group_info/' + groupId + '/').then(res => {
@@ -346,12 +350,20 @@
                     if (this.curGroup.admin.indexOf(this.curUser.info.username) !== -1) {
                         this.curUser.isAdmin = true
                     }
+                    // 切换组成员信息
+                    this.getGroupUsers(groupId)
                 })
             },
             // 获取组内成员
             getGroupUsers (groupId) {
                 this.$http.get('/get_group_users/' + groupId + '/').then(res => {
-                    this.groupUsers = res.data
+                    const groupUserDate = JSON.parse(JSON.stringify(res.data))
+                    groupUserDate.map((item, index) => {
+                        if (this.curGroup.admin.indexOf(item.username) !== -1) {
+                            groupUserDate.unshift(groupUserDate.splice(index, 1)[0])
+                        }
+                    })
+                    this.groupUsers = groupUserDate
                 })
             },
             // 获取所有组信息
@@ -394,8 +406,7 @@
                 } else {
                     // 更改组信息，和当前用户是否为当前组管理员信息
                     this.getGroupInfo(groupId)
-                    // 切换组成员信息
-                    this.getGroupUsers(groupId)
+                    
                     // 切换组模板
                     this.getGroupTemplates(groupId)
                 }
