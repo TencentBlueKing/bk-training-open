@@ -1,8 +1,5 @@
 <template>
     <div class="body">
-        <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">日报查看</div>
-        </bk-divider>
         <div class="container">
             <div class="left_container">
                 <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
@@ -238,7 +235,7 @@
         },
         computed: {
             link () {
-                return window.PROJECT_CONFIG.SITE_URL + 'home?date=' + this.curDate
+                return window.PROJECT_CONFIG.SITE_URL + '/home/?date=' + this.curDate
             }
         },
         created () {
