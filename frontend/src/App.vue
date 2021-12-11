@@ -136,19 +136,16 @@
         },
         methods: {
             changeHead (index) {
-                console.log('当前点击', index)
                 const vm = this
                 vm.header.active = index
             },
             handleSelect (id, item) {
                 this.nav.id = id
-                console.info(`你选择了${id}`)
             },
             handleToggle (v) {
                 this.nav.toggle = v
             },
             beforeNavChange (newId, oldId) {
-                console.info(newId, oldId)
                 return true
             }
         }
