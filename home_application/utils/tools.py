@@ -31,12 +31,12 @@ def apply_info_to_json(apply_info):
 
 
 def check_user_is_admin(request):
-    """判断用户是否在所有组皆为管理员，返回值为0时不需要写日报，为-1时需要写日报"""
+    """判断用户是否在所有组皆为管理员，返回值为True时不需要写日报，为False时需要写日报"""
     group_ids = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
     user_name = request.user.username
-    admin_key = 0
+    admin_key = True
     groups = Group.objects.filter(id__in=group_ids)
     for g in groups:
-        if user_name not in g.admin:
-            admin_key = -1
+        if user_name not in g.admin_list:
+            admin_key = False
     return admin_key
