@@ -322,18 +322,6 @@ export function getWindowHeight () {
 }
 
 /**
- * 判断某个元素是否有滚动条
- *
- * @return {boolean} 有还是没有
- */
-export function hasScroll (node) {
-    if (node.scrollHeight !== null && node.clientHeight !== null) {
-        return node.scrollHeight > node.clientHeight
-    }
-    return false
-}
-
-/**
  * 简单的 loadScript
  *
  * @param {string} url js 地址
