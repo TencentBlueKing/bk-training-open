@@ -663,12 +663,12 @@ def check_yesterday_daily(request):
     """检查工作日日报是否已填写"""
     yesterday = datetime.now() - timedelta(days=1)
     if CalendarHandler(yesterday).is_holiday:
-        return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": True})
+        return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": []})
     try:
         Daily.objects.get(create_by=request.user.username, date=yesterday)
     except Daily.DoesNotExist:
-        return JsonResponse({"result": True, "code": 0, "message": "昨天没有写日报", "data": False})
-    return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": True})
+        return JsonResponse({"result": False, "code": 0, "message": "昨天没有写日报", "data": []})
+    return JsonResponse({"result": True, "code": 0, "message": "昨天已写日报", "data": []})
 
 
 @is_group_member(admin_needed=["PATCH"])

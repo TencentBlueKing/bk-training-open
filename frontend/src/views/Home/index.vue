@@ -373,25 +373,16 @@
                     }
                 })
             },
-            changeTemplate () {
-                if (this.curTemplateId === null || this.curTemplateId === '') {
-                    this.curTemplate = []
-                    this.dailyData = []
-                }
-            },
             checkYesterdayDaliy () {
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.data
-                })
-            },
-            // 切换模板
-            selectTemplate () {
-                this.dailyData = []
-                this.templateList.forEach(function (template) {
-                    if (template.id === this.curTemplateId) {
-                        this.curTemplate = template.content.split(';')
+                    this.yesterdayDaliy = !!res.result
+                    if (!res.result) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: res.message
+                        })
                     }
                 })
             },
@@ -458,6 +449,7 @@
             dealAdd (index) {
                 this.currentIndex = index
                 this.isAdd = true
+                this.isPrivate = false
                 this.addDialog.visible = true
             },
             // 保存增加表格中的一行新内容
@@ -478,6 +470,7 @@
                 this.newContent = row.text
                 this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
+                this.isPrivate = row.isPrivate
                 this.isAdd = false
                 this.addDialog.visible = true
             },
