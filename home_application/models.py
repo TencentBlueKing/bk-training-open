@@ -15,6 +15,9 @@ import datetime
 from django.db import models
 from django_mysql.models import JSONField
 
+EARLIEST_TIME = datetime.time(8, 0)  # 允许空闲时间的最早时间：08:00
+LATEST_TIME = datetime.time(22, 0)  # 允许空闲时间的最晚时间：22:00
+
 
 # Create your models here.
 # 创建时间和更新时间基类
@@ -207,10 +210,8 @@ class Holiday(TimeBasic):
 
 
 class FreeTimeManage(models.Manager):
-    _EARLIEST_HOUR = datetime.time(8, 0)  # 允许空闲时间的最早时间：08:00
-    _LATEST_HOUR = datetime.time(22, 0)  # 允许空闲时间的最晚时间：22:00
-
-    def _is_valid_list(self, free_times: list):
+    @staticmethod
+    def _is_valid_list(free_times: list):
         """
         判断升序排列的多个时间段是否合法
         :param free_times:  升序排列的时间段list，其中每个元素格式为
@@ -218,7 +219,8 @@ class FreeTimeManage(models.Manager):
                                                     "start_time":xxx, 	# datetime类型参数，不能是字符串
                                                     "end_time":xxx		# datetime类型参数，不能是字符串
                                                 }
-        :return:    不冲突则返回True，冲突返回异常信息（字符串）
+        :return:    status, msg     返回两个变量，第一个为bool，说明是否冲突；第二个为str，在冲突时返回具体原因，不冲突的话为"success"
+                    True, "success" 或 False, "冲突的具体原因"
         """
         # 判断是否合法：
         # 每个时间段起止时间为同一天且当前时间段的结束早于下个时间段的开始
@@ -227,30 +229,30 @@ class FreeTimeManage(models.Manager):
             cur_time = free_times[index]
             # 必须为同一日期
             if cur_time["start_time"].date() != cur_time["end_time"].date():
-                return "[{}]和[{}]不在同一天".format(
+                return False, "[{}]和[{}]不在同一天".format(
                     cur_time["start_time"].strftime("%Y-%m-%d %H:%M"), cur_time["end_time"].strftime("%Y-%m-%d %H:%M")
                 )
             # 起始时间需早于终止时间
             if cur_time["start_time"] >= cur_time["end_time"]:
-                return "结束时间[{}]需要晚于起始时间[{}]".format(
+                return False, "结束时间[{}]需要晚于起始时间[{}]".format(
                     cur_time["start_time"].strftime("%Y-%m-%d %H:%M"), cur_time["end_time"].strftime("%Y-%m-%d %H:%M")
                 )
             # 时间范围为8点到22点
-            if cur_time["start_time"].time() < self._EARLIEST_HOUR or cur_time["end_time"].time() > self._LATEST_HOUR:
-                return "[{}]-[{}]空闲时间只能在早上8点（包含）到晚上10点（包含）之间".format(
+            if cur_time["start_time"].time() < EARLIEST_TIME or cur_time["end_time"].time() > LATEST_TIME:
+                return False, "[{}]-[{}]空闲时间只能在早上8点（包含）到晚上10点（包含）之间".format(
                     cur_time["start_time"].strftime("%Y-%m-%d %H:%M"),
                     cur_time["end_time"].strftime("%Y-%m-%d %H:%M"),
                 )
             if index != free_times_len - 1:
                 next_time = free_times[index + 1]
                 if cur_time["end_time"] > next_time["start_time"]:
-                    return "在您已有的空闲时间和要添加的空闲时间中存在交叉：[{}]-[{}]与[{}]-[{}]".format(
+                    return False, "在您已有的空闲时间和要添加的空闲时间中存在交叉：[{}]-[{}]与[{}]-[{}]".format(
                         cur_time["start_time"].strftime("%Y-%m-%d %H:%M"),
                         cur_time["end_time"].strftime("%Y-%m-%d %H:%M"),
                         next_time["start_time"].strftime("%Y-%m-%d %H:%M"),
                         next_time["end_time"].strftime("%Y-%m-%d %H:%M"),
                     )
-        return True
+        return True, "success"
 
     def is_valid_time(
         self,
@@ -267,7 +269,8 @@ class FreeTimeManage(models.Manager):
                                         "end_time":xxx		# datetime类型参数，不能是字符串
                                     }
         :param old_free_time_id:    int类型，待修改时间段id，修改空闲时间时需要忽略自身，判断修改后的时间段是否与其他时间段冲突，默认为None，只有在更新是使用
-        :return:                    不冲突则返回True，冲突返回异常信息（字符串）
+        :return:    status, msg     返回两个变量，第一个为bool，说明是否冲突；第二个为str，在冲突时返回具体原因，不冲突的话为"success"
+                    True, "success" 或 False, "冲突的具体原因"
         """
         # 根据开始时间升序排序，然后找出最早和最晚的时间去查询这中间的数据
         free_times = sorted(free_times, key=lambda t: t["start_time"])
@@ -297,11 +300,12 @@ class FreeTimeManage(models.Manager):
                                     "start_time":xxx, 	# datetime类型参数，不能是字符串
                                     "end_time":xxx		# datetime类型参数，不能是字符串
                                 }
-        :return                 True: 添加成功; False: 添加失败
+        :return:    status, msg     返回两个变量，第一个为bool，说明添加数据是否成功；第二个为str，在添加失败时返回具体原因，成功的话为"success"
+                    e.g. True, "success" 或 False, "冲突的具体原因"
         """
-        valid_res = self.is_valid_time(username, free_times)
-        if isinstance(valid_res, str):
-            return valid_res
+        valid_status, valid_msg = self.is_valid_time(username, free_times)
+        if not valid_status:
+            return valid_status, valid_msg
 
         # 将free_times转成FreeTime对象，然后批量插入数据库
         free_time_list = []
@@ -310,6 +314,7 @@ class FreeTimeManage(models.Manager):
                 self.model(username=username, start_time=f_time["start_time"], end_time=f_time["end_time"])
             )
         self.bulk_create(free_time_list)
+        return True, "success"
 
     @staticmethod
     def get_free_time(username_list: list, start_date: datetime.date, end_date: datetime.date):
@@ -355,9 +360,14 @@ class FreeTime(TimeBasic):
         return "%s的空闲时间" % self.username
 
     def save(self, *args, **kwargs):
+        """
+        :return:    status, msg     返回两个变量，第一个为bool，说明是否冲突；第二个为str，在冲突时返回具体原因，不冲突的话为"success"
+                    True, "success" 或 False, "冲突的具体原因"
+        """
         cur_free_time = [{"start_time": self.start_time, "end_time": self.end_time}]
-        valid_res = FreeTime.objects.is_valid_time(self.username, cur_free_time, self.id)
-        if isinstance(valid_res, str):
-            return valid_res
+        valid_status, valid_msg = FreeTime.objects.is_valid_time(self.username, cur_free_time, self.id)
+        if not valid_status:
+            return valid_status, valid_msg
         else:
             super().save()
+            return True, "success"

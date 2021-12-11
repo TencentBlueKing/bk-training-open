@@ -10,7 +10,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import datetime as python_datetime
 import json
 import math
 from datetime import timedelta
@@ -566,7 +565,7 @@ def daily_report(request):
             datetime_now = datetime.now()
             if datetime_now.hour < 10:
                 # 填写日期在10点前，日报日期在昨天(今天-1天)之前就是补签
-                send_status = report_date < (datetime_now - python_datetime.timedelta(days=1)).date()
+                send_status = report_date < (datetime_now - timedelta(days=1)).date()
             else:
                 # 填写日期在10点后，日报日期小于当天就是补签
                 send_status = report_date < datetime_now.date()
@@ -720,8 +719,8 @@ def free_time_get_post(request):
         start_date = request.GET.get("start_date", "")
         end_date = request.GET.get("end_date", "")
         try:
-            start_date = python_datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-            end_date = python_datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
             if start_date > end_date:
                 return JsonResponse({"result": False, "code": 1, "message": "结束日期不得早于起始日期", "data": []})
         except ValueError:
@@ -737,13 +736,13 @@ def free_time_get_post(request):
             if not isinstance(free_times, list):
                 return JsonResponse({"result": False, "code": 1, "message": "参数格式错误，缺少free_times", "data": []})
             for f_time in free_times:
-                f_time["start_time"] = python_datetime.datetime.strptime(f_time["start_time"], "%Y-%m-%d %H:%M")
-                f_time["end_time"] = python_datetime.datetime.strptime(f_time["end_time"], "%Y-%m-%d %H:%M")
+                f_time["start_time"] = datetime.strptime(f_time["start_time"], "%Y-%m-%d %H:%M")
+                f_time["end_time"] = datetime.strptime(f_time["end_time"], "%Y-%m-%d %H:%M")
 
             # 新增数据，添加成功则无返回值，为None，失败则返回失败的详细信息（字符串）
-            add_res = FreeTime.objects.add_free_time(request.user.username, free_times)
-            if isinstance(add_res, str):
-                return JsonResponse({"result": False, "code": 2, "message": add_res, "data": []})
+            add_status, add_msg = FreeTime.objects.add_free_time(request.user.username, free_times)
+            if not add_status:
+                return JsonResponse({"result": False, "code": 2, "message": add_msg, "data": []})
             else:
                 return JsonResponse({"result": True, "code": 0, "message": "添加空闲时间成功", "data": []})
         except ValueError:
@@ -761,12 +760,12 @@ def free_time_patch_delete(request, free_time_id):
         new_end_time = req.get("new_end_date", "")
         try:
             free_time_obj = FreeTime.objects.get(id=free_time_id)
-            free_time_obj.start_time = python_datetime.datetime.strptime(new_start_time, "%Y-%m-%d %H:%M")
-            free_time_obj.end_time = python_datetime.datetime.strptime(new_end_time, "%Y-%m-%d %H:%M")
-            save_res = free_time_obj.save()
-            # 保存出错的会返回出错原因（str）
-            if isinstance(save_res, str):
-                return JsonResponse({"result": False, "code": 2, "message": save_res, "data": []})
+            free_time_obj.start_time = datetime.strptime(new_start_time, "%Y-%m-%d %H:%M")
+            free_time_obj.end_time = datetime.strptime(new_end_time, "%Y-%m-%d %H:%M")
+            save_status, save_msg = free_time_obj.save()
+            # 保存出错则直接返回出错原因
+            if not save_status:
+                return JsonResponse({"result": False, "code": 2, "message": save_msg, "data": []})
             return JsonResponse({"result": True, "code": 0, "message": "修改成功", "data": []})
         except FreeTime.DoesNotExist:
             return JsonResponse({"result": False, "code": 2, "message": "修改失败，未找到对应的空闲时间", "data": []})
@@ -788,8 +787,8 @@ def group_free_time(request, group_id):
     try:
         start_date = request.GET.get("start_date", "")
         end_date = request.GET.get("end_date", "")
-        start_date = python_datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-        end_date = python_datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
         if start_date > end_date:
             return JsonResponse({"result": False, "code": 1, "message": "结束日期不得早于起始日期", "data": []})
     except ValueError:
