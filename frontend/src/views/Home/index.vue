@@ -377,15 +377,12 @@
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.data
-                })
-            },
-            // 切换模板
-            selectTemplate () {
-                this.dailyData = []
-                this.templateList.forEach(function (template) {
-                    if (template.id === this.curTemplateId) {
-                        this.curTemplate = template.content.split(';')
+                    this.yesterdayDaliy = !!res.result
+                    if (!res.result) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: res.message
+                        })
                     }
                 })
             },

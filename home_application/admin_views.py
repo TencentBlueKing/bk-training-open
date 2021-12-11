@@ -58,7 +58,10 @@ def list_group_admin(request, group_id):
     获取组内管理员列表
     """
     # 组内成员
-    admins = Group.objects.get(id=group_id).admin_list
+    try:
+        admins = Group.objects.get(id=group_id).admin_list
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "组不存在", "data": []})
     return JsonResponse({"result": True, "code": 0, "message": "", "data": admins})
 
 

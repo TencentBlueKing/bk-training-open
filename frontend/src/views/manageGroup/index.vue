@@ -588,8 +588,17 @@
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
-                this.$http.get('list_group_admin/' + selectGroupId + '/').then(res => {
-                    this.groupAdmins = res.data
+                this.$http.get(
+                    'list_group_admin/' + selectGroupId + '/'
+                ).then(res => {
+                    if (res.result) {
+                        this.groupAdmins = res.data
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
+                    }
                 })
                 this.shareAllList = []
                 // 发送请求，获取选定组的信息
