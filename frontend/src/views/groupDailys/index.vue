@@ -338,8 +338,6 @@
                         // 获取优秀日报
                         this.getPerfectReport()
                     }
-                    // 获取优秀日报
-                    this.getPerfectReport()
                 })
             },
             // 点击切换组
