@@ -119,6 +119,12 @@
                             id: 4,
                             url: 'manage-group',
                             show: true
+                        },
+                        {
+                            name: '时间安排',
+                            id: 5,
+                            url: 'time-table',
+                            show: true
                         }
                     ],
                     active: 0,
@@ -550,7 +556,7 @@ html {
   background-color: #f0f1f5;
 }
 .monitor-navigation-admin {
-  width: 170px #63656e;
+  width: 170px;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
