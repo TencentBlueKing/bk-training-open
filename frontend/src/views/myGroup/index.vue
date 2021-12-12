@@ -416,6 +416,7 @@
                 this.addUserDialog.visible = true
                 // 默认把蓝鲸平台第一个用户放在选项框里
                 this.addUserForm.id = this.bkUsers[0].id
+                console.log('bk-first-userId:', this.addUserForm.id)
             },
             clickEditGroup () {
                 this.editGroupDialog.visible = true
@@ -423,12 +424,15 @@
                 // 根据curGroup中的adminUsername获取当前组管理员id
                 const adminIds = []
                 const vm = this
+                console.log('curGroupAdmin', vm.curGroup.admin)
+                console.log(vm.curGroup.admin)
                 this.bkUsers.forEach(function (user) {
                     if (vm.curGroup.admin.indexOf(user.username) !== -1) {
                         adminIds.push(user.id)
                     }
                 })
                 this.editGroupData.adminIds = adminIds
+                console.log('curGroupAdminIds', this.editGroupData.adminIds)
             },
             showApplyForGroup () {
                 this.applyForGroup.dialogVisible = true
@@ -436,6 +440,7 @@
                 this.getAvailableApplyGroups()
             },
             clickEditDailyTemplate (row) {
+                // console.log('当前日报模板信息', row)
                 this.editDailyTemplateDialog.visible = true
                 this.editDailyTemplateData.formData = {
                     template_id: row.id,
@@ -448,10 +453,12 @@
                 // 初始化用户信息
                 this.$http.get('/get_user/').then((res) => {
                     this.curUser.info = res.data
+                    console.log('curUser', this.curUser.info)
                     // 初始化组
                     this.$http.get('/get_user_groups/').then((res) => {
                         // 更新组信息
                         this.groupsData = res.data
+                        console.log('init_group, groupsData:', this.groupsData)
                         if (this.groupsData.length !== 0) {
                             this.curGroupId = this.groupsData[0].id
                             this.changeGroup(this.curGroupId)
@@ -480,6 +487,7 @@
                             flag = true
                         }
                     })
+                    console.log('hasUser', flag)
                     if (!flag) {
                         const config = {}
                         config.message = '未在蓝鲸用户平台找到登录用户信息'
@@ -490,6 +498,7 @@
                     }
                 }
                 this.addGroupData.formData.admin = adminlist
+                console.log('参数formData', this.addGroupData.formData)
                 this.$http.post('/add_group/', this.addGroupData.formData).then(res => {
                     const config = {}
                     config.offsetY = 80
@@ -497,9 +506,11 @@
                     if (res.result) {
                         config.theme = 'success'
                         this.$bkMessage(config)
+                        console.log('新建组id', res.data.group_id)
                         // 更新用户所有的组列表,后更新当前组
                         this.$http.get('/get_user_groups/').then((res2) => {
                             this.groupsData = res2.data
+                            console.log('init_groups, allGroupsData:', this.groupsData)
                             // 切换组
                             this.curGroupId = res.data.group_id
                             this.changeGroup(this.curGroupId)
@@ -526,6 +537,7 @@
                     }
                 })
                 this.editGroupData.formData.admin = adminlist
+                console.log('editGroup-formData', this.editGroupData.formData)
                 // 调用更新组信息接口
                 this.$http.post('/update_group/' + groupId + '/', this.editGroupData.formData).then(res => {
                     const config = {}
@@ -549,6 +561,7 @@
             },
             // 删除组
             deleteGroup () {
+                console.log('clickDeleteGroup,groupId:', this.curGroupId)
                 this.$http.post('/delete_group/' + this.curGroupId + '/').then(res => {
                     const config = {}
                     config.offsetY = 80
@@ -608,6 +621,7 @@
             },
             // 新增日报模板
             addDailyTemplate () {
+                console.log('addDailyTemplateData:', this.addDailyTemplateData.formData)
                 this.$http.post('/report_template/' + this.curGroup.id + '/', this.addDailyTemplateData.formData).then((res) => {
                     const config = {}
                     config.offsetY = 80
@@ -628,6 +642,7 @@
             },
             // 修改日报模板
             editDailyTemplate () {
+                console.log('editDailyTemplateData', this.editDailyTemplateData)
                 this.$http.put('/report_template/' + this.curGroup.id + '/', this.editDailyTemplateData.formData).then(res => {
                     const config = {}
                     config.offsetY = 80
@@ -645,6 +660,7 @@
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
                         // res.data.results
                         this.dailyTemplates = res.data
+                        console.log('get_report_templates:', res.data)
                     })
                 })
             },
@@ -666,6 +682,7 @@
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
                         // res.data.results
                         this.dailyTemplates = res.data
+                        console.log('get_report_templates:', res.data)
                     })
                 })
             },
@@ -677,6 +694,7 @@
                         vm.addUserForm = user
                     }
                 })
+                console.log('addUserForm', this.addUserForm)
                 this.$http.post('/add_user/' + this.curGroup.id + '/', this.addUserForm).then(res => {
                     const config = {}
                     config.offsetY = 80
@@ -706,6 +724,7 @@
                     this.$bkMessage(config)
                 } else {
                     // props.row是当前行的遍历元素的全部信息=该行user
+                    console.log('row-user', row)
                     const deletForm = { 'user_id': row.id }
                     // 将用户从组里移除
                     this.$http.post('/exit_group/' + this.curGroup.id + '/', deletForm).then(res => {
