@@ -235,7 +235,7 @@
         },
         computed: {
             link () {
-                return window.PROJECT_CONFIG.SITE_URL + '/home/?date=' + this.curDate
+                return window.PROJECT_CONFIG.SITE_URL + 'home?date=' + this.curDate
             }
         },
         created () {
@@ -319,7 +319,7 @@
                     // 更新组信息
                     this.groupsData = res.data
                     // 初始化显示的组
-                    if (this.groupsData.length !== 0 && this.groupsData.length !== undefined) {
+                    if (this.groupsData.length !== 0) {
                         if (this.curGroupId !== null) {
                             const vm = this
                             this.groupsData.forEach(function (group) {
@@ -335,9 +335,9 @@
                             this.curGroupId = this.groupsData[0].id
                             this.curGroup = this.groupsData[0]
                         }
-                        // 获取优秀日报
-                        this.getPerfectReport()
                     }
+                    // 获取优秀日报
+                    this.getPerfectReport()
                 })
             },
             // 点击切换组
