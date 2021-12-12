@@ -694,7 +694,7 @@
     width: 100%;
 }
 .flexcard{
-    width: 24%;
+    width: 300px;
     margin: 10px 0.5%;
 }
 .card >>> .bk-card-body{
