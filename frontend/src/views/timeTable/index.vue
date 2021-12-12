@@ -373,14 +373,6 @@
                             obj.end_time = freetime.end_time
                             this.freeTimeList.push(obj)
                         }
-                        // console.log(freetimes.free_time.length)
-                        // if (freetimes.free_time.length === 0) {
-                        //     const obj = {}
-                        //     obj.username = freetimes.username
-                        //     obj.start_time = ''
-                        //     obj.end_time = ''
-                        //     this.freeTimeList.push(obj)
-                        // }
                     }
                     console.log('freeTimeList', this.freeTimeList)
                 })
