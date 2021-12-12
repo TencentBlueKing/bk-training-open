@@ -334,7 +334,7 @@
                 ],
                 activeTabTitle: '请假申请',
                 groupList: [],
-                selectedGroup: ''
+                selectedGroup: -1
             }
         },
         created () {
@@ -402,7 +402,7 @@
                 // 获取当前用户组信息
                 this.$http.get('/get_user_groups/').then((res) => {
                     this.groupList = res.data
-                    if (this.groupList.length !== 0) {
+                    if (this.groupList.length !== 0 && this.groupList.length !== undefined) {
                         this.selectedGroup = this.groupList[0].id
                     }
                 })
@@ -539,29 +539,38 @@
             },
             // 获取请假管理表
             getLeaveList () {
-                this.isleaveTableLoad = true
-                this.leaveTableData.data = []
-                const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
                 const groupId = this.selectedGroup
                 const sign = 0 // 1 返回未请假人 或 0 返回请假人
-                this.$http.get('/display_personnel_information/' + groupId
-                    + '/?date=' + todayDate
-                    + '&sign=' + sign
-                ).then(res => {
-                    if (res.data !== undefined && res.data.length !== 0) {
-                        res.data.map((item, index) => {
-                            this.leaveTableData.data.push({
-                                'offdayId': item.off_info.id,
-                                'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
-                                'reason': item.off_info.reason,
-                                'info': item.username + '(' + item.name + ')',
-                                'username': item.username
+                if (groupId === -1) {
+                    this.$bkMessage({
+                        'offsetY': 80,
+                        'delay': 2000,
+                        'theme': 'warning',
+                        'message': '用户当前未加入任何组，无请假信息。'
+                    })
+                } else {
+                    this.isleaveTableLoad = true
+                    this.leaveTableData.data = []
+                    const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+                    this.$http.get('/display_personnel_information/' + groupId
+                        + '/?date=' + todayDate
+                        + '&sign=' + sign
+                    ).then(res => {
+                        if (res.data !== undefined && res.data.length !== 0) {
+                            res.data.map((item, index) => {
+                                this.leaveTableData.data.push({
+                                    'offdayId': item.off_info.id,
+                                    'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                    'reason': item.off_info.reason,
+                                    'info': item.username + '(' + item.name + ')',
+                                    'username': item.username
+                                })
                             })
-                        })
-                    }
-                }).finally(() => {
-                    this.isleaveTableLoad = false
-                })
+                        }
+                    }).finally(() => {
+                        this.isleaveTableLoad = false
+                    })
+                }
             },
             // 请假滑窗关闭事件
             hiddenSlider () {
