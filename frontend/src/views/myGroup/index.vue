@@ -231,7 +231,6 @@
         data () {
             return {
                 // 通过姓名搜索用户
-                // searchResult:0 已在组内;1 用户存在,不在组内;2 用户不存在
                 searchForm: {
                     UserName: ''
                 },
