@@ -5,14 +5,20 @@
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
             <div class="top_container">
-                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
-                <bk-date-picker class="mr15" v-model="reportDate"
-                    :clearable="false"
-                    placeholder="选择日期"
-                    :options="customOption"
-                    @change="changeDate(reportDate)"
-                >
-                </bk-date-picker>
+                <bk-button theme="primary" style="display: inline-block" @click="leaveSetting.visible = true" class="mr30">
+                    请假
+                </bk-button>
+                <div>
+                    <span style="display: inline-block;margin-left:50px;" class="f20">选择日期：</span>
+                    <bk-date-picker
+                        class="mr15" v-model="reportDate"
+                        :clearable="false"
+                        placeholder="选择日期"
+                        :options="customOption"
+                        @change="changeDate(reportDate)"
+                    >
+                    </bk-date-picker>
+                </div>
                 <div>
                     <h2 class="mr30 f20" style="margin: 0;">
                         日报状态：
@@ -20,12 +26,15 @@
                         <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
                     </h2>
                 </div>
-                <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily" class="mr30">
-                    {{ hasWrittenToday ? '修改' : '保存' }}
-                </bk-button>
-                <bk-button :theme="'primary'" style="display: inline-block" @click="leaveSetting.visible = true" class="mr30">
-                    请假
-                </bk-button>
+                <div>
+                    <span class="mr10 f20">隐私模式</span>
+                    <bk-switcher
+                        v-model="allPrivate"
+                        class="mr30"
+                        @change="setAllPrivate"
+                    >
+                    </bk-switcher>
+                </div>
                 <bk-sideslider width="600"
                     :is-show.sync="leaveSetting.visible"
                     :quick-close="true"
@@ -155,8 +164,7 @@
                     title="新增内容"
                     :header-position="addDialog.headerPosition"
                     :width="addDialog.width"
-                    @value-change="addDialogChange"
-                    :position="{ top: 20, left: 100 }">
+                    @value-change="addDialogChange">
                     <div>
                         <h3>内容</h3>
                         <bk-input
@@ -164,6 +172,7 @@
                             type="textarea"
                             :rows="3"
                             v-model="newContent"
+                            :minlength="1"
                         >
                         </bk-input>
                         <div style="display: flex;justify-content: space-between;margin: 10px 0">
@@ -200,8 +209,7 @@
                     v-model="moreTemplateDialog.visible"
                     :header-position="moreTemplateDialog.headerPosition"
                     :width="moreTemplateDialog.width"
-                    @value-change="moreTemplateDialogChange"
-                    :position="{ top: 20, left: 100 }">
+                    @value-change="moreTemplateDialogChange">
                     <div slot="header">
                         <span class="mr30">新增模板标题</span>
                     </div>
@@ -239,6 +247,11 @@
                     </bk-input>
                 </div>
             </template>
+            <div class="saveBtn">
+                <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily">
+                    {{ hasWrittenToday ? '修改' : '保存' }}
+                </bk-button>
+            </div>
         </div>
     </div>
 </template>
@@ -287,6 +300,7 @@
                     { 'title': '明日计划', 'type': 'table', 'content': [] }
                 ],
                 isPrivate: false,
+                allPrivate: false,
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
@@ -398,6 +412,14 @@
                 })
                 this.checkYesterdayDaliy()
             },
+            setAllPrivate (val) {
+                this.isPrivate = val
+                for (const item of this.dailyDataContent) {
+                    for (const itemContent of item.content) {
+                        itemContent.isPrivate = val
+                    }
+                }
+            },
             getDailyReport () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
@@ -439,14 +461,20 @@
             dealAdd (index) {
                 this.currentIndex = index
                 this.isAdd = true
-                this.isPrivate = false
                 this.addDialog.visible = true
             },
             // 保存增加表格中的一行新内容
             addRow (index) {
-                const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
-                this.dailyDataContent[index]['content'].push(newObj)
-                this.addDialog.visible = false
+                if (this.newContent.length) {
+                    const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
+                    this.dailyDataContent[index]['content'].push(newObj)
+                    this.addDialog.visible = false
+                } else {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: '未填写内容'
+                    })
+                }
             },
             // 保存对指定行的修改
             changeRow (index) {
@@ -474,31 +502,51 @@
             },
             // 保存日报
             saveDaily () {
+                let hasSomeContentEmpty = false
                 this.newPostDaily.date = this.formatDate
                 for (const index in this.dailyDataContent) {
                     this.dailyDataContent[index].title = this.dailyDataTitle[index]
                 }
                 for (const tableContent of this.dailyDataContent) {
-                    this.newPostDaily.content.push(tableContent)
+                    if (tableContent.content.length) {
+                        this.newPostDaily.content.push(tableContent)
+                    } else {
+                        hasSomeContentEmpty = true
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: tableContent.title + '内容为空！'
+                        })
+                    }
                 }
                 for (const textContent of this.newTemplateContent) {
+                    if (!textContent.text.length) {
+                        hasSomeContentEmpty = true
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: textContent.title + '内容为空！'
+                        })
+                    }
                     this.newPostDaily.content.push(textContent)
                 }
-                this.$http.post(
-                    '/daily_report/', this.newPostDaily
-                ).then(res => {
-                    this.hasWrittenToday = true
-                    this.newPostDaily = {
-                        date: null,
-                        content: [],
-                        template_id: 0,
-                        send_email: false
-                    }
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: res.message
+                if (!hasSomeContentEmpty) {
+                    this.$http.post(
+                        '/daily_report/', this.newPostDaily
+                    ).then(res => {
+                        this.hasWrittenToday = true
+                        this.newPostDaily = {
+                            date: null,
+                            content: [],
+                            template_id: 0,
+                            send_email: false
+                        }
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: res.message
+                        })
                     })
-                })
+                } else {
+                    this.newPostDaily.content = []
+                }
             },
             // 增加自定义模板标题
             addTemplate () {
@@ -609,7 +657,7 @@
         width: 100%;
         padding: 10px 0;
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
     }
     .bottom_container{
         width: 100%;
@@ -617,6 +665,11 @@
     }
     ::-webkit-scrollbar{
         display: none;
+    }
+    .saveBtn{
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
     }
     .leave-slide .slide-header{
             display: flex;
@@ -739,18 +792,5 @@
 }
 .demo-block.demo-alert .bk-alert{
     margin-bottom: 20px;
-}
-.top_container{
-    width: 100%;
-    padding: 10px 0;
-    display: flex;
-    justify-content: flex-end;
-}
-.bottom_container{
-    width: 100%;
-    padding-top: 20px;
-}
-::-webkit-scrollbar{
-    display: none;
 }
 </style>
