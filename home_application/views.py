@@ -807,3 +807,18 @@ def group_free_time(request, group_id):
     usernames = User.objects.filter(id__in=user_ids).values_list("username", flat=True)
     free_times = FreeTime.objects.get_free_time(usernames, start_date, end_date)
     return JsonResponse({"result": True, "code": 0, "message": "", "data": free_times})
+
+
+@is_group_member(admin_needed=["POST"])
+def check_user_in_group(request, group_id):
+    user_name = json.loads(request.body).get("UserName")
+    user_name_lists = str(user_name).split(" ")
+    ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    usernames = User.objects.filter(id__in=ids).values_list("name", flat=True)
+    unjoined_users = []
+    for u in user_name_lists:
+        if u not in usernames:
+            unjoined_users.append(u)
+    if len(unjoined_users) > 0:
+        return JsonResponse({"result": True, "code": 0, "message": "", "data": ",".join(unjoined_users) + "未加入当前小组"})
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": "查询的用户已加入当前小组中"})
