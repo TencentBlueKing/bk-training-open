@@ -334,7 +334,7 @@
                 ],
                 activeTabTitle: '请假申请',
                 groupList: [],
-                selectedGroup: -1
+                selectedGroup: ''
             }
         },
         created () {
@@ -373,36 +373,26 @@
                     }
                 })
             },
-            changeTemplate () {
-                if (this.curTemplateId === null || this.curTemplateId === '') {
-                    this.curTemplate = []
-                    this.dailyData = []
-                }
-            },
             checkYesterdayDaliy () {
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.data
-                })
-            },
-            // 切换模板
-            selectTemplate () {
-                this.dailyData = []
-                this.templateList.forEach(function (template) {
-                    if (template.id === this.curTemplateId) {
-                        this.curTemplate = template.content.split(';')
+                    this.yesterdayDaliy = !!res.result
+                    if (!res.result) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: res.message
+                        })
                     }
                 })
             },
             // 界面初始化
             init () {
-                this.cheakDailyDates()
                 this.getDailyReport()
                 // 获取当前用户组信息
                 this.$http.get('/get_user_groups/').then((res) => {
                     this.groupList = res.data
-                    if (this.groupList.length !== 0 && this.groupList.length !== undefined) {
+                    if (this.groupList.length !== 0) {
                         this.selectedGroup = this.groupList[0].id
                     }
                 })
@@ -439,15 +429,6 @@
                     }
                     this.cheakDailyDates()
                 })
-
-                // 获取当前用户组信息
-                this.$http.get('/get_user_groups/').then((res) => {
-                    this.groupList = res.data
-                    if (this.groupList.length !== 0) {
-                        this.selectedGroup = this.groupList[0].id
-                    }
-                    this.cheakDailyDates()
-                })
             },
             // 改变默认模板标题
             changeTitleText (index) {
@@ -458,6 +439,7 @@
             dealAdd (index) {
                 this.currentIndex = index
                 this.isAdd = true
+                this.isPrivate = false
                 this.addDialog.visible = true
             },
             // 保存增加表格中的一行新内容
@@ -478,6 +460,7 @@
                 this.newContent = row.text
                 this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
+                this.isPrivate = row.isPrivate
                 this.isAdd = false
                 this.addDialog.visible = true
             },
@@ -539,38 +522,29 @@
             },
             // 获取请假管理表
             getLeaveList () {
+                this.isleaveTableLoad = true
+                this.leaveTableData.data = []
+                const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
                 const groupId = this.selectedGroup
                 const sign = 0 // 1 返回未请假人 或 0 返回请假人
-                if (groupId === -1) {
-                    this.$bkMessage({
-                        'offsetY': 80,
-                        'delay': 2000,
-                        'theme': 'warning',
-                        'message': '用户当前未加入任何组，无请假信息。'
-                    })
-                } else {
-                    this.isleaveTableLoad = true
-                    this.leaveTableData.data = []
-                    const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
-                    this.$http.get('/display_personnel_information/' + groupId
-                        + '/?date=' + todayDate
-                        + '&sign=' + sign
-                    ).then(res => {
-                        if (res.data !== undefined && res.data.length !== 0) {
-                            res.data.map((item, index) => {
-                                this.leaveTableData.data.push({
-                                    'offdayId': item.off_info.id,
-                                    'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
-                                    'reason': item.off_info.reason,
-                                    'info': item.username + '(' + item.name + ')',
-                                    'username': item.username
-                                })
+                this.$http.get('/display_personnel_information/' + groupId
+                    + '/?date=' + todayDate
+                    + '&sign=' + sign
+                ).then(res => {
+                    if (res.data !== undefined && res.data.length !== 0) {
+                        res.data.map((item, index) => {
+                            this.leaveTableData.data.push({
+                                'offdayId': item.off_info.id,
+                                'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                'reason': item.off_info.reason,
+                                'info': item.username + '(' + item.name + ')',
+                                'username': item.username
                             })
-                        }
-                    }).finally(() => {
-                        this.isleaveTableLoad = false
-                    })
-                }
+                        })
+                    }
+                }).finally(() => {
+                    this.isleaveTableLoad = false
+                })
             },
             // 请假滑窗关闭事件
             hiddenSlider () {
