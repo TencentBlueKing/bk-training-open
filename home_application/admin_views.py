@@ -166,6 +166,7 @@ def send_evaluate_all(request, group_id):
         if sign:
             daily["evaluate"] = "管理员未评价"
         daily_list.append(daily)
+        sign = True
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
@@ -223,10 +224,17 @@ def remove_off(request, group_id, offday_id):
 def display_personnel_information(request, group_id):
     """
     展示未请假人和请假人
-    param sign：标记 1 返回未请假人 或 0返回请假人
+    param sign：标记 2 返回当前用户今天之后的所有请假时间 1 返回未请假人 或 0返回请假人
     """
-    date = request.GET.get("date")
     sign = request.GET.get("sign")
+    if sign == "2":
+        data = list(
+            OffDay.objects.filter(end_date__gte=datetime.datetime.now(), user=request.user.username).values_list(
+                "start_date", "end_date"
+            )
+        )
+        return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
+    date = request.GET.get("date")
     # 组内所有人
     user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     users = User.objects.filter(id__in=user_ids)
