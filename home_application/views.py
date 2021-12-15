@@ -815,12 +815,12 @@ def check_user_in_group(request, group_id):
     # 查询成员是否已加入指定小组，返回未加入小组的成员姓名
     user_name = json.loads(request.body).get("UserName")
     # 待查询姓名列表
-    user_name_lists = str(user_name).split(" ")
+    user_name_list = str(user_name).split(" ")
     id_list = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
-    username_list = User.objects.filter(id__in=id_list).values_list("name", flat=True)
+    joined_user_name_list = User.objects.filter(id__in=id_list).values_list("name", flat=True)
     unjoined_users = []
-    for u in user_name_lists:
-        if u not in username_list:
+    for u in user_name_list:
+        if u not in joined_user_name_list:
             unjoined_users.append(u)
     if len(unjoined_users) > 0:
         return JsonResponse({"result": True, "code": 0, "message": "", "data": ",".join(unjoined_users) + "未加入当前小组"})
