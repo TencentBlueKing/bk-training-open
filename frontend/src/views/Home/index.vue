@@ -26,10 +26,38 @@
                 <bk-button :theme="'primary'" style="display: inline-block" @click="clickLeaveManage" class="mr30">
                     请假管理
                 </bk-button>
-                <bk-sideslider width="600"
+                <div>
+                    <span style="display: inline-block;" class="f15">选择日期：</span>
+                    <bk-date-picker
+                        v-model="reportDate"
+                        :clearable="false"
+                        placeholder="选择日期"
+                        :options="customOption"
+                        @change="changeDate(reportDate)"
+                    >
+                    </bk-date-picker>
+                </div>
+                <div style="padding: 5px 0">
+                    <p style="margin: 0;">
+                        <span>日报状态：</span>
+                        <span v-if="hasWrittenToday" style="color: #3A84FF">已写日报</span>
+                        <span v-else style="color: #63656E">未写日报</span>
+                    </p>
+                </div>
+                <div style="padding: 6px 0">
+                    <span class="mr10">隐私模式</span>
+                    <bk-switcher
+                        v-model="allPrivate"
+                        @change="setAllPrivate"
+                    >
+                    </bk-switcher>
+                </div>
+                <bk-sideslider
+                    width="600"
                     :is-show.sync="leaveSetting.visible"
                     :quick-close="true"
                     @hidden="hiddenSlider"
+                    direction="left"
                     ext-cls="leave-slide">
                     <div slot="header" class="slide-header">
                         <div :class="{
@@ -156,8 +184,7 @@
                     title="新增内容"
                     :header-position="addDialog.headerPosition"
                     :width="addDialog.width"
-                    @value-change="addDialogChange"
-                    :position="{ top: 20, left: 100 }">
+                    @value-change="addDialogChange">
                     <div>
                         <h3>内容</h3>
                         <bk-input
@@ -165,6 +192,7 @@
                             type="textarea"
                             :rows="3"
                             v-model="newContent"
+                            :minlength="1"
                         >
                         </bk-input>
                         <div style="display: flex;justify-content: space-between;margin: 10px 0">
@@ -201,8 +229,7 @@
                     v-model="moreTemplateDialog.visible"
                     :header-position="moreTemplateDialog.headerPosition"
                     :width="moreTemplateDialog.width"
-                    @value-change="moreTemplateDialogChange"
-                    :position="{ top: 20, left: 100 }">
+                    @value-change="moreTemplateDialogChange">
                     <div slot="header">
                         <span class="mr30">新增模板标题</span>
                     </div>
@@ -240,6 +267,11 @@
                     </bk-input>
                 </div>
             </template>
+            <div class="saveBtn">
+                <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily">
+                    {{ hasWrittenToday ? '修改' : '保存' }}
+                </bk-button>
+            </div>
         </div>
     </div>
 </template>
@@ -288,6 +320,7 @@
                     { 'title': '明日计划', 'type': 'table', 'content': [] }
                 ],
                 isPrivate: false,
+                allPrivate: false,
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
@@ -429,6 +462,14 @@
                 })
                 this.checkYesterdayDaliy()
             },
+            setAllPrivate (val) {
+                this.isPrivate = val
+                for (const item of this.dailyDataContent) {
+                    for (const itemContent of item.content) {
+                        itemContent.isPrivate = val
+                    }
+                }
+            },
             getDailyReport () {
                 this.$http.get(
                     '/daily_report/?date=' + this.formatDate
@@ -483,9 +524,16 @@
             },
             // 保存增加表格中的一行新内容
             addRow (index) {
-                const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
-                this.dailyDataContent[index]['content'].push(newObj)
-                this.addDialog.visible = false
+                if (this.newContent.length) {
+                    const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
+                    this.dailyDataContent[index]['content'].push(newObj)
+                    this.addDialog.visible = false
+                } else {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: '未填写内容'
+                    })
+                }
             },
             // 保存对指定行的修改
             changeRow (index) {
@@ -512,31 +560,51 @@
             },
             // 保存日报
             saveDaily () {
+                let hasSomeContentEmpty = false
                 this.newPostDaily.date = this.formatDate
                 for (const index in this.dailyDataContent) {
                     this.dailyDataContent[index].title = this.dailyDataTitle[index]
                 }
                 for (const tableContent of this.dailyDataContent) {
-                    this.newPostDaily.content.push(tableContent)
+                    if (tableContent.content.length) {
+                        this.newPostDaily.content.push(tableContent)
+                    } else {
+                        hasSomeContentEmpty = true
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: tableContent.title + '内容为空！'
+                        })
+                    }
                 }
                 for (const textContent of this.newTemplateContent) {
+                    if (!textContent.text.length) {
+                        hasSomeContentEmpty = true
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: textContent.title + '内容为空！'
+                        })
+                    }
                     this.newPostDaily.content.push(textContent)
                 }
-                this.$http.post(
-                    '/daily_report/', this.newPostDaily
-                ).then(res => {
-                    this.hasWrittenToday = true
-                    this.newPostDaily = {
-                        date: null,
-                        content: [],
-                        template_id: 0,
-                        send_email: false
-                    }
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: res.message
+                if (!hasSomeContentEmpty) {
+                    this.$http.post(
+                        '/daily_report/', this.newPostDaily
+                    ).then(res => {
+                        this.hasWrittenToday = true
+                        this.newPostDaily = {
+                            date: null,
+                            content: [],
+                            template_id: 0,
+                            send_email: false
+                        }
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: res.message
+                        })
                     })
-                })
+                } else {
+                    this.newPostDaily.content = []
+                }
             },
             // 增加自定义模板标题
             addTemplate () {
@@ -701,7 +769,7 @@
         width: 100%;
         padding: 10px 0;
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
     }
     .bottom_container{
         width: 100%;
@@ -709,6 +777,11 @@
     }
     ::-webkit-scrollbar{
         display: none;
+    }
+    .saveBtn{
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
     }
     .leave-slide .slide-header{
             display: flex;
@@ -831,18 +904,5 @@
 }
 .demo-block.demo-alert .bk-alert{
     margin-bottom: 20px;
-}
-.top_container{
-    width: 100%;
-    padding: 10px 0;
-    display: flex;
-    justify-content: flex-end;
-}
-.bottom_container{
-    width: 100%;
-    padding-top: 20px;
-}
-::-webkit-scrollbar{
-    display: none;
 }
 </style>

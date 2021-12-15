@@ -472,12 +472,10 @@
     .right_container{
         float: right;
         min-width: 380px;
-        width: calc(100% - 380px);
+        width: calc(100% - 310px);
     }
     .card{
-        float: left;
-        width: calc(46% - 5px);
-        margin-right: 18px;
+        margin: 0 0.5%;
     }
     .card >>> .bk-card-body{
         height: 260px;
@@ -557,11 +555,12 @@
     }
     .right_container .all-report-wapper .all-report-body{
         height: 650px;
+        width: 100%;
     }
     .right_container .all-report-wapper .all-report-body .all-report-card{
         float: left;
         margin-bottom: 10px;
-        width: 200px;
+        width: 24%;
     }
     .right_container .all-report-wapper .all-report-body .all-report-card /deep/ .bk-card-head{
         text-overflow: ellipsis;
