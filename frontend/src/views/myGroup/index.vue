@@ -112,6 +112,7 @@
             <div class="line-container group-users">
                 <bk-card title="组内成员">
                     <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
+                    <bk-input :clearable="true" v-model="searchForm.UserName" style="margin-left: 20px;width: 400px;display: inline-block;" placeholder="通过姓名搜索组内成员，可输入多个查询姓名，用空格分隔" :left-icon="'bk-icon icon-search'" @left-icon-click="searchUser"></bk-input>
                     <bk-dialog v-model="addUserDialog.visible" theme="primary" title="添加成员" class="add-group-dialog" :show-footer="false">
                         <bk-form label-width="120">
                             <bk-form-item label="成员" required="true">
@@ -161,15 +162,21 @@
 </template>
 
 <script>
-    import { bkSelect, bkOption } from 'bk-magic-vue'
+    import { bkSelect, bkOption, bkInput } from 'bk-magic-vue'
     export default {
         name: '',
         components: {
             bkSelect,
-            bkOption
+            bkOption,
+            bkInput
         },
         data () {
             return {
+                // 通过姓名搜索用户
+                searchForm: {
+                    UserName: ''
+                },
+                searchResult: '',
                 // 用户信息
                 curUser: {
                     isAdmin: false,
@@ -251,6 +258,18 @@
             this.getAllBKUser()
         },
         methods: {
+            handleSingle (config) {
+                config.message = this.searchResult
+                config.offsetY = 80
+                this.$bkMessage(config)
+            },
+            searchUser () {
+                this.$http.post('/check_user_in_group/' + this.curGroupId + '/', this.searchForm).then(res => {
+                    this.searchResult = res.data
+                    console.log(this.searchResult)
+                    this.handleSingle({ delay: 10000 })
+                })
+            },
             // 请求函数
             // 获取所有蓝鲸用户
             getAllBKUser () {
@@ -632,5 +651,8 @@
         padding-top: 10px !important;
         visibility:hidden;
         visibility:visible;
+    }
+    .input-demo {
+        width: 500px;
     }
 </style>
