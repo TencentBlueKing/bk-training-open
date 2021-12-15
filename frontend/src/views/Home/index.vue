@@ -23,8 +23,8 @@
                 <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily" class="mr30">
                     {{ hasWrittenToday ? '修改' : '保存' }}
                 </bk-button>
-                <bk-button :theme="'primary'" style="display: inline-block" @click="leaveSetting.visible = true" class="mr30">
-                    请假
+                <bk-button :theme="'primary'" style="display: inline-block" @click="clickLeaveManage" class="mr30">
+                    请假管理
                 </bk-button>
                 <bk-sideslider width="600"
                     :is-show.sync="leaveSetting.visible"
@@ -50,6 +50,7 @@
                                             :clearable="false"
                                             placeholder="选择日期范围"
                                             type="daterange"
+                                            :options="customLeaveOption"
                                             @clear="clearDate"
                                         ></bk-date-picker>
                                     </bk-form-item>
@@ -330,11 +331,20 @@
                 },
                 slideTitleList: [
                     '请假申请',
-                    '请假管理'
+                    '请假信息'
                 ],
                 activeTabTitle: '请假申请',
                 groupList: [],
-                selectedGroup: -1
+                selectedGroup: -1,
+                customLeaveOption: {
+                    disabledDate: function (date) {
+                        const nowDate = new Date()
+                        if (date < nowDate.setHours(nowDate.getHours() - 24)) {
+                            return true
+                        }
+                    }
+                },
+                curUserLeaveList: []
             }
         },
         created () {
@@ -538,9 +548,12 @@
                 }
             },
             // 获取请假管理表
-            getLeaveList () {
+            getLeaveList (sign) {
                 const groupId = this.selectedGroup
-                const sign = 0 // 1 返回未请假人 或 0 返回请假人
+                if (sign === null || sign === undefined) {
+                    sign = 0 // 1 返回未请假人 或 0 返回请假人 或 2 返回个人所有请假信息
+                }
+                
                 if (groupId === -1) {
                     this.$bkMessage({
                         'offsetY': 80,
@@ -549,6 +562,7 @@
                         'message': '用户当前未加入任何组，无请假信息。'
                     })
                 } else {
+                    const vm = this
                     this.isleaveTableLoad = true
                     this.leaveTableData.data = []
                     const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
@@ -557,15 +571,40 @@
                         + '&sign=' + sign
                     ).then(res => {
                         if (res.data !== undefined && res.data.length !== 0) {
-                            res.data.map((item, index) => {
-                                this.leaveTableData.data.push({
-                                    'offdayId': item.off_info.id,
-                                    'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
-                                    'reason': item.off_info.reason,
-                                    'info': item.username + '(' + item.name + ')',
-                                    'username': item.username
+                            console.log('sign == ', sign)
+                            if (sign === 2) {
+                                this.curUserLeaveList = res.data
+                                // 设置请假日期选择栏禁用日期
+                                this.customLeaveOption = {
+                                    disabledDate: function (date) {
+                                        const nowDate = new Date()
+                                        if (date < nowDate.setHours(nowDate.getHours() - 24)) {
+                                            return true
+                                        } else {
+                                            let iscompareDateShow = true
+                                            vm.curUserLeaveList.map((item, index) => {
+                                                const startDate = moment(item[0]).format('YYYY-MM-DD')
+                                                const compareDate = moment(date).format('YYYY-MM-DD')
+                                                const endDate = moment(item[1]).format('YYYY-MM-DD')
+                                                if (moment(startDate).isSameOrBefore(compareDate, 'day') && moment(compareDate).isSameOrBefore(endDate, 'day')) {
+                                                    iscompareDateShow = false
+                                                }
+                                            })
+                                            return !iscompareDateShow
+                                        }
+                                    }
+                                }
+                            } else if (sign === 0) {
+                                res.data.map((item, index) => {
+                                    this.leaveTableData.data.push({
+                                        'offdayId': item.off_info.id,
+                                        'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                        'reason': item.off_info.reason,
+                                        'info': item.username + '(' + item.name + ')',
+                                        'username': item.username
+                                    })
                                 })
-                            })
+                            }
                         }
                     }).finally(() => {
                         this.isleaveTableLoad = false
@@ -581,13 +620,15 @@
             // 切换请假页签事件
             changeTab (title) {
                 this.activeTabTitle = title
-                if (this.activeTabTitle === '请假管理') {
+                if (this.activeTabTitle === '请假信息') {
                     this.getLeaveList()
+                    this.getLeaveList(2)
                 }
             },
             // 选择组
             handleSelectGroup (value, option) {
                 this.getLeaveList()
+                this.getLeaveList(2)
             },
             // 清空请假日期
             clearDate () {
@@ -607,6 +648,7 @@
                             'theme': 'success',
                             'message': res.message
                         })
+                        this.getLeaveList(2)
                     } else {
                         this.$bkMessage({
                             'offsetY': 80,
@@ -616,6 +658,11 @@
                         })
                     }
                 })
+            },
+            // 请假管理按钮点击事件
+            clickLeaveManage () {
+                this.leaveSetting.visible = true
+                this.getLeaveList(2)
             }
         }
     }
