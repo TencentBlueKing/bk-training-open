@@ -2,7 +2,7 @@
     <div class="body">
         <div class="container">
             <div class="left_container">
-                <bk-select :disabled="false" v-model="curGroupId" style="width: 190px;display: inline-block;"
+                <bk-select v-model="curGroupId" style="width: 190px;display: inline-block;"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
                     @change="changeGroup(curGroupId)"
@@ -13,21 +13,25 @@
                         :name="group.name">
                     </bk-option>
                 </bk-select>
-                <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" style="margin-top:-21px;margin-left:5px;" @click="changeType" class="mr10">
+                <bk-button :disabled="!isLeftContentWork" :theme="'primary'" type="submit" :title="'基础按钮'" style="margin-top:-21px;margin-left:5px;" @click="changeType" class="mr10">
                     {{isUser ? '日期' : '成员'}}
                 </bk-button>
                 <div style="margin-top:18px;height:707px;">
                     <div v-if="isUser" class="users_list">
-                        <div>
-                            <bk-button v-for="user in groupUsers" :key="user.id" :theme="user.id === curUserId ? 'primary' : 'default'" style="width:130px;" @click="changeDateOrUser(user.id, '')" class="mr10">
+                        <div v-show="isLeftContentWork">
+                            <bk-button v-for="user in groupUsers" :key="user.id"
+                                :theme="user.id === curUserId ? 'primary' : 'default'"
+                                style="width:130px;"
+                                @click="changeDateOrUser(user.id, '')"
+                                class="mr10">
                                 {{user.name}}
                             </bk-button>
                         </div>
                     </div>
                     <div class="date_picker" style="margin-left:0px;" v-else>
-                        <bk-date-picker class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
+                        <bk-date-picker :disabled="!isLeftContentWork" class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
                             :placeholder="'选择日期'"
-                            :open="true"
+                            :open="isLeftContentWork"
                             :ext-popover-cls="'custom-popover-cls'"
                             :options="customOption">
                         </bk-date-picker>
@@ -47,7 +51,7 @@
                     <div :class="{
                         'header-tabs': true,
                         'tabs-active': title === activeTabTitle
-                    }" v-for="(title,tindex) in tabTitleList" :key="tindex" @click="activeTabTitle = title">
+                    }" v-for="(title,tindex) in tabTitleList" :key="tindex" @click="changeTabs(title)">
                         {{title}}
                     </div>
                 </div>
@@ -93,7 +97,7 @@
                                 ext-cls="select-type"
                                 behavior="simplicity"
                                 placeholder="请选择查看类型"
-                                ext-popover-cls="select-popover-custom"
+                                ext-popover-cls="select-popover-perfect"
                                 @change="changeShowType"
                                 placement="bottom-end">
                                 <bk-option v-for="option in pecfectTypeList"
@@ -129,7 +133,7 @@
                                     <h2>{{perfectContnet.title}}</h2>
                                     <div v-if="perfectContnet.type === 'table'" style="font-size: 18px">
                                         <div v-for="(row, iiIndex) in perfectContnet.content" :key="iiIndex">
-                                            <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                            <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
                                         </div>
                                     </div>
                                     <div v-else>
@@ -230,7 +234,8 @@
                 },
                 perfectDailysData: {
                     daily_list: []
-                }
+                },
+                isLeftContentWork: true
             }
         },
         computed: {
@@ -275,7 +280,23 @@
             getGroupUsers (groupId) {
                 // 根据组id获取组成员
                 this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
-                    this.groupUsers = res.data
+                    if (res.result) {
+                        this.groupUsers = []
+                        if (res.date.length !== 0 && res.date.length !== null) {
+                            res.data.map((item, index) => {
+                                if (item.username !== 'admin') {
+                                    this.groupUsers.push(item)
+                                }
+                            })
+                        }
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'error',
+                            'message': res.message
+                        })
+                    }
                 })
             },
             // 修改日期或成员
@@ -331,7 +352,7 @@
                         return
                     }
                     // 初始化显示的组
-                    if (this.groupsData.length !== 0) {
+                    if (this.groupsData.length !== 0 && this.groupsData.length !== undefined) {
                         if (this.curGroupId !== null) {
                             const vm = this
                             this.groupsData.forEach(function (group) {
@@ -347,9 +368,9 @@
                             this.curGroupId = this.groupsData[0].id
                             this.curGroup = this.groupsData[0]
                         }
+                        // 获取优秀日报
+                        this.getPerfectReport()
                     }
-                    // 获取优秀日报
-                    this.getPerfectReport()
                 })
             },
             // 点击切换组
@@ -430,6 +451,11 @@
             changePerfectPage (page) {
                 this.perfectPaging.current = page
                 this.getPerfectReport()
+            },
+            // 日报展示类型切换
+            changeTabs (title) {
+                this.activeTabTitle = title
+                this.isLeftContentWork = title !== '优秀日报'
             }
         }
     }
@@ -468,6 +494,9 @@
         overflow-y: auto;
         padding-top: 10px;
     }
+    .card >>> .bk-card-body .card-pre{
+        white-space: normal;
+    }
     .date_picker >>>.bk-date-picker-dropdown{
         top: 32px !important;
     }
@@ -481,7 +510,9 @@
     }
     .right_container .report-tabs .header-tabs{
         width: 50%;
-        height: 30px;
+        height: 40px;
+        font-size: 20px;
+        line-height: 40px;
         text-align:center;
         border-bottom: 1px solid rgb(196, 198, 204);
     }
@@ -503,13 +534,14 @@
     .right_container .perfect-report-wapper .perfect-body{
         width: 100%;
         height: 630px;
+        overflow-y: auto;
     }
     .right_container .perfect-report-wapper .perfect-body .perfect-empty{
         line-height: 600px;
         text-align: center;
     }
     .right_container .perfect-report-wapper .perfect-cards .perfect-report-card{
-        width: 200px !important;
+        width: 290px !important;
     }
     .right_container .perfect-report-wapper .perfect-cards .perfect-report-card /deep/ .bk-card-head{
         text-overflow: ellipsis;
@@ -554,10 +586,17 @@
         justify-content: space-between;
         width: 100%;
         align-items: center;
-        height: 50px;
+        height: 60px;
     }
     .right_container .perfect-report-wapper .perfect-date-picker{
-        width: 112px !important;
+        width: 130px !important;
+    }
+    .right_container .perfect-report-wapper .perfect-date-picker /deep/ .bk-date-picker-rel .bk-date-picker-editor{
+        font-size: 16px;
+    }
+    .right_container .perfect-report-wapper .perfect-date-picker /deep/ .bk-date-picker-rel .icon-wrapper .picker-icon{
+        width: 20px;
+        height: 20px;
     }
     .right_container .report-wapper .select-bar{
         display: flex;
@@ -565,7 +604,11 @@
         align-items: center;
     }
     .right_container .report-wapper .select-bar .select-type{
-        width: 120px !important;
+        width: 150px !important;
+        font-size: 16px
+    }
+    .select-popover-perfect /deep/ .bk-options-wrapper .bk-options .bk-option .bk-option-content .bk-option-content-default .bk-option-name{
+        font-size: 16px !important;
     }
     .right_container .report-wapper .right-bottom-bar{
         display: flex;

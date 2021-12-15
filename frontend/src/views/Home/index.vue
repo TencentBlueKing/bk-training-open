@@ -4,9 +4,27 @@
             <div v-if="!yesterdayDaliy">
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
-            <div class="top_container" style="font-size: 15px">
-                <bk-button theme="primary" style="display: inline-block" @click="leaveSetting.visible = true">
-                    请假
+            <div class="top_container">
+                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
+                <bk-date-picker class="mr15" v-model="reportDate"
+                    :clearable="false"
+                    placeholder="选择日期"
+                    :options="customOption"
+                    @change="changeDate(reportDate)"
+                >
+                </bk-date-picker>
+                <div>
+                    <h2 class="mr30 f20" style="margin: 0;">
+                        日报状态：
+                        <span v-if="hasWrittenToday" style="color: #3A84FF;font-size: 18px;">已写日报</span>
+                        <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
+                    </h2>
+                </div>
+                <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily" class="mr30">
+                    {{ hasWrittenToday ? '修改' : '保存' }}
+                </bk-button>
+                <bk-button :theme="'primary'" style="display: inline-block" @click="clickLeaveManage" class="mr30">
+                    请假管理
                 </bk-button>
                 <div>
                     <span style="display: inline-block;" class="f15">选择日期：</span>
@@ -60,6 +78,7 @@
                                             :clearable="false"
                                             placeholder="选择日期范围"
                                             type="daterange"
+                                            :options="customLeaveOption"
                                             @clear="clearDate"
                                         ></bk-date-picker>
                                     </bk-form-item>
@@ -345,11 +364,20 @@
                 },
                 slideTitleList: [
                     '请假申请',
-                    '请假管理'
+                    '请假信息'
                 ],
                 activeTabTitle: '请假申请',
                 groupList: [],
-                selectedGroup: ''
+                selectedGroup: -1,
+                customLeaveOption: {
+                    disabledDate: function (date) {
+                        const nowDate = new Date()
+                        if (date < nowDate.setHours(nowDate.getHours() - 24)) {
+                            return true
+                        }
+                    }
+                },
+                curUserLeaveList: []
             }
         },
         created () {
@@ -388,27 +416,48 @@
                     }
                 })
             },
+            changeTemplate () {
+                if (this.curTemplateId === null || this.curTemplateId === '') {
+                    this.curTemplate = []
+                    this.dailyData = []
+                }
+            },
             checkYesterdayDaliy () {
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.result
-                    if (!res.result) {
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: res.message
-                        })
+                    this.yesterdayDaliy = !!res.data
+                })
+            },
+            // 切换模板
+            selectTemplate () {
+                this.dailyData = []
+                this.templateList.forEach(function (template) {
+                    if (template.id === this.curTemplateId) {
+                        this.curTemplate = template.content.split(';')
                     }
                 })
             },
             // 界面初始化
             init () {
+                this.cheakDailyDates()
                 this.getDailyReport()
                 // 获取当前用户组信息
                 this.$http.get('/get_user_groups/').then((res) => {
-                    this.groupList = res.data
-                    if (this.groupList.length !== 0) {
-                        this.selectedGroup = this.groupList[0].id
+                    if (res.result) {
+                        if (res.date.length !== 0 && res.date.length !== null) {
+                            this.groupList = res.data
+                            if (this.groupList.length !== 0 && this.groupList.length !== undefined) {
+                                this.selectedGroup = this.groupList[0].id
+                            }
+                        } else {
+                            this.groupList = []
+                        }
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
                     }
                 })
                 this.checkYesterdayDaliy()
@@ -452,6 +501,15 @@
                     }
                     this.cheakDailyDates()
                 })
+
+                // 获取当前用户组信息
+                this.$http.get('/get_user_groups/').then((res) => {
+                    this.groupList = res.data
+                    if (this.groupList.length !== 0) {
+                        this.selectedGroup = this.groupList[0].id
+                    }
+                    this.cheakDailyDates()
+                })
             },
             // 改变默认模板标题
             changeTitleText (index) {
@@ -489,7 +547,6 @@
                 this.newContent = row.text
                 this.newCost = parseFloat(row.cost)
                 this.targetRow = row.$index
-                this.isPrivate = row.isPrivate
                 this.isAdd = false
                 this.addDialog.visible = true
             },
@@ -570,30 +627,76 @@
                 }
             },
             // 获取请假管理表
-            getLeaveList () {
-                this.isleaveTableLoad = true
-                this.leaveTableData.data = []
-                const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+            getLeaveList (sign) {
                 const groupId = this.selectedGroup
-                const sign = 0 // 1 返回未请假人 或 0 返回请假人
-                this.$http.get('/display_personnel_information/' + groupId
-                    + '/?date=' + todayDate
-                    + '&sign=' + sign
-                ).then(res => {
-                    if (res.data !== undefined && res.data.length !== 0) {
-                        res.data.map((item, index) => {
-                            this.leaveTableData.data.push({
-                                'offdayId': item.off_info.id,
-                                'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
-                                'reason': item.off_info.reason,
-                                'info': item.username + '(' + item.name + ')',
-                                'username': item.username
+                if (sign === null || sign === undefined) {
+                    sign = 0 // 1 返回未请假人 或 0 返回请假人 或 2 返回个人所有请假信息
+                }
+
+                if (groupId === -1) {
+                    this.$bkMessage({
+                        'offsetY': 80,
+                        'delay': 2000,
+                        'theme': 'warning',
+                        'message': '用户当前未加入任何组，无请假信息。'
+                    })
+                } else {
+                    const vm = this
+                    this.isleaveTableLoad = true
+                    this.leaveTableData.data = []
+                    const todayDate = moment(new Date()).format(moment.HTML5_FMT.DATE)
+                    this.$http.get('/display_personnel_information/' + groupId
+                        + '/?date=' + todayDate
+                        + '&sign=' + sign
+                    ).then(res => {
+                        if (res.result) {
+                            if (res.data.length !== null && res.data.length !== 0) {
+                                if (sign === 2) {
+                                    this.curUserLeaveList = res.data
+                                    // 设置请假日期选择栏禁用日期
+                                    this.customLeaveOption = {
+                                        disabledDate: function (date) {
+                                            const nowDate = new Date()
+                                            if (date < nowDate.setHours(nowDate.getHours() - 24)) {
+                                                return true
+                                            } else {
+                                                let iscompareDateShow = true
+                                                vm.curUserLeaveList.map((item, index) => {
+                                                    const startDate = moment(item[0]).format('YYYY-MM-DD')
+                                                    const compareDate = moment(date).format('YYYY-MM-DD')
+                                                    const endDate = moment(item[1]).format('YYYY-MM-DD')
+                                                    if (moment(startDate).isSameOrBefore(compareDate, 'day') && moment(compareDate).isSameOrBefore(endDate, 'day')) {
+                                                        iscompareDateShow = false
+                                                    }
+                                                })
+                                                return !iscompareDateShow
+                                            }
+                                        }
+                                    }
+                                } else if (sign === 0) {
+                                    res.data.map((item, index) => {
+                                        this.leaveTableData.data.push({
+                                            'offdayId': item.off_info.id,
+                                            'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                            'reason': item.off_info.reason,
+                                            'info': item.username + '(' + item.name + ')',
+                                            'username': item.username
+                                        })
+                                    })
+                                }
+                            }
+                        } else {
+                            this.$bkMessage({
+                                'offsetY': 80,
+                                'delay': 2000,
+                                'theme': 'warning',
+                                'message': res.message
                             })
-                        })
-                    }
-                }).finally(() => {
-                    this.isleaveTableLoad = false
-                })
+                        }
+                    }).finally(() => {
+                        this.isleaveTableLoad = false
+                    })
+                }
             },
             // 请假滑窗关闭事件
             hiddenSlider () {
@@ -604,13 +707,15 @@
             // 切换请假页签事件
             changeTab (title) {
                 this.activeTabTitle = title
-                if (this.activeTabTitle === '请假管理') {
+                if (this.activeTabTitle === '请假信息') {
                     this.getLeaveList()
+                    this.getLeaveList(2)
                 }
             },
             // 选择组
             handleSelectGroup (value, option) {
                 this.getLeaveList()
+                this.getLeaveList(2)
             },
             // 清空请假日期
             clearDate () {
@@ -630,6 +735,7 @@
                             'theme': 'success',
                             'message': res.message
                         })
+                        this.getLeaveList(2)
                     } else {
                         this.$bkMessage({
                             'offsetY': 80,
@@ -639,6 +745,11 @@
                         })
                     }
                 })
+            },
+            // 请假管理按钮点击事件
+            clickLeaveManage () {
+                this.leaveSetting.visible = true
+                this.getLeaveList(2)
             }
         }
     }

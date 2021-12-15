@@ -23,7 +23,10 @@
                                 style="margin-right:0px;margin-left:0px;text-decoration:none;"
                                 @click="changeHead(index)"
                             >
-                                <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;" :class="{ 'item-active': index === header.active }">   {{ item.name }}</router-link>
+                                <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;"
+                                    :class="{ 'item-active': index === header.active }">
+                                    {{ item.name }}
+                                </router-link>
                             </li>
                         </bk-popover>
                     </ol>
@@ -190,14 +193,6 @@ body{
 }
 /* 以上样式是为了适应例子父级的宽高而设置 */
 
-/* 修复footer高度问题 */
-html {
-  height: 100%;
-}
-.monitor-navigation{
-  height: 100%;
-}
-/* 以上样修复footer高度问题 */
 .body-wapper{
     width: 100%;
     height: 100%;
@@ -415,6 +410,7 @@ html {
   box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   border-radius: 2px;
   border: 1px solid rgba(220, 222, 229, 1);
+  min-height: calc(100vh - 136px);
 }
 .monitor-navigation-footer {
   height: 52px;
