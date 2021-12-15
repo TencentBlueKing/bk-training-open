@@ -1,8 +1,5 @@
 <template>
     <div class="body">
-        <bk-divider align="left" style="margin-bottom:30px;">
-            <div class="container_title">管理组</div>
-        </bk-divider>
         <div class="container">
             <div class="top_container">
                 <div style="width: 24%;max-width:261px">
