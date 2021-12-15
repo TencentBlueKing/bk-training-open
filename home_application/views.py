@@ -812,7 +812,7 @@ def group_free_time(request, group_id):
 
 @is_group_member(admin_needed=["POST"])
 def check_user_in_group(request, group_id):
-    # 查询成员是否已加入指定小组，将未加入小组的成员姓名返回
+    # 查询成员是否已加入指定小组，返回未加入小组的成员姓名
     user_name = json.loads(request.body).get("UserName")
     # 待查询姓名列表
     user_name_lists = str(user_name).split(" ")
