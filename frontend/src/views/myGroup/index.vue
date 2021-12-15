@@ -741,10 +741,6 @@
                         }
                     })
                 }
-            },
-            testIndex (index) {
-                console.log(index)
-                return index + 1
             }
 
         }
