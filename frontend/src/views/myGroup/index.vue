@@ -1,118 +1,140 @@
 <template>
     <div id="myGroup">
         <div class="body">
-            <div class="line-container group-info" style="margin-top:30px;">
-                <span style="float:left; margin-top:12px; margin-left:21px;">组名：</span>
-                <bk-select :disabled="false" v-model="curGroupId" style="width: 250px; margin-top:10px; display: inline-block;"
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
-                    searchable
-                    @change="changeGroup(curGroupId)">
-                    <bk-option v-for="option in groupsData"
-                        :key="option.id"
-                        :id="option.id"
-                        :name="option.name">
-                    </bk-option>
-                </bk-select>
-                <bk-button :theme="'primary'" style="margin-left:30px; margin-top:-20px;" class="mr10" @click="addGroupDialog.visible = true">
-                    +新增组
-                </bk-button>
-                <bk-dialog v-model="addGroupDialog.visible" theme="primary" title="新增组" class="add-group-dialog" :show-footer="false">
-                    <bk-form label-width="120">
-                        <bk-form-item label="组名称" required="true">
-                            <bk-input v-model="addGroupData.formData.name"></bk-input>
-                        </bk-form-item>
-                        <bk-form-item label="管理员" required="true">
-                            <bk-select style="width: 250px; margin-top: 10px;"
-                                searchable
-                                multiple
-                                display-tag
-                                v-model="addGroupData.adminIds">
-                                <bk-option v-for="option in bkUsers"
-                                    :key="option.id"
-                                    :id="option.id"
-                                    :name="option.username + '(' + option.display_name + ')'">
-                                </bk-option>
-                            </bk-select>
-                        </bk-form-item>
-                        <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addGroup">提交</bk-button>
-                            <bk-button ext-cls="mr5" @click="addGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
-                        </bk-form-item>
-                    </bk-form>
-                </bk-dialog>
-                <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" :title="'主要按钮'" class="mr10" ref="adminClick" style="margin-top:-20px;" @click="clickEditGroup">
-                    编辑组
-                </bk-button>
-                <bk-dialog v-model="editGroupDialog.visible" theme="primary" title="修改组信息" class="add-group-dialog" :show-footer="false">
-                    <bk-form label-width="120">
-                        <bk-form-item label="组名称" required="true">
-                            <bk-input v-model="editGroupData.formData.name"></bk-input>
-                        </bk-form-item>
-                        <bk-form-item label="管理员" required="true">
-                            <bk-select style="width: 250px; margin-top: 10px;"
-                                searchable
-                                multiple
-                                display-tag
-                                v-model="editGroupData.adminIds">
-                                <bk-option v-for="option in bkUsers"
-                                    :key="option.id"
-                                    :id="option.id"
-                                    :name="option.username + '(' + option.display_name + ')'">
-                                </bk-option>
-                            </bk-select>
-                        </bk-form-item>
-                        <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editGroup(curGroupId)">提交</bk-button>
-                            <bk-button ext-cls="mr5" @click="editGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
-                        </bk-form-item>
-                    </bk-form>
-                </bk-dialog>
-                <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" :title="'主要按钮'" class="mr10" style="margin-top:-20px;" @click="deleteGroupDialog.visible = true">
-                    删除组
-                </bk-button>
-                <bk-dialog v-model="deleteGroupDialog.visible" theme="primary" class="delete-group-dialog" :show-footer="false">
+            <div class="line-container group-info">
+                <div class="fun-bar">
+                    <div class="select-wapper">
+                        <span style="width:50px;">组名：</span>
+                        <bk-select :disabled="false" v-model="curGroupId" style="width: 140px;display: inline-block;"
+                            ext-cls="select-custom"
+                            ext-popover-cls="select-popover-custom"
+                            searchable
+                            @change="changeGroup(curGroupId)">
+                            <bk-option v-for="option in groupsData"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </div>
+                    <div class="btn-wapper">
+                        <bk-button theme="primary" class="mr10" @click="addGroupDialog.visible = true">
+                            +新增组
+                        </bk-button>
+                        <bk-dialog v-model="addGroupDialog.visible" theme="primary" title="新增组" class="add-group-dialog" :show-footer="false">
+                            <bk-form label-width="120">
+                                <bk-form-item label="组名称" required="true">
+                                    <bk-input v-model="addGroupData.formData.name"></bk-input>
+                                </bk-form-item>
+                                <bk-form-item label="管理员" required="true">
+                                    <bk-select style="width: 250px; margin-top: 10px;"
+                                        searchable
+                                        multiple
+                                        display-tag
+                                        v-model="addGroupData.adminIds">
+                                        <bk-option v-for="option in bkUsers"
+                                            :key="option.id"
+                                            :id="option.id"
+                                            :name="option.username + '(' + option.display_name + ')'">
+                                        </bk-option>
+                                    </bk-select>
+                                </bk-form-item>
+                                <bk-form-item>
+                                    <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addGroup">提交</bk-button>
+                                    <bk-button ext-cls="mr5" @click="addGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                                </bk-form-item>
+                            </bk-form>
+                        </bk-dialog>
+                        <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" title="编辑组" class="mr10" ref="adminClick" @click="clickEditGroup">
+                            编辑组
+                        </bk-button>
+                        <bk-dialog v-model="editGroupDialog.visible" theme="primary" title="修改组信息" class="add-group-dialog" :show-footer="false">
+                            <bk-form label-width="120">
+                                <bk-form-item label="组名称" required="true">
+                                    <bk-input v-model="editGroupData.formData.name"></bk-input>
+                                </bk-form-item>
+                                <bk-form-item label="管理员" required="true">
+                                    <bk-select style="width: 250px; margin-top: 10px;"
+                                        searchable
+                                        multiple
+                                        display-tag
+                                        v-model="editGroupData.adminIds">
+                                        <bk-option v-for="option in bkUsers"
+                                            :key="option.id"
+                                            :id="option.id"
+                                            :name="option.username + '(' + option.display_name + ')'">
+                                        </bk-option>
+                                    </bk-select>
+                                </bk-form-item>
+                                <bk-form-item>
+                                    <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editGroup(curGroupId)">提交</bk-button>
+                                    <bk-button ext-cls="mr5" @click="editGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                                </bk-form-item>
+                            </bk-form>
+                        </bk-dialog>
+                        <bk-button v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" :theme="'primary'" title="删除组" class="mr10" @click="deleteGroupDialog.visible = true">
+                            删除组
+                        </bk-button>
+                        <bk-dialog v-model="deleteGroupDialog.visible" theme="primary" class="delete-group-dialog" :show-footer="false">
 
-                    <bk-form label-width="80">
-                        <bk-form-item style="margin-left:15px;">
-                            确认删除{{curGroup.name}}吗？
-                        </bk-form-item>
+                            <bk-form label-width="80">
+                                <bk-form-item style="margin-left:15px;">
+                                    确认删除{{curGroup.name}}吗？
+                                </bk-form-item>
 
-                        <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 20px;" theme="primary" title="提交" @click.stop.prevent="deleteGroup">提交</bk-button>
-                            <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
-                        </bk-form-item>
-                    </bk-form>
-                </bk-dialog>
-                <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-top:-20px;" class="mr10" @click="showApplyForGroup()">
-                    申请入组
-                </bk-button>
-                <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
-                    <bk-form label-width="80">
-                        <bk-form-item label="组" required="true">
-                            <bk-select v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
-                                searchable>
-                                <bk-option v-for="group in availableApplyGroups"
-                                    :key="group.id"
-                                    :id="group.id"
-                                    :name="group.name">
-                                </bk-option>
-                            </bk-select>
-                        </bk-form-item>
-                        <bk-form-item>
-                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyForGroup.groupId === ''" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
-                            <bk-button ext-cls="mr5" @click="applyForGroup.dialogVisible = false" theme="default" title="取消">取消</bk-button>
-                        </bk-form-item>
-                    </bk-form>
-                </bk-dialog>
-                <div style="height:30px;margin-top:6px;margin-left:18px;">管理员：<span v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}}); </span></div>
-                <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：<span v-if="curGroupId !== null ">{{curGroup.create_by}}({{curGroup.create_name}})</span></div>
-                <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
+                                <bk-form-item>
+                                    <bk-button style="margin-left: 20px;margin-right: 20px;" theme="primary" title="提交" @click.stop.prevent="deleteGroup">提交</bk-button>
+                                    <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
+                                </bk-form-item>
+                            </bk-form>
+                        </bk-dialog>
+                        <bk-button :theme="'primary'" title="申请入组" class="mr10" @click="showApplyForGroup()">
+                            申请入组
+                        </bk-button>
+                        <bk-dialog v-model="applyForGroup.dialogVisible" theme="primary" class="apply-join-club-dialog" :show-footer="false">
+                            <bk-form label-width="80">
+                                <bk-form-item label="组" required="true">
+                                    <bk-select v-model="applyForGroup.groupId" :loading="availableGroupsIsLoding" style="width: 250px;"
+                                        searchable>
+                                        <bk-option v-for="group in availableApplyGroups"
+                                            :key="group.id"
+                                            :id="group.id"
+                                            :name="group.name">
+                                        </bk-option>
+                                    </bk-select>
+                                </bk-form-item>
+                                <bk-form-item>
+                                    <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" :disabled="applyForGroup.groupId === ''" title="提交" @click.stop.prevent="doApplyforGroup()">提交</bk-button>
+                                    <bk-button ext-cls="mr5" @click="applyForGroup.dialogVisible = false" theme="default" title="取消">取消</bk-button>
+                                </bk-form-item>
+                            </bk-form>
+                        </bk-dialog>
+                    </div>
+                    
+                </div>
+                <div v-show="!iscurGroupLoad" class="info-bar">
+                    <div class="create-wapper">
+                        <div class="create-content">
+                            创建人:
+                            <bk-tag v-if="curGroupId !== null " ext-cls="create-tag">{{curGroup.create_by}}({{curGroup.create_name}})</bk-tag>
+                            <span v-if="curGroupId !== null "></span></div>
+                        <div class="create-content">
+                            创建时间:
+                            <bk-tag ext-cls="create-tag">{{curGroup.create_time}}</bk-tag>
+                        </div>
+                    </div>
+                    <div class="admin-wapper">
+                        <span>管理员:</span>
+                        <bk-tag ext-cls="admin-tag" v-for="admin in curGroup.admin_list" :key="admin.id">{{admin.username}}({{admin.name}})</bk-tag>
+                    </div>
+                </div>
+                <div v-show="iscurGroupLoad" class="info-loading" v-bkloading="{ isLoading: iscurGroupLoad, theme: 'primary', zIndex: 10 }">
+                </div>
             </div>
+        
             <div class="line-container group-users">
                 <bk-card title="组内成员">
                     <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
-                    <bk-input :clearable="true" v-model="searchForm.UserName" style="margin-left: 20px;width: 400px;display: inline-block;" placeholder="通过姓名搜索组内成员，可输入多个查询姓名，用空格分隔" :left-icon="'bk-icon icon-search'" @left-icon-click="searchUser"></bk-input>
                     <bk-dialog v-model="addUserDialog.visible" theme="primary" title="添加成员" class="add-group-dialog" :show-footer="false">
                         <bk-form label-width="120">
                             <bk-form-item label="成员" required="true">
@@ -162,21 +184,15 @@
 </template>
 
 <script>
-    import { bkSelect, bkOption, bkInput } from 'bk-magic-vue'
+    import { bkSelect, bkOption } from 'bk-magic-vue'
     export default {
         name: '',
         components: {
             bkSelect,
-            bkOption,
-            bkInput
+            bkOption
         },
         data () {
             return {
-                // 通过姓名搜索用户
-                searchForm: {
-                    UserName: ''
-                },
-                searchResult: '',
                 // 用户信息
                 curUser: {
                     isAdmin: false,
@@ -248,7 +264,8 @@
                     name: '',
                     phone: '',
                     email: ''
-                }
+                },
+                iscurGroupLoad: true
             }
         },
         created () {
@@ -258,18 +275,6 @@
             this.getAllBKUser()
         },
         methods: {
-            handleSingle (config) {
-                config.message = this.searchResult
-                config.offsetY = 80
-                this.$bkMessage(config)
-            },
-            searchUser () {
-                this.$http.post('/check_user_in_group/' + this.curGroupId + '/', this.searchForm).then(res => {
-                    this.searchResult = res.data
-                    console.log(this.searchResult)
-                    this.handleSingle({ delay: 10000 })
-                })
-            },
             // 请求函数
             // 获取所有蓝鲸用户
             getAllBKUser () {
@@ -283,6 +288,7 @@
             },
             // 获取组信息，并检查当前用户是否为该组管理员
             getGroupInfo (groupId) {
+                this.iscurGroupLoad = true
                 this.$http.get('/get_group_info/' + groupId + '/').then(res => {
                     this.curGroup = res.data
                     // 当前用户没加入任何组的话提示
@@ -300,6 +306,7 @@
                     }
                     // 切换组成员信息
                     this.getGroupUsers(groupId)
+                    this.iscurGroupLoad = false
                 })
             },
             // 获取组内成员
@@ -394,8 +401,6 @@
                     this.$http.get('/get_user_groups/').then((res) => {
                         // 更新组信息
                         this.groupsData = res.data
-
-                        console.log('init_group, groupsData:', this.groupsData)
                         // 当前用户没加入任何组的话提示
                         if (!this.groupsData || this.groupsData.length === 0) {
                             this.$bkMessage({
@@ -404,7 +409,6 @@
                             })
                             return
                         }
-                        
                         if (this.groupsData.length !== 0) {
                             this.curGroupId = this.groupsData[0].id
                             this.changeGroup(this.curGroupId)
@@ -628,13 +632,59 @@
 <style scoped>
     .body{
         border: 2px solid #EAEBF0 ;
-        /* border-radius: 4px; */
         margin:0px 100px;
+        min-height: 540px;
     }
     .line-container {
-        margin: 20px 50px 0px 50px;
+        margin: 16px 50px 0px 50px;
         padding-bottom: 10px;
-
+        
+    }
+    .group-info{
+        margin-top: 30px;
+        padding: 0px 20px;
+    }
+    .group-info .fun-bar{
+        display: flex;
+        flex-wrap:wrap;
+        margin-bottom: 8px;
+        min-height: 44px;
+    }
+    .group-info .fun-bar .select-wapper{
+        display: flex;
+        align-items: center;
+        margin-right: 20px;
+    }
+   .group-info .fun-bar .btn-wapper{
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: center;
+    }
+    .group-info .info-bar{
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .group-info .info-loading{
+        height: 60px;
+    }
+    .group-info .info-bar .admin-wapper{
+        width: 100%;
+        min-height: 40px;
+    }
+    .group-info .info-bar .admin-wapper .admin-tag{
+        font-size: 16px;
+    }
+    .group-info .info-bar .create-wapper{
+        display: flex;
+        flex-wrap: wrap;
+        min-height: 40px;
+    }
+    .group-info .info-bar .create-wapper .create-content{
+        margin-right: 20px;
+    }
+    .group-info .info-bar .create-wapper .create-content .create-tag{
+        font-size: 16px;
     }
     .line-container .container-label{
         font-size: 22px;
@@ -651,8 +701,5 @@
         padding-top: 10px !important;
         visibility:hidden;
         visibility:visible;
-    }
-    .input-demo {
-        width: 500px;
     }
 </style>
