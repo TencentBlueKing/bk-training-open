@@ -70,7 +70,7 @@
                                 <h2>{{dailyContnet.title}}</h2>
                                 <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                     <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                        <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                        <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
                                     </div>
                                 </div>
                                 <div v-else>
@@ -282,7 +282,7 @@
                 this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
                     if (res.result) {
                         this.groupUsers = []
-                        if (res.date.length !== 0 && res.date.length !== null) {
+                        if (res.data.length !== 0 && res.data.length !== null) {
                             res.data.map((item, index) => {
                                 if (item.username !== 'admin') {
                                     this.groupUsers.push(item)
@@ -540,8 +540,12 @@
         line-height: 600px;
         text-align: center;
     }
+    .right_container .perfect-report-wapper .perfect-cards{
+            display: flex;
+    flex-wrap: wrap;
+    }
     .right_container .perfect-report-wapper .perfect-cards .perfect-report-card{
-        width: 290px !important;
+        width: 32% !important;
     }
     .right_container .perfect-report-wapper .perfect-cards .perfect-report-card /deep/ .bk-card-head{
         text-overflow: ellipsis;
@@ -572,7 +576,7 @@
     .right_container .all-report-wapper .all-report-body .all-report-card{
         float: left;
         margin-bottom: 10px;
-        width: 24%;
+        width: 32%;
     }
     .right_container .all-report-wapper .all-report-body .all-report-card /deep/ .bk-card-head{
         text-overflow: ellipsis;
