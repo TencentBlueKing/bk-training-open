@@ -288,6 +288,14 @@
             getGroupInfo (groupId) {
                 this.$http.get('/get_group_info/' + groupId + '/').then(res => {
                     this.curGroup = res.data
+                    // 当前用户没加入任何组的话提示
+                    if (!this.groupsData || this.groupsData.length === 0) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: '您还没有加入任何组'
+                        })
+                        return
+                    }
                     // 是否为此组管理员
                     this.curUser.isAdmin = false
                     if (this.curGroup.admin.indexOf(this.curUser.info.username) !== -1) {
@@ -299,6 +307,10 @@
             },
             // 获取组内成员
             getGroupUsers (groupId) {
+                if (!groupId) {
+                    // 如果没有加入任何组就不执行任何操作
+                    return
+                }
                 this.$http.get('/get_group_users/' + groupId + '/').then(res => {
                     const groupUserDate = JSON.parse(JSON.stringify(res.data))
                     groupUserDate.map((item, index) => {
@@ -377,6 +389,14 @@
                     this.$http.get('/get_user_groups/').then((res) => {
                         // 更新组信息
                         this.groupsData = res.data
+                        // 当前用户没加入任何组的话提示
+                        if (!this.groupsData || this.groupsData.length === 0) {
+                            this.$bkMessage({
+                                theme: 'warning',
+                                message: '您还没有加入任何组'
+                            })
+                            return
+                        }
                         if (this.groupsData.length !== 0) {
                             this.curGroupId = this.groupsData[0].id
                             this.changeGroup(this.curGroupId)
