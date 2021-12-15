@@ -152,13 +152,13 @@
                         <div v-for="(daily, dindex) in hasSubmitDaily" :key="daily" class="flexcard">
                             <bk-card class="card" :show-head="true" :show-foot="true">
                                 <div slot="header" class="head-main">
-                                    <div class="mr20">{{daily.create_name}}的日报</div>
+                                    <div>{{daily.create_name}}的日报</div>
                                     <div class="state-bar">
                                         <bk-tag class="mr15" v-show="!daily.is_normal" theme="warning">补签</bk-tag>
-                                        <div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div>
-                                        <div v-else style="color: #63656E">未点评</div>
+                                        <div v-if="daily.evaluate.length" style="color: #3A84FF;">已点评</div>
+                                        <div v-else style="color: #63656E;">未点评</div>
                                     </div>
-                                    
+
                                 </div>
                                 <div>
                                     <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
@@ -688,7 +688,7 @@
     display: flex;
     justify-content: space-between;
     overflow: hidden;
-    
+
 }
 .head-main .state-bar{
     display: flex;

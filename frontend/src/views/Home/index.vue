@@ -4,14 +4,14 @@
             <div v-if="!yesterdayDaliy">
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
-            <div class="top_container">
-                <bk-button theme="primary" style="display: inline-block" @click="leaveSetting.visible = true" class="mr30">
+            <div class="top_container" style="font-size: 15px">
+                <bk-button theme="primary" style="display: inline-block" @click="leaveSetting.visible = true">
                     请假
                 </bk-button>
                 <div>
-                    <span style="display: inline-block;margin-left:50px;" class="f20">选择日期：</span>
+                    <span style="display: inline-block;" class="f15">选择日期：</span>
                     <bk-date-picker
-                        class="mr15" v-model="reportDate"
+                        v-model="reportDate"
                         :clearable="false"
                         placeholder="选择日期"
                         :options="customOption"
@@ -19,26 +19,27 @@
                     >
                     </bk-date-picker>
                 </div>
-                <div>
-                    <h2 class="mr30 f20" style="margin: 0;">
-                        日报状态：
-                        <span v-if="hasWrittenToday" style="color: #3A84FF;font-size: 18px;">已写日报</span>
-                        <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
-                    </h2>
+                <div style="padding: 5px 0">
+                    <p style="margin: 0;">
+                        <span>日报状态：</span>
+                        <span v-if="hasWrittenToday" style="color: #3A84FF">已写日报</span>
+                        <span v-else style="color: #63656E">未写日报</span>
+                    </p>
                 </div>
-                <div>
-                    <span class="mr10 f20">隐私模式</span>
+                <div style="padding: 6px 0">
+                    <span class="mr10">隐私模式</span>
                     <bk-switcher
                         v-model="allPrivate"
-                        class="mr30"
                         @change="setAllPrivate"
                     >
                     </bk-switcher>
                 </div>
-                <bk-sideslider width="600"
+                <bk-sideslider
+                    width="600"
                     :is-show.sync="leaveSetting.visible"
                     :quick-close="true"
                     @hidden="hiddenSlider"
+                    direction="left"
                     ext-cls="leave-slide">
                     <div slot="header" class="slide-header">
                         <div :class="{

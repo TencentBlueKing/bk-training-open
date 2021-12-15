@@ -75,12 +75,12 @@
                     删除组
                 </bk-button>
                 <bk-dialog v-model="deleteGroupDialog.visible" theme="primary" class="delete-group-dialog" :show-footer="false">
-                   
+
                     <bk-form label-width="80">
                         <bk-form-item style="margin-left:15px;">
                             确认删除{{curGroup.name}}吗？
                         </bk-form-item>
-                        
+
                         <bk-form-item>
                             <bk-button style="margin-left: 20px;margin-right: 20px;" theme="primary" title="提交" @click.stop.prevent="deleteGroup">提交</bk-button>
                             <bk-button ext-cls="mr5" @click="deleteGroupDialog.visible = false" theme="default" title="取消">取消</bk-button>
@@ -158,7 +158,7 @@
                     </bk-table>
                 </bk-card>
             </div>
-           
+
         </div>
     </div>
 </template>
@@ -323,9 +323,6 @@
                 } else {
                     // 更改组信息，和当前用户是否为当前组管理员信息
                     this.getGroupInfo(groupId)
-                    
-                    // 切换组模板
-                    this.getGroupTemplates(groupId)
                 }
             },
             // 点击添加用户
@@ -582,7 +579,7 @@
     .line-container {
         margin: 20px 50px 0px 50px;
         padding-bottom: 10px;
-        
+
     }
     .line-container .container-label{
         font-size: 22px;
