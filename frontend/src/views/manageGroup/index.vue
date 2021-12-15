@@ -159,10 +159,10 @@
                                 </div>
                                 <div>
                                     <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
-                                        <h2>{{dailyContnet.title}}</h2>
+                                        <h4>{{dailyContnet.title}}</h4>
                                         <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                             <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                                <pre>({{iiIndex + 1}}){{row.text}}</pre><span v-if="!row.isPrivate">----({{row.cost}})</span>
+                                                <pre>{{iiIndex + 1}}.{{row.text}}</pre><span v-if="!row.isPrivate">----({{row.cost}})</span>
                                             </div>
                                         </div>
                                         <div v-else>
@@ -171,7 +171,7 @@
                                     </div>
                                 </div>
                                 <div v-if="daily.evaluate.length">
-                                    <h2>点评情况</h2>
+                                    <h4>点评情况</h4>
                                     <div>
                                         <div class="singleComment" v-for="(evaluate,index) in daily.evaluate" :key="index">
                                             <p style="font-weight: bold">{{evaluate.name + '：'}}</p>
@@ -205,9 +205,9 @@
                             v-model="dailyDetailDialog.visible"
                             :header-position="dailyDetailDialog.headerPosition"
                             :width="dailyDetailDialog.width"
+                            title="我的点评"
                             @value-change="dailyDetailDialogChange">
                             <div v-if="dialogMember.hasComment">
-                                <h2>修改我的点评</h2>
                                 <div class="singleComment">
                                     <bk-input
                                         v-model="myNewComment"
@@ -220,7 +220,6 @@
                                 </div>
                             </div>
                             <div v-else>
-                                <h2>我的点评</h2>
                                 <bk-input
                                     placeholder="请输入"
                                     :clearable="true"
@@ -260,16 +259,14 @@
                                             删除
                                         </bk-button>
                                     </template>
-                                    <template v-else-if="myComment.length">
-                                        <bk-button
-                                            theme="primary"
-                                            title="确认"
-                                            class="mr10"
-                                            size="large"
-                                            @click="submitMyComment">
-                                            发送给他
-                                        </bk-button>
-                                    </template>
+                                    <bk-button
+                                        theme="primary"
+                                        title="确认"
+                                        class="mr10"
+                                        size="large"
+                                        @click="submitMyComment">
+                                        发送给他
+                                    </bk-button>
                                     <bk-button
                                         theme="default"
                                         title="关闭"
@@ -520,6 +517,11 @@
                     })
                     this.myComment = ''
                     this.dailyDetailDialog.visible = false
+                } else {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: '点评内容为空'
+                    })
                 }
             },
             // 更新，删除评论
@@ -694,6 +696,10 @@
     height: 200px;
     padding: 0 20px;
     overflow-y: scroll;
+}
+pre{
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 .foot-main {
     width: 100%;

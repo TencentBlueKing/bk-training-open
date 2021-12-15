@@ -138,7 +138,8 @@
                                 style="margin-top: 15px;"
                                 :data="singleContent.content"
                                 :virtual-render="true"
-                                height="175px">
+                                height="210px"
+                            >
                                 <bk-table-column prop="text" label="内容"></bk-table-column>
                                 <bk-table-column width="150" prop="cost" label="所花时间"></bk-table-column>
                                 <bk-table-column label="操作" width="150">
@@ -301,8 +302,8 @@
                     { 'title': '今日任务', 'type': 'table', 'content': [] },
                     { 'title': '明日计划', 'type': 'table', 'content': [] }
                 ],
-                isPrivate: false,
-                allPrivate: false,
+                isPrivate: true,
+                allPrivate: true,
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
@@ -543,6 +544,7 @@
             // 保存日报
             saveDaily () {
                 let hasSomeContentEmpty = false
+                const emptyContent = []
                 this.newPostDaily.date = this.formatDate
                 for (const index in this.dailyDataContent) {
                     this.dailyDataContent[index].title = this.dailyDataTitle[index]
@@ -552,19 +554,13 @@
                         this.newPostDaily.content.push(tableContent)
                     } else {
                         hasSomeContentEmpty = true
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: tableContent.title + '内容为空！'
-                        })
+                        emptyContent.push(tableContent.title)
                     }
                 }
                 for (const textContent of this.newTemplateContent) {
                     if (!textContent.text.length) {
                         hasSomeContentEmpty = true
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: textContent.title + '内容为空！'
-                        })
+                        emptyContent.push(textContent.title)
                     }
                     this.newPostDaily.content.push(textContent)
                 }
@@ -585,6 +581,10 @@
                         })
                     })
                 } else {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: emptyContent.join(',') + ' 内容为空！'
+                    })
                     this.newPostDaily.content = []
                 }
             },

@@ -156,7 +156,7 @@
                         </bk-form>
                     </bk-dialog>
                     <bk-table style="margin-top: 15px;"
-                        height="212px"
+                        height="294px"
                         :data="groupUsers"
                         :size="size"
                         :pagination="pagination"

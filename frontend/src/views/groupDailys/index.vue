@@ -67,10 +67,10 @@
                             <div>日期：{{daily.date}}</div>
                             <div>日报状态：{{daily.send_describe}}</div>
                             <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
-                                <h2>{{dailyContnet.title}}</h2>
+                                <h4>{{dailyContnet.title}}</h4>
                                 <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                     <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                        <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                        <pre>{{iiIndex + 1}}.{{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
                                     </div>
                                 </div>
                                 <div v-else>
@@ -130,7 +130,7 @@
                                 <div>日期：{{pdaily.date}}</div>
                                 <div>日报状态：{{pdaily.send_describe}}</div>
                                 <div v-for="(perfectContnet, innerIndex) in pdaily.content" :key="innerIndex">
-                                    <h2>{{perfectContnet.title}}</h2>
+                                    <h4>{{perfectContnet.title}}</h4>
                                     <div v-if="perfectContnet.type === 'table'" style="font-size: 18px">
                                         <div v-for="(row, iiIndex) in perfectContnet.content" :key="iiIndex">
                                             <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
@@ -310,7 +310,7 @@
             },
             // 获取当前组日报
             getDailys () {
-                if (!this.curUserId) {
+                if (!this.curGroupId) {
                     // 没有组的话直接不执行操作
                     return
                 }
@@ -496,6 +496,10 @@
     }
     .card >>> .bk-card-body .card-pre{
         white-space: normal;
+    }
+    pre{
+        white-space: pre-wrap;
+        word-break: break-word;
     }
     .date_picker >>>.bk-date-picker-dropdown{
         top: 32px !important;
