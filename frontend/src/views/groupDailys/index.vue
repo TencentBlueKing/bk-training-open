@@ -280,12 +280,23 @@
             getGroupUsers (groupId) {
                 // 根据组id获取组成员
                 this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
-                    this.groupUsers = []
-                    res.data.map((item, index) => {
-                        if (item.username !== 'admin') {
-                            this.groupUsers.push(item)
+                    if (res.result) {
+                        this.groupUsers = []
+                        if (res.date.length !== 0 && res.date.length !== null) {
+                            res.data.map((item, index) => {
+                                if (item.username !== 'admin') {
+                                    this.groupUsers.push(item)
+                                }
+                            })
                         }
-                    })
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'error',
+                            'message': res.message
+                        })
+                    }
                 })
             },
             // 修改日期或成员

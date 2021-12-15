@@ -411,9 +411,20 @@
                 this.getDailyReport()
                 // 获取当前用户组信息
                 this.$http.get('/get_user_groups/').then((res) => {
-                    this.groupList = res.data
-                    if (this.groupList.length !== 0 && this.groupList.length !== undefined) {
-                        this.selectedGroup = this.groupList[0].id
+                    if (res.result) {
+                        if (res.date.length !== 0 && res.date.length !== null) {
+                            this.groupList = res.data
+                            if (this.groupList.length !== 0 && this.groupList.length !== undefined) {
+                                this.selectedGroup = this.groupList[0].id
+                            }
+                        } else {
+                            this.groupList = []
+                        }
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
                     }
                 })
                 this.checkYesterdayDaliy()
@@ -570,41 +581,49 @@
                         + '/?date=' + todayDate
                         + '&sign=' + sign
                     ).then(res => {
-                        if (res.data !== undefined && res.data.length !== 0) {
-                            console.log('sign == ', sign)
-                            if (sign === 2) {
-                                this.curUserLeaveList = res.data
-                                // 设置请假日期选择栏禁用日期
-                                this.customLeaveOption = {
-                                    disabledDate: function (date) {
-                                        const nowDate = new Date()
-                                        if (date < nowDate.setHours(nowDate.getHours() - 24)) {
-                                            return true
-                                        } else {
-                                            let iscompareDateShow = true
-                                            vm.curUserLeaveList.map((item, index) => {
-                                                const startDate = moment(item[0]).format('YYYY-MM-DD')
-                                                const compareDate = moment(date).format('YYYY-MM-DD')
-                                                const endDate = moment(item[1]).format('YYYY-MM-DD')
-                                                if (moment(startDate).isSameOrBefore(compareDate, 'day') && moment(compareDate).isSameOrBefore(endDate, 'day')) {
-                                                    iscompareDateShow = false
-                                                }
-                                            })
-                                            return !iscompareDateShow
+                        if (res.result) {
+                            if (res.data.length !== null && res.data.length !== 0) {
+                                if (sign === 2) {
+                                    this.curUserLeaveList = res.data
+                                    // 设置请假日期选择栏禁用日期
+                                    this.customLeaveOption = {
+                                        disabledDate: function (date) {
+                                            const nowDate = new Date()
+                                            if (date < nowDate.setHours(nowDate.getHours() - 24)) {
+                                                return true
+                                            } else {
+                                                let iscompareDateShow = true
+                                                vm.curUserLeaveList.map((item, index) => {
+                                                    const startDate = moment(item[0]).format('YYYY-MM-DD')
+                                                    const compareDate = moment(date).format('YYYY-MM-DD')
+                                                    const endDate = moment(item[1]).format('YYYY-MM-DD')
+                                                    if (moment(startDate).isSameOrBefore(compareDate, 'day') && moment(compareDate).isSameOrBefore(endDate, 'day')) {
+                                                        iscompareDateShow = false
+                                                    }
+                                                })
+                                                return !iscompareDateShow
+                                            }
                                         }
                                     }
-                                }
-                            } else if (sign === 0) {
-                                res.data.map((item, index) => {
-                                    this.leaveTableData.data.push({
-                                        'offdayId': item.off_info.id,
-                                        'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
-                                        'reason': item.off_info.reason,
-                                        'info': item.username + '(' + item.name + ')',
-                                        'username': item.username
+                                } else if (sign === 0) {
+                                    res.data.map((item, index) => {
+                                        this.leaveTableData.data.push({
+                                            'offdayId': item.off_info.id,
+                                            'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                                            'reason': item.off_info.reason,
+                                            'info': item.username + '(' + item.name + ')',
+                                            'username': item.username
+                                        })
                                     })
-                                })
+                                }
                             }
+                        } else {
+                            this.$bkMessage({
+                                'offsetY': 80,
+                                'delay': 2000,
+                                'theme': 'warning',
+                                'message': res.message
+                            })
                         }
                     }).finally(() => {
                         this.isleaveTableLoad = false
