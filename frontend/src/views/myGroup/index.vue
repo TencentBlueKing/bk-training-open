@@ -112,61 +112,6 @@
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建人：<span v-if="curGroupId !== null ">{{curGroup.create_by}}({{curGroup.create_name}})</span></div>
                 <div style="height:30px;margin-top:6px;margin-left:18px;">创建时间：{{curGroup.create_time}}</div>
             </div>
-            <div class="line-container daily-template-info" style="margin-top:0px;">
-                <bk-card title="日报模板">
-                    <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" style="display:float" theme="primary" @click="addDailyTemplateDialog.visible = true">+新增模板</bk-link>
-                    <bk-dialog v-model="addDailyTemplateDialog.visible" theme="primary" title="新增模板" class="add-group-dialog" :show-footer="false">
-                        <bk-form label-width="120">
-                            <bk-form-item label="模板名称" required="true">
-                                <bk-input v-model="addDailyTemplateData.formData.name"></bk-input>
-                            </bk-form-item>
-                            <bk-form-item label="模板内容" required="true">
-                                <bk-input type="textarea" v-model="addDailyTemplateData.formData.content" placeholder="例如：今日任务;明日计划;总结"></bk-input>
-                            </bk-form-item>
-                            <bk-form-item>
-                                <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addDailyTemplate">提交</bk-button>
-                                <bk-button ext-cls="mr5" @click="addDailyTemplateDialog.visible = false" theme="default" title="取消">取消</bk-button>
-                            </bk-form-item>
-                        </bk-form>
-                    </bk-dialog>
-                    <bk-table style="margin-top:10px"
-
-                        height="210px"
-                        :data="dailyTemplates"
-                        :size="size"
-                        :pagination="pagination"
-                        :virtual-render="true"
-                        @row-mouse-enter="handleRowMouseEnter"
-                        @row-mouse-leave="handleRowMouseLeave"
-                        @page-change="handlePageChange"
-                        @page-limit-change="handlePageLimitChange">
-                        <bk-table-column type="index" label="序列" width="100"></bk-table-column>
-                        <bk-table-column label="模板名称" prop="name" width="320"></bk-table-column>
-                        <bk-table-column label="模板内容" prop="content"></bk-table-column>
-                        <bk-table-column label="创建人" prop="create_by"></bk-table-column>
-                        <bk-table-column label="操作" width="150">
-                            <template slot-scope="props">
-                                <bk-button v-show="curUser.isAdmin" class="mr10" theme="primary" text :disabled="!curUser.isAdmin" @click="clickEditDailyTemplate(props.row)">修改</bk-button>
-                                <bk-button v-show="curUser.isAdmin" class="mr10" theme="primary" text :disabled="!curUser.isAdmin" @click="removeDailyTemplate(props.row)">移除</bk-button>
-                                <bk-dialog v-model="editDailyTemplateDialog.visible" theme="primary" title="修改模板" class="add-group-dialog" :show-footer="false">
-                                    <bk-form label-width="120">
-                                        <bk-form-item label="模板名称" required="true">
-                                            <bk-input v-model="editDailyTemplateData.formData.name"></bk-input>
-                                        </bk-form-item>
-                                        <bk-form-item label="模板内容" required="true">
-                                            <bk-input type="textarea" v-model="editDailyTemplateData.formData.content" placeholder="请输入描述"></bk-input>
-                                        </bk-form-item>
-                                        <bk-form-item>
-                                            <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="editDailyTemplate">提交</bk-button>
-                                            <bk-button ext-cls="mr5" @click="editDailyTemplateDialog.visible = false" theme="default" title="取消">取消</bk-button>
-                                        </bk-form-item>
-                                    </bk-form>
-                                </bk-dialog>
-                            </template>
-                        </bk-table-column>
-                    </bk-table>
-                </bk-card>
-            </div>
             <div class="line-container group-users">
                 <bk-card title="组内成员">
                     <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
@@ -287,27 +232,6 @@
                     dialogVisible: false,
                     groupId: ''
                 },
-                addDailyTemplateDialog: {
-                    visible: false
-                },
-                addDailyTemplateData: {
-                    formData: {
-                        name: '',
-                        content: ''
-                    }
-                },
-                // 所有日志模板数据
-                dailyTemplates: [],
-                editDailyTemplateDialog: {
-                    visible: false
-                },
-                editDailyTemplateData: {
-                    formData: {
-                        template_id: '',
-                        name: '',
-                        content: ''
-                    }
-                },
                 // 所有组内成员数据
                 groupUsers: [],
                 addUserDialog: {
@@ -392,12 +316,6 @@
                     this.availableGroupsIsLoding = false
                 })
             },
-            // 获取组模板
-            getGroupTemplates (groupId) {
-                this.$http.get('/report_template/' + groupId + '/').then(res => {
-                    this.dailyTemplates = res.data
-                })
-            },
             // 前端反应操作
             // 切换组模板、组成员、是否管理员等信息
             changeGroup (groupId) {
@@ -412,15 +330,11 @@
                         create_name: '',
                         create_time: ''
                     }
-                    this.dailyTemplates = []
                     this.groupUsers = []
                     this.curUser.isAdmin = false
                 } else {
                     // 更改组信息，和当前用户是否为当前组管理员信息
                     this.getGroupInfo(groupId)
-
-                    // 切换组模板
-                    this.getGroupTemplates(groupId)
                 }
             },
             // 点击添加用户
@@ -446,14 +360,6 @@
                 this.applyForGroup.dialogVisible = true
                 // 获取用户（未在、未申请）组
                 this.getAvailableApplyGroups()
-            },
-            clickEditDailyTemplate (row) {
-                this.editDailyTemplateDialog.visible = true
-                this.editDailyTemplateData.formData = {
-                    template_id: row.id,
-                    name: row.name,
-                    content: row.content
-                }
             },
             // 初始化
             init () {
@@ -587,7 +493,6 @@
                             create_name: '',
                             create_time: ''
                         }
-                        this.dailyTemplates = []
                         this.groupUsers = []
                         this.curUser.isAdmin = false
                         // 更新页面全部信息
@@ -624,69 +529,6 @@
                         config.theme = 'error'
                     }
                     this.$bkMessage(config)
-                })
-            },
-            // 新增日报模板
-            addDailyTemplate () {
-                this.$http.post('/report_template/' + this.curGroup.id + '/', this.addDailyTemplateData.formData).then((res) => {
-                    const config = {}
-                    config.offsetY = 80
-                    if (res.result) {
-                        config.message = res.message
-                        config.theme = 'success'
-                        this.$bkMessage(config)
-                        // 更新模板内容
-                        this.getGroupTemplates(this.curGroup.id)
-                        this.addDailyTemplateDialog.visible = false
-                        this.addDailyTemplateData.formData = { name: '', content: '' }
-                    } else {
-                        config.message = res.message
-                        config.theme = 'error'
-                        this.$bkMessage(config)
-                    }
-                })
-            },
-            // 修改日报模板
-            editDailyTemplate () {
-                this.$http.put('/report_template/' + this.curGroup.id + '/', this.editDailyTemplateData.formData).then(res => {
-                    const config = {}
-                    config.offsetY = 80
-                    if (res.result) {
-                        config.message = res.message
-                        config.theme = 'success'
-                        this.$bkMessage(config)
-                        this.editDailyTemplateDialog.visible = false
-                    } else {
-                        config.message = res.message
-                        config.theme = 'error'
-                        this.$bkMessage(config)
-                    }
-                    // 更新模板信息
-                    this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
-                        // res.data.results
-                        this.dailyTemplates = res.data
-                    })
-                })
-            },
-            removeDailyTemplate (row) {
-                const templateId = row.id
-                this.$http.delete('/report_template/' + this.curGroup.id + '/?template_id=' + templateId, { 'template_id': 12
-                }).then(res => {
-                    const config = {}
-                    config.offsetY = 80
-                    config.message = res.message
-                    if (res.result) {
-                        config.theme = 'success'
-                        this.$bkMessage(config)
-                    } else {
-                        config.theme = 'error'
-                        this.$bkMessage(config)
-                    }
-                    // 更新模板信息
-                    this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
-                        // res.data.results
-                        this.dailyTemplates = res.data
-                    })
                 })
             },
             // 新增成员

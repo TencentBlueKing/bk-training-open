@@ -103,9 +103,9 @@ def send_good_daily(username, user_name, date, daily_list):
     :param date : 日报时间
     :param daily_list: 日报内容 日报评价
     """
-    mail_title = "{} 日报推送".format(date)
+    mail_title = "{} 日报推送".format(date[0:10])
     html_template = get_template("all_excellent.html")
-    mail_content = html_template.render({"daily_list": daily_list, "username": username})
+    mail_content = html_template.render({"daily_list": daily_list, "username": username, "date": date[0:10]})
     send_mail(
         receiver__username=user_name,
         title=mail_title,

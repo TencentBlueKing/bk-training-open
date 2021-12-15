@@ -31,20 +31,19 @@
                     </bk-date-picker>
                 </div>
                 <div style="margin-left: 2%">
-                    <bk-badge theme="danger" :max="99" :val="newApplyData.length">
+                    <bk-badge theme="danger" :max="99" :val="newApplyData.length" :visible="newApplyData.length">
                         <bk-button
                             theme="primary"
                             @click="newApplyDialog.visible = true">
-                            新的申请入组
+                            新人入组申请
                         </bk-button>
                     </bk-badge>
                 </div>
                 <bk-dialog
                     v-model="newApplyDialog.visible"
-                    title="新人入组请求"
+                    title="新人入组申请"
                     :header-position="newApplyDialog.headerPosition"
-                    :width="newApplyDialog.width"
-                    :position="{ top: 20, left: 100 }">
+                    :width="newApplyDialog.width">
                     <bk-table
                         style="margin-top: 15px;"
                         :virtual-render="true"
@@ -73,7 +72,7 @@
                     </bk-table>
                 </bk-dialog>
                 <div>
-                    <bk-badge theme="danger" :max="99" :val="hasNotSubmitMember.length">
+                    <bk-badge theme="danger" :max="99" :val="hasNotSubmitMember.length" :visible="hasNotSubmitMember.length">
                         <bk-button
                             :theme="'primary'"
                             :title="'未提交'"
@@ -86,8 +85,7 @@
                     v-model="hasNotSubmitDialog.visible"
                     title="今日未提交报告名单"
                     :header-position="hasNotSubmitDialog.headerPosition"
-                    :width="hasNotSubmitDialog.width"
-                    :position="{ top: 20, left: 100 }">
+                    :width="hasNotSubmitDialog.width">
                     <div>
                         <bk-button v-for="daily in hasNotSubmitMember" :key="daily.id" :theme="'primary'" style="width:110px;margin: 10px 0" class="mr10">
                             {{daily.create_name}}
@@ -102,7 +100,7 @@
                     </div>
                 </bk-dialog>
                 <div>
-                    <bk-badge theme="danger" :max="99" :val="shareAllList.length">
+                    <bk-badge theme="danger" :max="99" :val="shareAllList.length" :visible="shareAllList.length">
                         <bk-button
                             theme="primary"
                             title="分享日报"
@@ -115,8 +113,7 @@
                     v-model="shareAllDialog.visible"
                     title="分享日报列表"
                     :header-position="shareAllDialog.headerPosition"
-                    :width="shareAllDialog.width"
-                    :position="{ top: 20, left: 100 }">
+                    :width="shareAllDialog.width">
                     <div>
                         <template v-for="(daily,index) in shareAllList">
                             <a :key="index" @click="removeFromShareList(index)" style="cursor:pointer">
@@ -155,13 +152,13 @@
                         <div v-for="(daily, dindex) in hasSubmitDaily" :key="daily" class="flexcard">
                             <bk-card class="card" :show-head="true" :show-foot="true">
                                 <div slot="header" class="head-main">
-                                    <div class="mr20">{{daily.create_name}}的日报</div>
+                                    <div>{{daily.create_name}}的日报</div>
                                     <div class="state-bar">
                                         <bk-tag class="mr15" v-show="!daily.is_normal" theme="warning">补签</bk-tag>
-                                        <div v-if="daily.evaluate.length" style="color: #3A84FF">已点评</div>
-                                        <div v-else style="color: #63656E">未点评</div>
+                                        <div v-if="daily.evaluate.length" style="color: #3A84FF;">已点评</div>
+                                        <div v-else style="color: #63656E;">未点评</div>
                                     </div>
-                                    
+
                                 </div>
                                 <div>
                                     <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
@@ -180,21 +177,13 @@
                                     <h2>点评情况</h2>
                                     <div>
                                         <div class="singleComment" v-for="(evaluate,index) in daily.evaluate" :key="index">
-                                            <span style="font-weight: bold">{{evaluate.name + '说：'}}</span>
+                                            <p style="font-weight: bold">{{evaluate.name + '：'}}</p>
                                             <span>{{evaluate.evaluate}}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div slot="footer" class="foot-main">
                                     <div>
-                                        <bk-button
-                                            theme="success"
-                                            title="分享"
-                                            class="mr10"
-                                            size="small"
-                                            @click="dealShareAll(daily)">
-                                            加入待分享
-                                        </bk-button>
                                         <bk-button
                                             theme="primary"
                                             title="去点评"
@@ -219,8 +208,7 @@
                             v-model="dailyDetailDialog.visible"
                             :header-position="dailyDetailDialog.headerPosition"
                             :width="dailyDetailDialog.width"
-                            @value-change="dailyDetailDialogChange"
-                            :position="{ top: 20, left: 100 }">
+                            @value-change="dailyDetailDialogChange">
                             <div v-if="dialogMember.hasComment">
                                 <h2>修改我的点评</h2>
                                 <div class="singleComment">
@@ -248,6 +236,14 @@
                             </div>
                             <div slot="footer" class="dialog-foot">
                                 <div>
+                                    <bk-button
+                                        theme="primary"
+                                        title="分享"
+                                        class="mr10"
+                                        size="large"
+                                        @click="dealShareAll(dialogMember)">
+                                        加入待分享
+                                    </bk-button>
                                     <template v-if="dialogMember.hasComment">
                                         <bk-button
                                             theme="warning"
@@ -692,7 +688,7 @@
     display: flex;
     justify-content: space-between;
     overflow: hidden;
-    
+
 }
 .head-main .state-bar{
     display: flex;
