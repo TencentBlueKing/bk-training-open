@@ -110,7 +110,7 @@
                             </bk-form>
                         </bk-dialog>
                     </div>
-                    
+
                 </div>
                 <div v-show="!iscurGroupLoad" class="info-bar">
                     <div class="create-wapper">
@@ -131,30 +131,31 @@
                 <div v-show="iscurGroupLoad" class="info-loading" v-bkloading="{ isLoading: iscurGroupLoad, theme: 'primary', zIndex: 10 }">
                 </div>
             </div>
-        
             <div class="line-container group-users">
                 <bk-card title="组内成员">
-                    <bk-link v-show="curUser.isAdmin" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
-                    <bk-dialog v-model="addUserDialog.visible" theme="primary" title="添加成员" class="add-group-dialog" :show-footer="false">
-                        <bk-form label-width="120">
-                            <bk-form-item label="成员" required="true">
-                                <bk-select :disabled="false" v-model="addUserForm.id" style="width: 250px;"
-                                    ext-cls="select-custom"
-                                    ext-popover-cls="select-popover-custom"
-                                    searchable>
-                                    <bk-option v-for="option in bkUsers"
-                                        :key="option.id"
-                                        :id="option.id"
-                                        :name="option.username + '(' + option.display_name + ')'">
-                                    </bk-option>
-                                </bk-select>
-                            </bk-form-item>
-                            <bk-form-item>
-                                <bk-button style="margin-left: 20px;margin-right: 40px;" theme="primary" title="提交" @click.stop.prevent="addUser">提交</bk-button>
-                                <bk-button ext-cls="mr5" @click="addUserDialog.visible = false" theme="default" title="取消">取消</bk-button>
-                            </bk-form-item>
-                        </bk-form>
-                    </bk-dialog>
+                    <bk-link v-show="curUser.isAdmin && !addUserVisible" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
+
+                    <div v-show="addUserVisible">
+                        <bk-select
+                            searchable
+                            multiple
+                            display-tag
+                            v-model="newUserIds"
+                            @click="updateBkUserExceptGroupUser"
+                            style="display: inline-block; min-width: 20%; float: left; margin: 10px 0"
+                            ext-cls="select-custom"
+                            ext-popover-cls="select-popover-custom">
+                            <bk-option v-for="option in bkUsersExceptGroupUsers"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.username + '(' + option.display_name + ')'">
+                            </bk-option>
+                        </bk-select>
+
+                        <bk-button style="float: left; margin: 10px" theme="primary" title="添加" @click.stop.prevent="addUser">添加</bk-button>
+                        <bk-button style="float: left; margin: 10px" ext-cls="mr5" @click="cancelAddUser" theme="default" title="取消">取消</bk-button>
+                    </div>
+
                     <bk-table style="margin-top: 15px;"
                         height="212px"
                         :data="groupUsers"
@@ -216,6 +217,10 @@
                 },
                 // 所有蓝鲸用户
                 bkUsers: [],
+                // 除了组内用户之外的所有蓝鲸用户
+                bkUsersExceptGroupUsers: [],
+                // 要添加的新用户id数组
+                newUserIds: [],
                 // 添加组dialog样式
                 addGroupDialog: {
                     visible: false
@@ -265,7 +270,8 @@
                     phone: '',
                     email: ''
                 },
-                iscurGroupLoad: true
+                iscurGroupLoad: true,
+                addUserVisible: false
             }
         },
         created () {
@@ -282,9 +288,14 @@
                     this.bkUsers = res.data.results
                 })
             },
-            // 判断用户是否是当前组的管理员
-            isManager () {
-
+            // 更新添加用户下拉框的候选成员
+            updateBkUserExceptGroupUser () {
+                const groupUserIds = this.groupUsers.map((item) => {
+                    return item.id
+                })
+                this.bkUsersExceptGroupUsers = this.bkUsers.filter(function (user) {
+                    return groupUserIds.indexOf(user.id) === -1
+                })
             },
             // 获取组信息，并检查当前用户是否为该组管理员
             getGroupInfo (groupId) {
@@ -326,6 +337,7 @@
                         item.listId = index + 1
                     })
                     this.groupUsers = groupUserDate
+                    this.updateBkUserExceptGroupUser()
                 })
             },
             // 获取所有组信息
@@ -365,10 +377,40 @@
             },
             // 点击添加用户
             clickAddUser () {
-                this.addUserDialog.visible = true
-                // 默认把蓝鲸平台第一个用户放在选项框里
-                this.addUserForm.id = this.bkUsers[0].id
-                console.log('bk-first-userId:', this.addUserForm.id)
+                this.addUserVisible = true
+                this.updateBkUserExceptGroupUser()
+            },
+            cancelAddUser () {
+                // 设置添加用户下拉框不可见
+                this.addUserVisible = false
+                // 情况添加用户下拉框
+                // 情况添加用户下拉框
+                this.newUserIds = []
+            },
+            // 新增成员
+            addUser () {
+                // 弹窗信息
+                const config = {}
+                config.offsetY = 80
+                if (this.newUserIds.length === 0) {
+                    config.message = '请选择要添加的用户'
+                    this.$bkMessage(config)
+                    return
+                }
+                this.$http.post('/add_user/' + this.curGroup.id + '/', { 'new_user_ids': this.newUserIds }).then(res => {
+                    config.message = res.message
+                    if (res.result) {
+                        config.theme = 'success'
+                        this.$bkMessage(config)
+                        // 将提交的表单清空，因为当前（刚打开时的第一个元素）和它关联
+                        this.newUserIds = []
+                        // 更新组-用户信息
+                        this.getGroupUsers(this.curGroup.id)
+                    } else {
+                        config.theme = 'error'
+                        this.$bkMessage(config)
+                    }
+                })
             },
             clickEditGroup () {
                 this.editGroupDialog.visible = true
@@ -568,33 +610,6 @@
                     this.$bkMessage(config)
                 })
             },
-            // 新增成员
-            addUser () {
-                const vm = this
-                this.bkUsers.forEach(function (user) {
-                    if (user.id === vm.addUserForm.id) {
-                        vm.addUserForm = user
-                    }
-                })
-                console.log('addUserForm', this.addUserForm)
-                this.$http.post('/add_user/' + this.curGroup.id + '/', this.addUserForm).then(res => {
-                    const config = {}
-                    config.offsetY = 80
-                    config.message = res.message
-                    if (res.result) {
-                        this.addUserDialog.visible = false
-                        config.theme = 'success'
-                        this.$bkMessage(config)
-                        // 将提交的表单清空，因为当前（刚打开时的第一个元素）和它关联
-                        this.addUserForm = {}
-                        // 更新组-用户信息
-                        this.getGroupUsers(this.curGroup.id)
-                    } else {
-                        config.theme = 'error'
-                        this.$bkMessage(config)
-                    }
-                })
-            },
             // 将用户从组中移除
             removeUser (row) {
                 // 检验删除的是否是管理员
@@ -606,10 +621,9 @@
                     this.$bkMessage(config)
                 } else {
                     // props.row是当前行的遍历元素的全部信息=该行user
-                    console.log('row-user', row)
-                    const deletForm = { 'user_id': row.id }
+                    const deleteForm = { 'user_id': row.id }
                     // 将用户从组里移除
-                    this.$http.post('/exit_group/' + this.curGroup.id + '/', deletForm).then(res => {
+                    this.$http.post('/exit_group/' + this.curGroup.id + '/', deleteForm).then(res => {
                         const config = {}
                         config.offsetY = 80
                         config.message = res.message
@@ -638,7 +652,7 @@
     .line-container {
         margin: 16px 50px 0px 50px;
         padding-bottom: 10px;
-        
+
     }
     .group-info{
         margin-top: 30px;

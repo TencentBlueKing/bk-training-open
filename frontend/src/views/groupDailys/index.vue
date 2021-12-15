@@ -310,7 +310,7 @@
             },
             // 获取当前组日报
             getDailys () {
-                if (!this.curUserId) {
+                if (!this.curGroupId) {
                     // 没有组的话直接不执行操作
                     return
                 }
