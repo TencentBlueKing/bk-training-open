@@ -2,9 +2,6 @@
     <div id="myGroup">
         <div class="body">
             <div class="line-container group-info" style="margin-top:30px;">
-                <bk-divider align="left">
-                    <div class="container-label">基本信息</div>
-                </bk-divider>
                 <span style="float:left; margin-top:12px; margin-left:21px;">组名：</span>
                 <bk-select :disabled="false" v-model="curGroupId" style="width: 250px; margin-top:10px; display: inline-block;"
                     ext-cls="select-custom"
@@ -140,7 +137,7 @@
                         @row-mouse-leave="handleRowMouseLeave"
                         @page-change="handlePageChange"
                         @page-limit-change="handlePageLimitChange">
-                        <bk-table-column type="index" label="序列" width="100"></bk-table-column>
+                        <bk-table-column type="index" label="序号" width="100"></bk-table-column>
                         <bk-table-column label="模板名称" prop="name" width="320"></bk-table-column>
                         <bk-table-column label="模板内容" prop="content"></bk-table-column>
                         <bk-table-column label="创建人" prop="create_by"></bk-table-column>
@@ -200,7 +197,7 @@
                         @row-mouse-leave="handleRowMouseLeave"
                         @page-change="handlePageChange"
                         @page-limit-change="handlePageLimitChange">
-                        <bk-table-column type="index" label="序列" width="100"></bk-table-column>
+                        <bk-table-column label="序号" prop="listId" width="60"></bk-table-column>
                         <bk-table-column label="用户名" prop="username"></bk-table-column>
                         <bk-table-column label="姓名" prop="name"></bk-table-column>
                         <bk-table-column label="电话" prop="phone"></bk-table-column>
@@ -362,6 +359,9 @@
                         if (this.curGroup.admin.indexOf(item.username) !== -1) {
                             groupUserDate.unshift(groupUserDate.splice(index, 1)[0])
                         }
+                    })
+                    groupUserDate.map((item, index) => {
+                        item.listId = index + 1
                     })
                     this.groupUsers = groupUserDate
                 })
@@ -660,7 +660,6 @@
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
                         // res.data.results
                         this.dailyTemplates = res.data
-                        console.log('get_report_templates:', res.data)
                     })
                 })
             },
@@ -682,7 +681,6 @@
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
                         // res.data.results
                         this.dailyTemplates = res.data
-                        console.log('get_report_templates:', res.data)
                     })
                 })
             },
@@ -741,6 +739,10 @@
                         }
                     })
                 }
+            },
+            testIndex (index) {
+                console.log(index)
+                return index + 1
             }
 
         }
