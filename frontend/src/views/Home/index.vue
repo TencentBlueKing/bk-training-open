@@ -482,16 +482,6 @@
                             { 'title': '感想', 'type': 'text', 'text': '' }
                         ]
                     }
-                    this.cheakDailyDates()
-                })
-
-                // 获取当前用户组信息
-                this.$http.get('/get_user_groups/').then((res) => {
-                    this.groupList = res.data
-                    if (this.groupList.length !== 0) {
-                        this.selectedGroup = this.groupList[0].id
-                    }
-                    this.cheakDailyDates()
                 })
             },
             // 改变默认模板标题
