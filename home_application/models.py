@@ -336,6 +336,7 @@ class FreeTimeManage(models.Manager):
                     "username": username,
                     "free_time": [
                         {
+                            "id": f_time.id,
                             "date": f_time.start_time.date(),
                             "start_time": f_time.start_time.strftime("%Y-%m-%d %H:%M"),
                             "end_time": f_time.end_time.strftime("%Y-%m-%d %H:%M"),
