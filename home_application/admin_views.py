@@ -80,9 +80,9 @@ def evaluate_daily(request):
     evaluate.append({"name": request.user.username, "evaluate": evaluate_content})
     Daily.objects.filter(id=daily_id).update(evaluate=evaluate)
     # 获取发邮件人的姓名
-    admin_username = User.objects.filter(username=request.user.username).values("name")
+    evaluate_name = User.objects.get(username=request.user.username)
     send_evaluate_daily.apply_async(
-        kwargs={"admin_username": admin_username[0]["name"], "daily_id": daily_id, "evaluate_content": evaluate_content}
+        kwargs={"evaluate_name": evaluate_name.name, "daily_id": daily_id, "evaluate_content": evaluate_content}
     )
     return JsonResponse({"result": True, "code": 0, "message": "点评成功", "data": []})
 

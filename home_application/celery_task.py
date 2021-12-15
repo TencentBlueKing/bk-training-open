@@ -115,12 +115,12 @@ def send_good_daily(username, user_name, date, daily_list):
 
 
 @task()
-def send_evaluate_daily(admin_username, daily_id, evaluate_content):
+def send_evaluate_daily(evaluate_name, daily_id, evaluate_content):
     """
     将日报评价发生给个人
     :param daily_id:日报id
     :param evaluate_content: 日报内容
-    :param admin_username :评价人姓名
+    :param evaluate_name :评价人姓名
     """
     name = Daily.objects.filter(id=daily_id).values("create_name", "date", "content")
     username = User.objects.filter(name=name[0]["create_name"]).values("username")
@@ -133,7 +133,7 @@ def send_evaluate_daily(admin_username, daily_id, evaluate_content):
     group_reports = [
         {
             "content": content,
-            "username": admin_username,
+            "evaluate_name": evaluate_name,
             "evaluate_content": evaluate_content,
         }
     ]
