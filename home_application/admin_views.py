@@ -174,12 +174,13 @@ def send_evaluate_all(request, group_id):
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
+    evaluate_name = User.objects.get(username=request.user.username)
     if all_username:
         # 放进celery里
         all_username = ",".join(all_username)
         send_good_daily.apply_async(
             kwargs={
-                "username": request.user.username,
+                "evaluate_name": evaluate_name.name,
                 "user_name": all_username,
                 "date": date,
                 "daily_list": daily_list,
