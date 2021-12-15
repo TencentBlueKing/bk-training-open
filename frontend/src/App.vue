@@ -134,6 +134,17 @@
                 return this.header.list[this.header.active] || {}
             }
         },
+        created () {
+            // url/分割获取最后一个元素再截取掉参数
+            const curUrl = window.location.href
+            const subRouterName = curUrl.split('/').slice(-1)[0].split('?')[0]
+            const vm = this
+            this.header.list.forEach(e => {
+                if (e.url === subRouterName) {
+                    vm.header.active = e.id - 1
+                }
+            })
+        },
         methods: {
             changeHead (index) {
                 const vm = this
