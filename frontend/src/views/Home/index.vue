@@ -564,7 +564,7 @@
                 if (sign === null || sign === undefined) {
                     sign = 0 // 1 返回未请假人 或 0 返回请假人 或 2 返回个人所有请假信息
                 }
-                
+
                 if (groupId === -1) {
                     this.$bkMessage({
                         'offsetY': 80,

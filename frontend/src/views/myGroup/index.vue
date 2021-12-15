@@ -660,6 +660,7 @@
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
                         // res.data.results
                         this.dailyTemplates = res.data
+                        console.log('get_report_templates:', res.data)
                     })
                 })
             },
@@ -681,6 +682,7 @@
                     this.$http.get('/report_template/' + this.curGroup.id + '/').then(res => {
                         // res.data.results
                         this.dailyTemplates = res.data
+                        console.log('get_report_templates:', res.data)
                     })
                 })
             },
