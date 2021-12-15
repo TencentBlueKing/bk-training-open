@@ -5,24 +5,6 @@
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
             <div class="top_container">
-                <span style="display: inline-block;margin-left:50px;">选择日期：</span>
-                <bk-date-picker class="mr15" v-model="reportDate"
-                    :clearable="false"
-                    placeholder="选择日期"
-                    :options="customOption"
-                    @change="changeDate(reportDate)"
-                >
-                </bk-date-picker>
-                <div>
-                    <h2 class="mr30 f20" style="margin: 0;">
-                        日报状态：
-                        <span v-if="hasWrittenToday" style="color: #3A84FF;font-size: 18px;">已写日报</span>
-                        <span v-else style="color: #63656E;font-size: 18px;">未写日报</span>
-                    </h2>
-                </div>
-                <bk-button :theme="hasWrittenToday ? 'warning' : 'primary' " style="display: inline-block" @click="saveDaily" class="mr30">
-                    {{ hasWrittenToday ? '修改' : '保存' }}
-                </bk-button>
                 <bk-button :theme="'primary'" style="display: inline-block" @click="clickLeaveManage" class="mr30">
                     请假管理
                 </bk-button>
@@ -57,7 +39,7 @@
                     :is-show.sync="leaveSetting.visible"
                     :quick-close="true"
                     @hidden="hiddenSlider"
-                    direction="left"
+                    direction="right"
                     ext-cls="leave-slide">
                     <div slot="header" class="slide-header">
                         <div :class="{
@@ -445,7 +427,7 @@
                 // 获取当前用户组信息
                 this.$http.get('/get_user_groups/').then((res) => {
                     if (res.result) {
-                        if (res.date.length !== 0 && res.date.length !== null) {
+                        if (res.data.length !== 0 && res.data.length !== null) {
                             this.groupList = res.data
                             if (this.groupList.length !== 0 && this.groupList.length !== undefined) {
                                 this.selectedGroup = this.groupList[0].id
