@@ -401,6 +401,7 @@ def apply_for_group(request):
                     "group_name": group.name,
                     "group_admins": group.admin,
                     "user_name": "{}({})".format(user.username, user.name),
+                    "group_id": group_id,
                 }
             )
             return JsonResponse({"result": True, "code": 0, "message": u"申请入组-{}成功".format(group.name), "data": []})

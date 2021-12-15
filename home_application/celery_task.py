@@ -42,21 +42,30 @@ def morning_task():
 
 
 @task()
-def send_apply_for_group_to_manager(user_name, group_admins, group_name):
+def send_apply_for_group_to_manager(user_name, group_admins, group_name, group_id):
     """
     将申请入组请求发送给管理员
     :param user_name:       用户名：username(name)
     :param group_admins:    用户申请入组的所有管理员(邮件接收人)
     :param group_name:   组名
+    :param group_id:    组id
     """
     logger.info(
-        "将申请入组请求发送给管理员 \n username: %s \n group_admins: %s \n group_name: %s", user_name, group_admins, group_name
+        "将申请入组请求发送给管理员 \n username: %s \n group_admins: %s \n group_name: %s \n group_id: %s",
+        user_name,
+        group_admins,
+        group_name,
+        group_id,
     )
     mail_title = "申请入组请求"
+    link_text = "点击查看"
+    link_url = "https://paas-edu.bktencent.com/t/train-test/manage-group?group={}".format(group_id)  # 组管理页面
     mail_content = get_template("simple_notify.html").render(
         {
             "notify_title": mail_title,
             "notify_content": "{}申请加入您管理的组『{}』，快去处理吧~".format(user_name, group_name),
+            "link_text": link_text,
+            "link_url": link_url,
         }
     )
     send_mail(receiver__username=group_admins, title=mail_title, content=mail_content, body_format="Html")
