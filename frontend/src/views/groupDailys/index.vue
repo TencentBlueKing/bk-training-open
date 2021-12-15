@@ -289,6 +289,10 @@
             },
             // 获取当前组日报
             getDailys () {
+                if (!this.curUserId) {
+                    // 没有组的话直接不执行操作
+                    return
+                }
                 this.$http.get('/report_filter/' + this.curGroupId + '/?date=' + this.curDate + '&member_id=' + this.curUserId + '&size=' + this.defaultPaging.limit + '&page=' + this.defaultPaging.current).then(res => {
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
@@ -318,6 +322,14 @@
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
                     this.groupsData = res.data
+                    // 当前用户没加入任何组的话提示
+                    if (!this.groupsData || this.groupsData.length === 0) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: '您还没有加入任何组'
+                        })
+                        return
+                    }
                     // 初始化显示的组
                     if (this.groupsData.length !== 0) {
                         if (this.curGroupId !== null) {
