@@ -79,7 +79,11 @@ def evaluate_daily(request):
         return JsonResponse({"result": False, "code": 1, "message": "日报不存在"})
     evaluate.append({"name": request.user.username, "evaluate": evaluate_content})
     Daily.objects.filter(id=daily_id).update(evaluate=evaluate)
-    send_evaluate_daily.apply_async(kwargs={"daily_id": daily_id, "evaluate_content": evaluate_content})
+    # 获取发邮件人的姓名
+    evaluate_name = User.objects.get(username=request.user.username)
+    send_evaluate_daily.apply_async(
+        kwargs={"evaluate_name": evaluate_name.name, "daily_id": daily_id, "evaluate_content": evaluate_content}
+    )
     return JsonResponse({"result": True, "code": 0, "message": "点评成功", "data": []})
 
 
@@ -170,12 +174,13 @@ def send_evaluate_all(request, group_id):
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
+    evaluate_name = User.objects.get(username=request.user.username)
     if all_username:
         # 放进celery里
         all_username = ",".join(all_username)
         send_good_daily.apply_async(
             kwargs={
-                "username": request.user.username,
+                "evaluate_name": evaluate_name.name,
                 "user_name": all_username,
                 "date": date,
                 "daily_list": daily_list,

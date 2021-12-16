@@ -251,6 +251,13 @@
             }
             this.init()
         },
+        activated () {
+            if (!this.curGroupId) {
+                this.init()
+            } else {
+                this.getDailys()
+            }
+        },
         methods: {
             // 每页日报数量
             changeLimit (pageSize) {
@@ -343,13 +350,9 @@
                 this.$http.get('/get_user_groups/').then((res) => {
                     // 更新组信息
                     this.groupsData = res.data
-                    // 当前用户没加入任何组的话提示
+                    // 当前用户没加入任何组的话跳转到我的小组页面
                     if (!this.groupsData || this.groupsData.length === 0) {
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: '您还没有加入任何组'
-                        })
-                        return
+                        this.$router.push({ name: 'MyGroup' })
                     }
                     // 初始化显示的组
                     if (this.groupsData.length !== 0 && this.groupsData.length !== undefined) {

@@ -374,6 +374,25 @@
             }
             this.init()
         },
+        activated () {
+            // 如果没有加入任何组就跳转到我的小组页面
+            this.$http.get(
+                '/get_user_groups/'
+            ).then(res => {
+                console.log(res)
+                if (res.result) {
+                    // 没有加入任何组就跳转到我的小组页面
+                    if (res.data.length === 0) {
+                        this.$router.push({ name: 'MyGroup' })
+                    }
+                } else {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: res.message
+                    })
+                }
+            })
+        },
         methods: {
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
