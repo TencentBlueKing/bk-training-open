@@ -12,7 +12,7 @@
                 <div class="monitor-navigation-header">
                     <ol class="header-nav" v-if="curNav.nav === 'top-bottom'">
                         <bk-popover
-                            v-for="(item, index) in header.list"
+                            v-for="item in header.list"
                             :key="item.id"
                             theme="light navigation-message"
                             :arrow="false"
@@ -21,10 +21,9 @@
                                 v-show="item.show"
                                 class="header-nav-item"
                                 style="margin-right:0px;margin-left:0px;text-decoration:none;"
-                                @click="changeHead(index)"
                             >
                                 <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;"
-                                    :class="{ 'item-active': index === header.active }">
+                                    :class="{ 'item-active': item.routerName === activeRouter }">
                                     {{ item.name }}
                                 </router-link>
                             </li>
@@ -103,28 +102,31 @@
                             name: '填写日报',
                             id: 1,
                             url: 'home',
-                            show: true
+                            show: true,
+                            routerName: 'Home'
                         },
                         {
                             name: '日报查看',
                             id: 2,
                             url: 'group-dailys',
-                            show: true
+                            show: true,
+                            routerName: 'GroupDailys'
                         },
                         {
                             name: '我的小组',
                             id: 3,
                             url: 'my-group',
-                            show: true
+                            show: true,
+                            routerName: 'MyGroup'
                         },
                         {
                             name: '管理组',
                             id: 4,
                             url: 'manage-group',
-                            show: true
+                            show: true,
+                            routerName: 'ManageGroup'
                         }
                     ],
-                    active: 0,
                     bizId: 1
                 }
             }
@@ -133,26 +135,11 @@
             curNav () {
                 return this.navMap[this.navActive]
             },
-            curHeaderNav () {
-                return this.header.list[this.header.active] || {}
+            activeRouter () {
+                return this.$route.name
             }
         },
-        created () {
-            // url/分割获取最后一个元素再截取掉参数
-            const curUrl = window.location.href
-            const subRouterName = curUrl.split('/').slice(-1)[0].split('?')[0]
-            const vm = this
-            this.header.list.forEach(e => {
-                if (e.url === subRouterName) {
-                    vm.header.active = e.id - 1
-                }
-            })
-        },
         methods: {
-            changeHead (index) {
-                const vm = this
-                vm.header.active = index
-            },
             handleSelect (id, item) {
                 this.nav.id = id
             },
