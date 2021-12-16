@@ -95,17 +95,17 @@ def send_apply_for_group_result(username, group_name, status):
 
 
 @task()
-def send_good_daily(username, user_name, date, daily_list):
+def send_good_daily(evaluate_name, user_name, date, daily_list):
     """
     发送日报给组内所有人
-    :param username: 管理员
+    :param evaluate_name: 管理员
     :param user_name: 用户名：username string(多人以逗号连接)
     :param date : 日报时间
     :param daily_list: 日报内容 日报评价
     """
     mail_title = "{} 日报推送".format(date[0:10])
     html_template = get_template("all_excellent.html")
-    mail_content = html_template.render({"daily_list": daily_list, "username": username, "date": date[0:10]})
+    mail_content = html_template.render({"daily_list": daily_list, "evaluate_name": evaluate_name, "date": date[0:10]})
     send_mail(
         receiver__username=user_name,
         title=mail_title,
