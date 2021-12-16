@@ -304,29 +304,45 @@ def get_all_bk_users(request):
 def add_user(request, group_id):
     """添加用户信息"""
     req = json.loads(request.body)
-    params = {"id": "用户id", "username": "用户名"}
-    check_result, message = check_param(params, req)
-    if not check_result:
-        return JsonResponse({"result": False, "code": 1, "message": message})
-    id = req.get("id")
-    username = req.get("username")
-    name = req.get("display_name")
-    phone = req.get("phone")
-    email = req.get("email")
-    # 判断用户是否存在
-    try:
-        User.objects.get(id=id)  # 用户已存在
-    except User.DoesNotExist:
-        try:
-            # 用户不存在，创建用户
-            User.objects.create(id=id, username=username, name=name, phone=phone, email=email)
-        except IntegrityError:
-            return JsonResponse({"result": False, "code": 1, "message": "创建用户失败，用户名重复"})
+    new_user_ids = set(req.get("new_user_ids"))
+    # 获取日报数据库中没有的用户，将其信息从蓝鲸平台拉取过来
+    sign_in_user_ids = set(User.objects.filter(id__in=new_user_ids).values_list("id", flat=True))
+    user_not_in_platform = new_user_ids - sign_in_user_ids
+
+    # ↓↓↓当有不在本系统中的用户时去主平台拉取------------
+    if len(user_not_in_platform):
+        client = get_client_by_request(request=request)
+        response = client.usermanage.list_users(
+            lookup_field="id",
+            exact_lookups=",".join(map(str, user_not_in_platform)),  # 将set中的整数拼接成","连接的字符串，用做从蓝鲸平台精准获取用户信息
+            fields="id,username,display_name,email,telephone",
+            page=1,
+            pageSize=len(user_not_in_platform),
+        )
+        if not response.get("result"):
+            return JsonResponse({"result": False, "code": 1, "message": "从蓝鲸主平台拉取用户时出现错误"})
+        # 从蓝鲸主平台拿到的新用户
+        user_infos = response.get("data").get("results")
+        # 将新用户添加到数据库
+        new_users = []
+        for u_info in user_infos:
+            new_users.append(
+                User(
+                    id=u_info["id"],
+                    username=u_info["username"],
+                    name=u_info["display_name"],
+                    email=u_info["email"],
+                    phone=u_info["telephone"],
+                )
+            )
+        User.objects.bulk_create(new_users)
+    # ↑↑↑拉取成功-----------------------------------
+
     # 添加组-用户表
-    try:
-        GroupUser.objects.create(group_id=group_id, user_id=id)
-    except IntegrityError:
-        return JsonResponse({"result": False, "code": 0, "message": "用户已在组中", "data": []})
+    new_group_user = []
+    for user_id in new_user_ids:
+        new_group_user.append(GroupUser(user_id=user_id, group_id=group_id))
+    GroupUser.objects.bulk_create(new_group_user)
     return JsonResponse({"result": True, "code": 0, "message": "添加用户成功", "data": []})
 
 
@@ -362,7 +378,7 @@ def get_available_apply_groups(request):
     apply_groups = ApplyForGroup.objects.filter(user_id=request.user.id, status=0).values_list("group_id", flat=True)
     available_groups = Group.objects.filter(Q(~Q(id__in=user_groups) & ~Q(id__in=apply_groups)))
     group_list = [group.to_json() for group in available_groups]
-    return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": group_list})
+    return JsonResponse({"result": True, "code": 0, "message": "获取成功", "data": group_list})
 
 
 def apply_for_group(request):

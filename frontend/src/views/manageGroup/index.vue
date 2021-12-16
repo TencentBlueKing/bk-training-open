@@ -371,6 +371,13 @@
             this.formatDate = moment(this.curDate).format(moment.HTML5_FMT.DATE)
             this.init()
         },
+        activated () {
+            if (!this.selectGroupId) {
+                this.init()
+            } else {
+                this.changeGroup(this.selectGroupId)
+            }
+        },
         methods: {
             init () {
                 // 发送请求，获取所有用户的信息
