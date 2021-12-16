@@ -5,11 +5,11 @@
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
             <div class="top_container">
-                <bk-button :theme="'primary'" style="display: inline-block" @click="clickLeaveManage" class="mr30">
+                <bk-button theme="primary" style="display: inline-block" @click="clickLeaveManage">
                     请假管理
                 </bk-button>
                 <div>
-                    <span style="display: inline-block;" class="f15">选择日期：</span>
+                    <span style="display: inline-block;" class="f16">选择日期：</span>
                     <bk-date-picker
                         v-model="reportDate"
                         :clearable="false"
@@ -26,7 +26,7 @@
                         <span v-else style="color: #63656E">未写日报</span>
                     </p>
                 </div>
-                <div style="padding: 6px 0">
+                <div style="padding: 4px 0 6px">
                     <span class="mr10">隐私模式</span>
                     <bk-switcher
                         v-model="allPrivate"
@@ -120,7 +120,7 @@
                         </div>
                     </div>
                 </bk-sideslider>
-                <bk-button :theme="'success'" style="display: inline-block" @click="moreTemplateDialog.visible = true">
+                <bk-button theme="primary" style="display: inline-block" @click="moreTemplateDialog.visible = true">
                     添加模板
                 </bk-button>
             </div>
@@ -138,7 +138,8 @@
                                 style="margin-top: 15px;"
                                 :data="singleContent.content"
                                 :virtual-render="true"
-                                height="175px">
+                                height="210px"
+                            >
                                 <bk-table-column prop="text" label="内容"></bk-table-column>
                                 <bk-table-column width="150" prop="cost" label="所花时间"></bk-table-column>
                                 <bk-table-column label="操作" width="150">
@@ -301,8 +302,8 @@
                     { 'title': '今日任务', 'type': 'table', 'content': [] },
                     { 'title': '明日计划', 'type': 'table', 'content': [] }
                 ],
-                isPrivate: false,
-                allPrivate: false,
+                isPrivate: true,
+                allPrivate: true,
                 dailyDates: [],
                 // 新的内容和新花费时间的临时变量
                 newContent: '',
@@ -378,7 +379,6 @@
             this.$http.get(
                 '/get_user_groups/'
             ).then(res => {
-                console.log(res)
                 if (res.result) {
                     // 没有加入任何组就跳转到我的小组页面
                     if (res.data.length === 0) {
@@ -500,16 +500,6 @@
                             { 'title': '感想', 'type': 'text', 'text': '' }
                         ]
                     }
-                    this.cheakDailyDates()
-                })
-
-                // 获取当前用户组信息
-                this.$http.get('/get_user_groups/').then((res) => {
-                    this.groupList = res.data
-                    if (this.groupList.length !== 0) {
-                        this.selectedGroup = this.groupList[0].id
-                    }
-                    this.cheakDailyDates()
                 })
             },
             // 改变默认模板标题
@@ -562,6 +552,7 @@
             // 保存日报
             saveDaily () {
                 let hasSomeContentEmpty = false
+                const emptyContent = []
                 this.newPostDaily.date = this.formatDate
                 for (const index in this.dailyDataContent) {
                     this.dailyDataContent[index].title = this.dailyDataTitle[index]
@@ -571,19 +562,13 @@
                         this.newPostDaily.content.push(tableContent)
                     } else {
                         hasSomeContentEmpty = true
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: tableContent.title + '内容为空！'
-                        })
+                        emptyContent.push(tableContent.title)
                     }
                 }
                 for (const textContent of this.newTemplateContent) {
                     if (!textContent.text.length) {
                         hasSomeContentEmpty = true
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: textContent.title + '内容为空！'
-                        })
+                        emptyContent.push(textContent.title)
                     }
                     this.newPostDaily.content.push(textContent)
                 }
@@ -604,6 +589,10 @@
                         })
                     })
                 } else {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: emptyContent.join(',') + ' 内容为空！'
+                    })
                     this.newPostDaily.content = []
                 }
             },

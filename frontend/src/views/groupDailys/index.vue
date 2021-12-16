@@ -67,10 +67,10 @@
                             <div>日期：{{daily.date}}</div>
                             <div>日报状态：{{daily.send_describe}}</div>
                             <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
-                                <h2>{{dailyContnet.title}}</h2>
+                                <h4>{{dailyContnet.title}}</h4>
                                 <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                     <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                        <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                        <pre>{{iiIndex + 1}}.{{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
                                     </div>
                                 </div>
                                 <div v-else>
@@ -130,7 +130,7 @@
                                 <div>日期：{{pdaily.date}}</div>
                                 <div>日报状态：{{pdaily.send_describe}}</div>
                                 <div v-for="(perfectContnet, innerIndex) in pdaily.content" :key="innerIndex">
-                                    <h2>{{perfectContnet.title}}</h2>
+                                    <h4>{{perfectContnet.title}}</h4>
                                     <div v-if="perfectContnet.type === 'table'" style="font-size: 18px">
                                         <div v-for="(row, iiIndex) in perfectContnet.content" :key="iiIndex">
                                             <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
@@ -249,10 +249,9 @@
             if (groupIdInURL !== undefined) {
                 this.curGroupId = parseInt(groupIdInURL)
             }
-            this.init()
         },
         activated () {
-            if (!this.curGroupId) {
+            if (!this.groupsData.length) {
                 this.init()
             } else {
                 this.getDailys()
@@ -371,8 +370,6 @@
                             this.curGroupId = this.groupsData[0].id
                             this.curGroup = this.groupsData[0]
                         }
-                        // 获取优秀日报
-                        this.getPerfectReport()
                     }
                 })
             },
@@ -499,6 +496,10 @@
     }
     .card >>> .bk-card-body .card-pre{
         white-space: normal;
+    }
+    pre{
+        white-space: pre-wrap;
+        word-break: break-word;
     }
     .date_picker >>>.bk-date-picker-dropdown{
         top: 32px !important;

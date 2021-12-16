@@ -131,6 +131,7 @@
                 <div v-show="iscurGroupLoad" class="info-loading" v-bkloading="{ isLoading: iscurGroupLoad, theme: 'primary', zIndex: 10 }">
                 </div>
             </div>
+
             <div class="line-container group-users">
                 <bk-card title="组内成员">
                     <bk-link v-show="curUser.isAdmin && !addUserVisible" :disabled="!curUser.isAdmin" theme="primary" @click="clickAddUser">+新增成员</bk-link>
@@ -162,7 +163,7 @@
                     </div>
 
                     <bk-table style="margin-top: 15px;"
-                        height="212px"
+                        height="294px"
                         :data="groupUsers"
                         :size="size"
                         :pagination="pagination"
@@ -282,21 +283,15 @@
             }
         },
         activated () {
-            if (!this.curGroupId) {
+            if (!this.curGroupId && this.iscurGroupLoad) {
                 // 没有组id且未加载过数据就是初次打开页面，去请求数据，否则就是没有加入任何组
-                if (this.iscurGroupLoad) {
-                    this.init()
-                }
+                this.init()
             } else if (this.iscurGroupLoad) {
                 // 有组id但是还在载组就去加载组
                 this.getGroupInfo(this.curGroupId)
-            }
-            if (this.bkUsers.length === 0) {
+            } else if (this.bkUsers.length === 0) {
                 this.getAllBKUser()
             }
-        },
-        mounted () {
-            this.getAllBKUser()
         },
         methods: {
             // 请求函数
@@ -446,15 +441,12 @@
                 // 根据curGroup中的adminUsername获取当前组管理员id
                 const adminIds = []
                 const vm = this
-                console.log('curGroupAdmin', vm.curGroup.admin)
-                console.log(vm.curGroup.admin)
                 this.bkUsers.forEach(function (user) {
                     if (vm.curGroup.admin.indexOf(user.username) !== -1) {
                         adminIds.push(user.id)
                     }
                 })
                 this.editGroupData.adminIds = adminIds
-                console.log('curGroupAdminIds', this.editGroupData.adminIds)
             },
             showApplyForGroup () {
                 this.applyForGroup.dialogVisible = true
@@ -484,10 +476,10 @@
                         }
                         if (this.groupsData.length !== 0) {
                             this.curGroupId = this.groupsData[0].id
-                            this.changeGroup(this.curGroupId)
                         }
                     })
                 })
+                this.getAllBKUser()
             },
             // 新增组
             addGroup () {
@@ -510,7 +502,6 @@
                             flag = true
                         }
                     })
-                    console.log('hasUser', flag)
                     if (!flag) {
                         const config = {}
                         config.message = '未在蓝鲸用户平台找到登录用户信息'
@@ -521,7 +512,6 @@
                     }
                 }
                 this.addGroupData.formData.admin = adminlist
-                console.log('参数formData', this.addGroupData.formData)
                 this.$http.post('/add_group/', this.addGroupData.formData).then(res => {
                     const config = {}
                     config.offsetY = 80
@@ -529,11 +519,9 @@
                     if (res.result) {
                         config.theme = 'success'
                         this.$bkMessage(config)
-                        console.log('新建组id', res.data.group_id)
                         // 更新用户所有的组列表,后更新当前组
                         this.$http.get('/get_user_groups/').then((res2) => {
                             this.groupsData = res2.data
-                            console.log('init_groups, allGroupsData:', this.groupsData)
                             // 切换组
                             this.curGroupId = res.data.group_id
                             this.changeGroup(this.curGroupId)
@@ -560,7 +548,6 @@
                     }
                 })
                 this.editGroupData.formData.admin = adminlist
-                console.log('editGroup-formData', this.editGroupData.formData)
                 // 调用更新组信息接口
                 this.$http.post('/update_group/' + groupId + '/', this.editGroupData.formData).then(res => {
                     const config = {}
@@ -584,7 +571,6 @@
             },
             // 删除组
             deleteGroup () {
-                console.log('clickDeleteGroup,groupId:', this.curGroupId)
                 this.$http.post('/delete_group/' + this.curGroupId + '/').then(res => {
                     const config = {}
                     config.offsetY = 80
