@@ -5,7 +5,7 @@
                 <div class="fun-bar">
                     <div class="select-wapper">
                         <span style="width:50px;">组名：</span>
-                        <bk-select :disabled="false" v-model="curGroupId" style="width: 140px;display: inline-block;"
+                        <bk-select :disabled="false" v-model="curGroupId" style="min-width: 140px;display: inline-block;"
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom"
                             searchable
@@ -112,7 +112,7 @@
                     </div>
 
                 </div>
-                <div v-show="!iscurGroupLoad" class="info-bar">
+                <div v-show="!iscurGroupLoad && curGroupId !== null" class="info-bar">
                     <div class="create-wapper">
                         <div class="create-content">
                             创建人:
@@ -133,27 +133,32 @@
             </div>
             <div class="line-container group-users">
                 <bk-card title="组内成员">
-                    <bk-link v-show="curUser.isAdmin && !addUserVisible" :disabled="!curUser.isAdmin" theme="primary" style="" @click="clickAddUser">+新增成员</bk-link>
+                    <bk-link v-show="curUser.isAdmin && !addUserVisible" :disabled="!curUser.isAdmin" theme="primary" @click="clickAddUser">+新增成员</bk-link>
 
                     <div v-show="addUserVisible">
                         <bk-select
                             searchable
                             multiple
                             display-tag
+                            search-with-pinyin
+                            :loading="bkSelectLoading"
+                            :is-tag-width-limit="false"
                             v-model="newUserIds"
-                            @click="updateBkUserExceptGroupUser"
-                            style="display: inline-block; min-width: 20%; float: left; margin: 10px 0"
+                            @change="changeSelectUser"
+                            class="add-user-select"
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom">
                             <bk-option v-for="option in bkUsersExceptGroupUsers"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.username + '(' + option.display_name + ')'">
+                                :name="option.username + '(' + option.display_name + ')'"
+                                :disabled="option.disabled"
+                            >
                             </bk-option>
                         </bk-select>
 
-                        <bk-button style="float: left; margin: 10px" theme="primary" title="添加" @click.stop.prevent="addUser">添加</bk-button>
-                        <bk-button style="float: left; margin: 10px" ext-cls="mr5" @click="cancelAddUser" theme="default" title="取消">取消</bk-button>
+                        <bk-button class="add-user-button" theme="primary" title="添加" @click.stop.prevent="addUser">添加</bk-button>
+                        <bk-button class="add-user-button" ext-cls="mr5" @click="cancelAddUser" theme="default" title="取消">取消</bk-button>
                     </div>
 
                     <bk-table style="margin-top: 15px;"
@@ -219,6 +224,7 @@
                 bkUsers: [],
                 // 除了组内用户之外的所有蓝鲸用户
                 bkUsersExceptGroupUsers: [],
+                bkSelectLoading: true,
                 // 要添加的新用户id数组
                 newUserIds: [],
                 // 添加组dialog样式
@@ -270,12 +276,24 @@
                     phone: '',
                     email: ''
                 },
+                // 当前组是否正在加载
                 iscurGroupLoad: true,
                 addUserVisible: false
             }
         },
-        created () {
-            this.init()
+        activated () {
+            if (!this.curGroupId) {
+                // 没有组id且未加载过数据就是初次打开页面，去请求数据，否则就是没有加入任何组
+                if (this.iscurGroupLoad) {
+                    this.init()
+                }
+            } else if (this.iscurGroupLoad) {
+                // 有组id但是还在载组就去加载组
+                this.getGroupInfo(this.curGroupId)
+            }
+            if (this.bkUsers.length === 0) {
+                this.getAllBKUser()
+            }
         },
         mounted () {
             this.getAllBKUser()
@@ -286,6 +304,7 @@
             getAllBKUser () {
                 this.$http.get('/get_all_bk_users/').then(res => {
                     this.bkUsers = res.data.results
+                    this.updateBkUserExceptGroupUser()
                 })
             },
             // 更新添加用户下拉框的候选成员
@@ -293,9 +312,15 @@
                 const groupUserIds = this.groupUsers.map((item) => {
                     return item.id
                 })
-                this.bkUsersExceptGroupUsers = this.bkUsers.filter(function (user) {
-                    return groupUserIds.indexOf(user.id) === -1
+                this.bkUsersExceptGroupUsers = this.bkUsers
+                this.bkUsersExceptGroupUsers.forEach(function (bkUser) {
+                    // 找到当前用户id就标记为不可选
+                    bkUser.disabled = groupUserIds.indexOf(bkUser.id) >= 0
                 })
+                this.bkSelectLoading = this.bkUsersExceptGroupUsers.length === 0
+            },
+            changeSelectUser () {
+                // TODO 选中用户之后清空搜索框
             },
             // 获取组信息，并检查当前用户是否为该组管理员
             getGroupInfo (groupId) {
@@ -304,6 +329,7 @@
                     this.curGroup = res.data
                     // 当前用户没加入任何组的话提示
                     if (!this.groupsData || this.groupsData.length === 0) {
+                        this.iscurGroupLoad = false
                         this.$bkMessage({
                             theme: 'warning',
                             message: '您还没有加入任何组'
@@ -378,7 +404,9 @@
             // 点击添加用户
             clickAddUser () {
                 this.addUserVisible = true
-                this.updateBkUserExceptGroupUser()
+                if (this.bkUsersExceptGroupUsers.length === 0) {
+                    this.updateBkUserExceptGroupUser()
+                }
             },
             cancelAddUser () {
                 // 设置添加用户下拉框不可见
@@ -438,18 +466,21 @@
                 // 初始化用户信息
                 this.$http.get('/get_user/').then((res) => {
                     this.curUser.info = res.data
-                    console.log('curUser', this.curUser.info)
                     // 初始化组
                     this.$http.get('/get_user_groups/').then((res) => {
                         // 更新组信息
                         this.groupsData = res.data
                         // 当前用户没加入任何组的话提示
                         if (!this.groupsData || this.groupsData.length === 0) {
-                            this.$bkMessage({
-                                theme: 'warning',
-                                message: '您还没有加入任何组'
-                            })
-                            return
+                            // 加个判断，避免多次弹窗
+                            if (this.iscurGroupLoad) {
+                                this.iscurGroupLoad = false
+                                this.$bkMessage({
+                                    theme: 'warning',
+                                    message: '您还没有加入任何组'
+                                })
+                                return
+                            }
                         }
                         if (this.groupsData.length !== 0) {
                             this.curGroupId = this.groupsData[0].id
@@ -715,5 +746,15 @@
         padding-top: 10px !important;
         visibility:hidden;
         visibility:visible;
+    }
+    .add-user-select {
+        display: inline-block;
+        min-width: 20%;
+        float: left;
+        margin: 10px 0;
+    }
+    .add-user-button {
+        float: left;
+        margin: 10px;
     }
 </style>
