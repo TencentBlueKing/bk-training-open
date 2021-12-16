@@ -249,10 +249,9 @@
             if (groupIdInURL !== undefined) {
                 this.curGroupId = parseInt(groupIdInURL)
             }
-            this.init()
         },
         activated () {
-            if (!this.curGroupId) {
+            if (!this.groupsData.length) {
                 this.init()
             } else {
                 this.getDailys()
@@ -371,8 +370,6 @@
                             this.curGroupId = this.groupsData[0].id
                             this.curGroup = this.groupsData[0]
                         }
-                        // 获取优秀日报
-                        this.getPerfectReport()
                     }
                 })
             },

@@ -283,21 +283,15 @@
             }
         },
         activated () {
-            if (!this.curGroupId) {
+            if (!this.curGroupId && this.iscurGroupLoad) {
                 // 没有组id且未加载过数据就是初次打开页面，去请求数据，否则就是没有加入任何组
-                if (this.iscurGroupLoad) {
-                    this.init()
-                }
+                this.init()
             } else if (this.iscurGroupLoad) {
                 // 有组id但是还在载组就去加载组
                 this.getGroupInfo(this.curGroupId)
-            }
-            if (this.bkUsers.length === 0) {
+            } else if (this.bkUsers.length === 0) {
                 this.getAllBKUser()
             }
-        },
-        mounted () {
-            this.getAllBKUser()
         },
         methods: {
             // 请求函数
@@ -485,6 +479,7 @@
                         }
                     })
                 })
+                this.getAllBKUser()
             },
             // 新增组
             addGroup () {

@@ -5,11 +5,11 @@
                 <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
             </div>
             <div class="top_container">
-                <bk-button :theme="'primary'" style="display: inline-block" @click="clickLeaveManage" class="mr30">
+                <bk-button theme="primary" style="display: inline-block" @click="clickLeaveManage">
                     请假管理
                 </bk-button>
                 <div>
-                    <span style="display: inline-block;" class="f15">选择日期：</span>
+                    <span style="display: inline-block;" class="f16">选择日期：</span>
                     <bk-date-picker
                         v-model="reportDate"
                         :clearable="false"
@@ -26,7 +26,7 @@
                         <span v-else style="color: #63656E">未写日报</span>
                     </p>
                 </div>
-                <div style="padding: 6px 0">
+                <div style="padding: 4px 0 6px">
                     <span class="mr10">隐私模式</span>
                     <bk-switcher
                         v-model="allPrivate"
@@ -120,7 +120,7 @@
                         </div>
                     </div>
                 </bk-sideslider>
-                <bk-button :theme="'success'" style="display: inline-block" @click="moreTemplateDialog.visible = true">
+                <bk-button theme="primary" style="display: inline-block" @click="moreTemplateDialog.visible = true">
                     添加模板
                 </bk-button>
             </div>
@@ -379,7 +379,6 @@
             this.$http.get(
                 '/get_user_groups/'
             ).then(res => {
-                console.log(res)
                 if (res.result) {
                     // 没有加入任何组就跳转到我的小组页面
                     if (res.data.length === 0) {

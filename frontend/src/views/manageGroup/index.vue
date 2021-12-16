@@ -366,10 +366,9 @@
             }
 
             this.formatDate = moment(this.curDate).format(moment.HTML5_FMT.DATE)
-            this.init()
         },
         activated () {
-            if (!this.selectGroupId) {
+            if (!this.groupList.length) {
                 this.init()
             } else {
                 this.changeGroup(this.selectGroupId)
