@@ -289,7 +289,9 @@
             } else if (this.iscurGroupLoad) {
                 // 有组id但是还在载组就去加载组
                 this.getGroupInfo(this.curGroupId)
-            } else if (this.bkUsers.length === 0) {
+            }
+            // 更新蓝鲸所有的用户信息
+            if (this.bkUsers.length === 0) {
                 this.getAllBKUser()
             }
         },
@@ -338,11 +340,11 @@
                     }
                     // 切换组成员信息
                     this.getGroupUsers(groupId)
-                    this.iscurGroupLoad = false
                 })
             },
             // 获取组内成员
             getGroupUsers (groupId) {
+                this.iscurGroupLoad = true
                 if (!groupId) {
                     // 如果没有加入任何组就不执行任何操作
                     return
@@ -359,6 +361,7 @@
                     })
                     this.groupUsers = groupUserDate
                     this.updateBkUserExceptGroupUser()
+                    this.iscurGroupLoad = false
                 })
             },
             // 获取所有组信息
@@ -479,7 +482,6 @@
                         }
                     })
                 })
-                this.getAllBKUser()
             },
             // 新增组
             addGroup () {
