@@ -63,17 +63,25 @@
                         <bk-card class="all-report-card card"
                             v-for="(daily, index) in dailysData.dailys"
                             :key="index"
-                            :title="daily.create_by + '(' + (daily.create_name) + ')' + '-' + '日报'">
-                            <div>日期：{{daily.date}}</div>
-                            <div>日报状态：{{daily.send_describe}}</div>
+                            :title="daily.create_by + '(' + (daily.create_name) + ')'">
+                            <div class="card-header" slot="header" :title="daily.create_by + '(' + (daily.create_name) + ')'">
+                                {{daily.create_by + '(' + (daily.create_name) + ')'}}
+                            </div>
                             <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
-                                <h4>{{dailyContnet.title}}</h4>
-                                <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
+                                <h5 class="sub-title">{{dailyContnet.title}}</h5>
+                                <div v-if="dailyContnet.type === 'table'" style="font-size: 14px">
                                     <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                        <pre>{{iiIndex + 1}}.{{row.text}}</pre><span v-if="curUserName === daily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                        <pre class="card-pre">
+                                            <div v-if="curUserName === daily.create_by || !row.isPrivate" class="time-wapper">
+                                                <bk-tag theme="info">
+                                                    {{row.cost}}
+                                                </bk-tag>
+                                            </div>
+                                            <div class="content-wapper">{{row.text}}</div>
+                                        </pre>
                                     </div>
                                 </div>
-                                <div v-else>
+                                <div style="font-size:14px;line-height: 22px;" v-else>
                                     {{dailyContnet.text}}
                                 </div>
                             </div>
@@ -126,17 +134,30 @@
                             <bk-card class="perfect-report-card card"
                                 v-for="(pdaily, pindex) in perfectDailysData.daily_list"
                                 :key="pindex"
-                                :title="pdaily.create_by + '(' + (pdaily.create_name) + ')' + '-' + '日报'">
-                                <div>日期：{{pdaily.date}}</div>
-                                <div>日报状态：{{pdaily.send_describe}}</div>
+                            >
+                                <div class="card-header perfect-card-header" slot="header" :title="pdaily.create_by + '(' + (pdaily.create_name) + ')     ' + pdaily.date">
+                                    <div class="perfect-card-header-text">
+                                        {{pdaily.create_by + '(' + (pdaily.create_name) + ')'}}
+                                    </div>
+                                    <div class="perfect-card-header-text">
+                                        {{pdaily.date}}
+                                    </div>
+                                </div>
                                 <div v-for="(perfectContnet, innerIndex) in pdaily.content" :key="innerIndex">
-                                    <h4>{{perfectContnet.title}}</h4>
-                                    <div v-if="perfectContnet.type === 'table'" style="font-size: 18px">
+                                    <h5 class="sub-title">{{perfectContnet.title}}</h5>
+                                    <div v-if="perfectContnet.type === 'table'" style="font-size: 14px">
                                         <div v-for="(row, pfIndex) in perfectContnet.content" :key="pfIndex">
-                                            <pre class="card-pre">{{pfIndex + 1}}.{{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                            <pre class="card-pre">
+                                                <div v-if="curUserName === pdaily.create_by || !row.isPrivate" class="time-wapper">
+                                                    <bk-tag theme="info">
+                                                        {{row.cost}}
+                                                    </bk-tag>
+                                                </div>
+                                                <div class="content-wapper">{{row.text}}</div>
+                                            </pre>
                                         </div>
                                     </div>
-                                    <div v-else>
+                                    <div style="font-size:14px;line-height: 22px;" v-else>
                                         {{perfectContnet.text}}
                                     </div>
                                 </div>
@@ -490,19 +511,45 @@
         margin: 0 0.5%;
         cursor: default;
     }
-    .card >>> .bk-card-body{
+    .card /deep/ .bk-card-body{
         height: 260px;
         overflow-y: auto;
         padding-top: 10px;
     }
-    .card >>> .bk-card-body .card-pre{
+    .card /deep/ .bk-card-body .card-pre{
         white-space: normal;
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .card /deep/ .bk-card-head .card-header{
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        font-size: 16px;
+    }
+    .card /deep/ .bk-card-body .card-pre .time-wapper{
+        width: 68px;
+        margin-right: 6px;
+    }
+    .card /deep/ .bk-card-body .card-pre .time-wapper .bk-tag{
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 68px;
+        text-align: center;
+    }
+    .card /deep/ .bk-card-body .card-pre .content-wapper{
+        font-size: 14px;
+        line-height: 20px;
+    }
+    .card /deep/ .bk-card-body .sub-title{
+        font-size: 16px !important;
+        margin: 6px 0 !important;
     }
     pre{
         white-space: pre-wrap;
         word-break: break-word;
     }
-    .date_picker >>>.bk-date-picker-dropdown{
+    .date_picker /deep/ .bk-date-picker-dropdown{
         top: 32px !important;
     }
     .demo-block.demo-alert .bk-alert{
@@ -552,6 +599,16 @@
     .right_container .perfect-report-wapper .perfect-cards .perfect-report-card{
         width: 32% !important;
     }
+    .perfect-card-header{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .perfect-card-header .perfect-card-header-text{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     .right_container .perfect-report-wapper .perfect-cards .perfect-report-card /deep/ .bk-card-head{
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -583,12 +640,11 @@
         margin-bottom: 10px;
         width: 32%;
     }
-    .right_container .all-report-wapper .all-report-body .all-report-card /deep/ .bk-card-head{
+    .right_container .all-report-wapper .all-report-body .all-report-card .all-card-header{
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
         font-size: 16px;
-        width: 100% !important;
     }
     .right_container .perfect-report-wapper .right-top-bar{
         display: flex;
