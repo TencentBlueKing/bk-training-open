@@ -177,9 +177,9 @@
                         <bk-table-column label="姓名" prop="name"></bk-table-column>
                         <bk-table-column label="电话" prop="phone"></bk-table-column>
                         <bk-table-column label="邮箱" prop="email"></bk-table-column>
-                        <bk-table-column label="操作" width="100px">
+                        <bk-table-column label="操作" width="100px" v-if="curUser.isAdmin">
                             <template slot-scope="props">
-                                <bk-button v-show="curUser.isAdmin " class="mr10" :disabled="curGroup.admin.indexOf(props.row.username) !== -1" theme="primary" text @click="removeUser(props.row)">移除</bk-button>
+                                <bk-button v-show="curUser.isAdmin " class="mr10" :disabled="curGroup.admin.indexOf(props.row.username) !== -1" theme="primary" text @click="RemoveFromGroup(props.row)">移除</bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -296,6 +296,27 @@
             }
         },
         methods: {
+            setCurGroup (curGroup) {
+                const storage = window.sessionStorage
+                storage.setItem('curGroup', curGroup)
+            },
+            getCurGroup () {
+                const storage = window.sessionStorage
+                if (storage.getItem('curGroup') !== null) {
+                    this.curGroupId = storage.getItem('curGroup')
+                } else {
+                    this.curGroupId = this.groupsData[0].id
+                }
+            },
+            RemoveFromGroup (row) {
+                this.$bkInfo({
+                    title: '确认移除该组员吗？',
+                    showFooter: true,
+                    confirmFn: () => {
+                        this.removeUser(row)
+                    }
+                })
+            },
             // 请求函数
             // 获取所有蓝鲸用户
             getAllBKUser () {
@@ -400,6 +421,7 @@
                 } else {
                     // 更改组信息，和当前用户是否为当前组管理员信息
                     this.getGroupInfo(groupId)
+                    this.setCurGroup(groupId)
                 }
             },
             // 点击添加用户
@@ -481,7 +503,7 @@
                             }
                         }
                         if (this.groupsData.length !== 0) {
-                            this.curGroupId = this.groupsData[0].id
+                            this.getCurGroup()
                         }
                     })
                 }).finally(() => {

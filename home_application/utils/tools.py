@@ -30,12 +30,21 @@ def apply_info_to_json(apply_info):
     }
 
 
-def check_user_is_admin(request):
-    """判断用户是否在所有组皆为管理员，返回值为True时不需要写日报，为False时需要写日报"""
+def check_user_is_admin(request, key):
+    """
+    key为True时，判断用户是否在其所加入的所有组皆为管理员，若是返回True，反之返回False;
+    key为False时，判断用户是否在其所加入的所有组中，至少是其中一个组的管理员，若是返回True，反之返回False
+    """
     group_ids = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
     user_name = request.user.username
     groups = Group.objects.filter(id__in=group_ids)
-    for g in groups:
-        if user_name not in g.admin_list:
-            return False
-    return True
+    if key:
+        for g in groups:
+            if user_name not in g.admin_list:
+                return False
+        return True
+    else:
+        for g in groups:
+            if user_name in g.admin_list:
+                return True
+        return False
