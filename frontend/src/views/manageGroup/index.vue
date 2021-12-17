@@ -711,6 +711,9 @@
     width: 300px;
     margin: 10px 0.5%;
 }
+.card{
+    cursor: default;
+}
 .card >>> .bk-card-body{
     height: 200px;
     padding: 0 20px;

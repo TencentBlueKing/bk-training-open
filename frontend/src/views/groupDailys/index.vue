@@ -132,8 +132,8 @@
                                 <div v-for="(perfectContnet, innerIndex) in pdaily.content" :key="innerIndex">
                                     <h4>{{perfectContnet.title}}</h4>
                                     <div v-if="perfectContnet.type === 'table'" style="font-size: 18px">
-                                        <div v-for="(row, iiIndex) in perfectContnet.content" :key="iiIndex">
-                                            <pre class="card-pre">({{iiIndex + 1}}){{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
+                                        <div v-for="(row, pfIndex) in perfectContnet.content" :key="pfIndex">
+                                            <pre class="card-pre">{{pfIndex + 1}}.{{row.text}}</pre><span v-if="curUserName === pdaily.create_by || !row.isPrivate">----({{row.cost}})</span>
                                         </div>
                                     </div>
                                     <div v-else>
@@ -488,6 +488,7 @@
     }
     .card{
         margin: 0 0.5%;
+        cursor: default;
     }
     .card >>> .bk-card-body{
         height: 260px;
