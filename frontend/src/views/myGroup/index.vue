@@ -297,11 +297,11 @@
         },
         methods: {
             setCurGroup (curGroup) {
-                const storage = window.sessionStorage
+                const storage = sessionStorage
                 storage.setItem('curGroup', curGroup)
             },
             getCurGroup () {
-                const storage = window.sessionStorage
+                const storage = sessionStorage
                 if (storage.getItem('curGroup') !== null) {
                     this.curGroupId = storage.getItem('curGroup')
                 } else {
