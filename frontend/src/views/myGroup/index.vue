@@ -163,7 +163,7 @@
                     </div>
 
                     <bk-table style="margin-top: 15px;"
-                        height="294px"
+                        height="383px"
                         :data="groupUsers"
                         :size="size"
                         :pagination="pagination"

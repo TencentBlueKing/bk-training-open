@@ -343,13 +343,14 @@
                 shareAllIdList: [],
                 hasSharedIdList: [],
                 currentUserName: this.$store.state.user.username,
-                hasSubmitDaily: []
+                hasSubmitDaily: [],
+                currentGroupAdmin: []
             }
         },
         computed: {
             hasNotSubmitMember () {
                 return this.memberDaily.filter((item) => {
-                    return !item.write_status
+                    return !item.write_status && this.currentGroupAdmin.indexOf(item.create_by) === -1
                 })
             }
         },
@@ -387,6 +388,18 @@
                         } else {
                             this.selectGroupId = this.groupList[0].id
                         }
+                        this.$http.get(
+                            '/list_group_admin/' + this.selectGroupId + '/'
+                        ).then(res => {
+                            if (res.result) {
+                                this.currentGroupAdmin = res.data
+                            } else {
+                                this.$bkMessage({
+                                    theme: 'warning',
+                                    message: res.message
+                                })
+                            }
+                        })
                     }
                 })
             },
