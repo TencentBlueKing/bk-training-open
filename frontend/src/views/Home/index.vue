@@ -808,6 +808,9 @@
     .leave-slide .leave-manage /deep/ .bk-table .bk-table-body-wrapper .bk-table-body{
         width: 100% !important;
     }
+    .leave-slide .leave-manage /deep/ .bk-table .bk-table-body-wrapper .bk-table-empty-block{
+        width: 100% !important;
+    }
     .leave-slide .leave-manage .select-bar{
         display: flex;
         flex-wrap: wrap;
