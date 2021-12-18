@@ -123,7 +123,7 @@
                             name: '管理组',
                             id: 4,
                             url: 'manage-group',
-                            show: true,
+                            show: false,
                             routerName: 'ManageGroup'
                         }
                     ],
@@ -139,6 +139,9 @@
                 return this.$route.name
             }
         },
+        created () {
+            this.checkUserIsAdmin()
+        },
         methods: {
             handleSelect (id, item) {
                 this.nav.id = id
@@ -148,6 +151,20 @@
             },
             beforeNavChange (newId, oldId) {
                 return true
+            },
+            checkUserIsAdmin () {
+                this.$http.get('/check_user_admin/').then(res => {
+                    if (res.result !== null) {
+                        this.header.list[3].show = res.result
+                    } else {
+                        this.$bkMessage({
+                            'offsetY': 80,
+                            'delay': 2000,
+                            'theme': 'error',
+                            'message': res.message
+                        })
+                    }
+                })
             }
         }
     }
