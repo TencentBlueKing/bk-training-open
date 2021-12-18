@@ -72,9 +72,9 @@
                                 <div v-if="dailyContnet.type === 'table'" style="font-size: 14px">
                                     <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
                                         <pre class="card-pre">
-                                            <div v-if="curUserName === daily.create_by || !row.isPrivate" class="time-wapper">
+                                            <div v-if="(curUserName === daily.create_by || !row.isPrivate) && row.cost" class="time-wapper">
                                                 <bk-tag theme="info">
-                                                    {{row.cost}}
+                                                    {{row.cost}}小时
                                                 </bk-tag>
                                             </div>
                                             <div class="content-wapper">{{row.text}}</div>
@@ -148,9 +148,9 @@
                                     <div v-if="perfectContnet.type === 'table'" style="font-size: 14px">
                                         <div v-for="(row, pfIndex) in perfectContnet.content" :key="pfIndex">
                                             <pre class="card-pre">
-                                                <div v-if="curUserName === pdaily.create_by || !row.isPrivate" class="time-wapper">
+                                                <div v-if="(curUserName === daily.create_by || !row.isPrivate) && row.cost" class="time-wapper">
                                                     <bk-tag theme="info">
-                                                        {{row.cost}}
+                                                        {{row.cost}}小时
                                                     </bk-tag>
                                                 </div>
                                                 <div class="content-wapper">{{row.text}}</div>

@@ -32,13 +32,13 @@
                         <bk-button
                             theme="primary"
                             @click="newApplyDialog.visible = true">
-                            新人入组申请
+                            入组申请
                         </bk-button>
                     </bk-badge>
                 </div>
                 <bk-dialog
                     v-model="newApplyDialog.visible"
-                    title="新人入组申请"
+                    title="入组申请"
                     :header-position="newApplyDialog.headerPosition"
                     :width="newApplyDialog.width">
                     <bk-table
@@ -71,8 +71,8 @@
                 <div>
                     <bk-badge theme="danger" :max="99" :val="hasNotSubmitMember.length" :visible="hasNotSubmitMember.length">
                         <bk-button
-                            :theme="'primary'"
-                            :title="'未提交'"
+                            theme="primary"
+                            title="未提交"
                             @click="hasNotSubmitDialog.visible = true">
                             未提交日报
                         </bk-button>
@@ -84,9 +84,9 @@
                     :header-position="hasNotSubmitDialog.headerPosition"
                     :width="hasNotSubmitDialog.width">
                     <div>
-                        <bk-button v-for="daily in hasNotSubmitMember" :key="daily.id" :theme="'primary'" style="width:110px;margin: 10px 0" class="mr10">
+                        <bk-tag v-for="daily in hasNotSubmitMember" :key="daily.id" style="margin: 10px 0" class="mr10">
                             {{daily.create_name}}
-                        </bk-button>
+                        </bk-tag>
                     </div>
                     <div slot="footer" class="dialog-foot">
                         <div>
@@ -115,12 +115,11 @@
                         <template v-for="(daily,index) in shareAllList">
                             <a :key="index" @click="removeFromShareList(index)" style="cursor:pointer">
                                 <bk-badge theme="danger" :val="'X'" :key="index" class="mr15">
-                                    <bk-button
+                                    <bk-tag
                                         :key="index"
-                                        style="width:110px;margin-bottom: 10px"
-                                        hover-theme="danger">
+                                        style="margin-bottom: 10px">
                                         {{daily.create_name}}
-                                    </bk-button>
+                                    </bk-tag>
                                 </bk-badge>
                             </a>
                         </template>
@@ -163,9 +162,9 @@
                                         <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                             <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
                                                 <pre class="card-pre">
-                                                    <div v-show="!row.isPrivate" class="time-wapper">
+                                                    <div v-show="!row.isPrivate && row.cost" class="time-wapper">
                                                         <bk-tag theme="info">
-                                                            {{row.cost}}
+                                                            {{row.cost}}小时
                                                         </bk-tag>
                                                     </div>
                                                     <div class="content-wapper">{{row.text}}</div>
@@ -614,12 +613,14 @@
             changeDate (date) {
                 this.formatDate = moment(date).format(moment.HTML5_FMT.DATE)
                 this.shareAllList = []
+                this.shareAllIdList = []
                 this.getDaily(this.selectGroupId, this.formatDate)
             },
             // 改变当前查看组
             changeGroup (selectGroupId) {
                 this.selectGroupId = selectGroupId
                 this.shareAllList = []
+                this.shareAllIdList = []
                 // 发送请求，获取选定组的信息
                 this.getDaily(this.selectGroupId, this.formatDate)
                 // 获取申请该组的列表
@@ -689,6 +690,15 @@
     padding: 20px 0.5%;
     display: flex;
     justify-content: space-between;
+}
+.bk-dialog /deep/ .bk-table .bk-table-header-wrapper .bk-table-header{
+  width: 100% !important;
+}
+.bk-dialog /deep/ .bk-table .bk-table-body-wrapper .bk-table-body{
+  width: 100% !important;
+}
+.bk-dialog /deep/ .bk-table .bk-table-body-wrapper .bk-table-empty-block{
+  width: 100% !important;
 }
 .bottom_container{
     width: 100%;

@@ -129,27 +129,52 @@
                     <div :key="index">
                         <div style="display: flex;justify-content: space-between;margin: 10px 0">
                             <h2 contenteditable="true" @input="changeTitleText(index)" :ref="'title' + index" style="display: inline-block;margin: 0">{{singleContent.title}}</h2>
-                            <bk-button style="display: inline-block" theme="primary" @click="dealAdd(index)">
-                                新增一条内容
-                            </bk-button>
                         </div>
                         <div>
                             <bk-table
                                 style="margin-top: 15px;"
                                 :data="singleContent.content"
                                 :virtual-render="true"
-                                height="210px"
                             >
-                                <bk-table-column prop="text" label="内容"></bk-table-column>
-                                <bk-table-column width="150" prop="cost" label="所花时间"></bk-table-column>
-                                <bk-table-column label="操作" width="150">
+                                <div slot="append" style="text-align: right;padding: 10px 70px">
+                                    <bk-button style="display: inline-block;" text @click="dealAdd(index)">
+                                        新增一条内容
+                                    </bk-button>
+                                </div>
+                                <bk-table-column label="内容">
                                     <template slot-scope="props">
-                                        <bk-button
-                                            theme="warning"
-                                            text
-                                            @click="changeContent(props.row, index)">
-                                            修改
-                                        </bk-button>
+                                        <bk-input
+                                            placeholder="新内容"
+                                            v-model="singleContent.content[props.row.$index].text"
+                                            type="textarea"
+                                            :rows="3"
+                                        >
+                                        </bk-input>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column width="250" label="所花时间">
+                                    <template slot-scope="props">
+                                        <bk-input
+                                            placeholder="所花时间"
+                                            v-model="singleContent.content[props.row.$index].cost"
+                                            type="number"
+                                            :precision="1"
+                                            :min="0"
+                                            :max="24"
+                                        >
+                                            <template slot="append">
+                                                <div class="group-text">小时</div>
+                                            </template>
+                                        </bk-input>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column width="100" label="隐私模式">
+                                    <template slot-scope="props">
+                                        <bk-switcher v-model="singleContent.content[props.row.$index].isPrivate"></bk-switcher>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column label="操作" width="100">
+                                    <template slot-scope="props">
                                         <bk-button
                                             theme="danger"
                                             text
@@ -162,52 +187,6 @@
                         </div>
                     </div>
                 </template>
-                <bk-dialog
-                    v-model="addDialog.visible"
-                    title="新增内容"
-                    :header-position="addDialog.headerPosition"
-                    :width="addDialog.width"
-                    @value-change="addDialogChange">
-                    <div>
-                        <h3>内容</h3>
-                        <bk-input
-                            placeholder="新内容"
-                            type="textarea"
-                            :rows="3"
-                            v-model="newContent"
-                            :minlength="1"
-                        >
-                        </bk-input>
-                        <div style="display: flex;justify-content: space-between;margin: 10px 0">
-                            <h3 style="margin: 0">所花时间</h3>
-                            <div>
-                                <span class="mr10 f10">隐私模式</span>
-                                <bk-switcher v-model="isPrivate" class="mr30"></bk-switcher>
-                            </div>
-                        </div>
-                        <bk-input
-                            placeholder="所花时间"
-                            type="number"
-                            v-model="newCost"
-                            :precision="1"
-                            :min="0"
-                        >
-                            <template slot="append">
-                                <div class="group-text">小时</div>
-                            </template>
-                        </bk-input>
-                    </div>
-                    <div slot="footer" class="dialog-foot">
-                        <div>
-                            <bk-button v-if="isAdd" theme="primary" title="分享" @click="addRow(currentIndex)">
-                                添加
-                            </bk-button>
-                            <bk-button v-else theme="primary" title="分享" @click="changeRow(currentIndex)">
-                                修改
-                            </bk-button>
-                        </div>
-                    </div>
-                </bk-dialog>
                 <bk-dialog
                     v-model="moreTemplateDialog.visible"
                     :header-position="moreTemplateDialog.headerPosition"
@@ -282,18 +261,11 @@
                 curDate: new Date(),
                 reportDate: new Date(),
                 formatDate: '',
-                addDialog: {
-                    visible: false,
-                    width: 600,
-                    headerPosition: 'left'
-                },
                 moreTemplateDialog: {
                     visible: false,
                     width: 600,
                     headerPosition: 'left'
                 },
-                // 此次操作是增加一列还是修改一列
-                isAdd: true,
                 // 修改指定行的临时变量
                 targetRow: 0,
                 // 日报信息
@@ -302,12 +274,8 @@
                     { 'title': '今日任务', 'type': 'table', 'content': [] },
                     { 'title': '明日计划', 'type': 'table', 'content': [] }
                 ],
-                isPrivate: true,
                 allPrivate: true,
                 dailyDates: [],
-                // 新的内容和新花费时间的临时变量
-                newContent: '',
-                newCost: 0,
                 // 新的模板标题及内容数组
                 newTemplateContent: [
                     { 'title': '感想', 'type': 'text', 'text': '' }
@@ -360,7 +328,10 @@
                         }
                     }
                 },
-                curUserLeaveList: []
+                curUserLeaveList: [],
+                virtualRenderConfig: {
+                    height: 226
+                }
             }
         },
         created () {
@@ -430,15 +401,6 @@
                     this.yesterdayDaliy = !!res.data
                 })
             },
-            // 切换模板
-            selectTemplate () {
-                this.dailyData = []
-                this.templateList.forEach(function (template) {
-                    if (template.id === this.curTemplateId) {
-                        this.curTemplate = template.content.split(';')
-                    }
-                })
-            },
             // 界面初始化
             init () {
                 this.cheakDailyDates()
@@ -464,7 +426,6 @@
                 this.checkYesterdayDaliy()
             },
             setAllPrivate (val) {
-                this.isPrivate = val
                 for (const item of this.dailyDataContent) {
                     for (const itemContent of item.content) {
                         itemContent.isPrivate = val
@@ -509,37 +470,16 @@
             },
             // 打开dialog, 增加一行
             dealAdd (index) {
-                this.currentIndex = index
-                this.isAdd = true
-                this.addDialog.visible = true
-            },
-            // 保存增加表格中的一行新内容
-            addRow (index) {
-                if (this.newContent.length) {
-                    const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
-                    this.dailyDataContent[index]['content'].push(newObj)
-                    this.addDialog.visible = false
-                } else {
+                const contentLength = this.dailyDataContent[index].content.length
+                if (contentLength && !this.dailyDataContent[index].content[contentLength - 1].text) {
                     this.$bkMessage({
                         theme: 'warning',
-                        message: '未填写内容'
+                        message: '前一条内容为空'
                     })
+                } else {
+                    const newobj = { 'text': '', 'cost': 0, 'isPrivate': this.allPrivate }
+                    this.dailyDataContent[index].content.push(newobj)
                 }
-            },
-            // 保存对指定行的修改
-            changeRow (index) {
-                const newObj = { 'text': this.newContent, 'cost': this.newCost + '小时', 'isPrivate': this.isPrivate }
-                this.dailyDataContent[index]['content'].splice(this.targetRow, 1, newObj)
-                this.addDialog.visible = false
-            },
-            // 打开dailog,改变表格中指定行内容
-            changeContent (row, changeIndex) {
-                this.currentIndex = changeIndex
-                this.newContent = row.text
-                this.newCost = parseFloat(row.cost)
-                this.targetRow = row.$index
-                this.isAdd = false
-                this.addDialog.visible = true
             },
             // 删除表格中的一行内容
             deleteContent (row, removeIndex) {
@@ -558,8 +498,14 @@
                     this.dailyDataContent[index].title = this.dailyDataTitle[index]
                 }
                 for (const tableContent of this.dailyDataContent) {
-                    if (tableContent.content.length) {
-                        this.newPostDaily.content.push(tableContent)
+                    const contentLength = tableContent.content.length
+                    if (contentLength) {
+                        if (!tableContent.content[contentLength - 1].text) {
+                            hasSomeContentEmpty = true
+                            emptyContent.push(tableContent.title + '最后一条')
+                        } else {
+                            this.newPostDaily.content.push(tableContent)
+                        }
                     } else {
                         hasSomeContentEmpty = true
                         emptyContent.push(tableContent.title)
@@ -577,6 +523,7 @@
                         '/daily_report/', this.newPostDaily
                     ).then(res => {
                         this.hasWrittenToday = true
+                        console.log(this.newPostDaily)
                         this.newPostDaily = {
                             date: null,
                             content: [],
@@ -604,12 +551,6 @@
             // 删除自定义模板标题
             deleteTemplate (index) {
                 this.newTemplateContent.splice(index, 1)
-            },
-            addDialogChange (val) {
-                if (val === false) {
-                    this.newContent = ''
-                    this.newCost = 0
-                }
             },
             moreTemplateDialogChange (val) {
                 if (val === false) {
@@ -810,6 +751,23 @@
     }
     .leave-slide .leave-manage /deep/ .bk-table .bk-table-body-wrapper .bk-table-empty-block{
         width: 100% !important;
+    }
+    .bottom_container /deep/ .bk-table-empty-block{
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden;
+    }
+    .bottom_container /deep/ .bk-virtual-content{
+      height: 100% !important;
+    }
+    .bottom_container /deep/ .bk-scroll-x{
+        overflow-x: hidden !important;
+    }
+    .bottom_container /deep/ .bk-virtual-content{
+        position: inherit !important;
+    }
+    .bottom_container /deep/ .bk-virtual-section{
+        display: none !important;
     }
     .leave-slide .leave-manage .select-bar{
         display: flex;
