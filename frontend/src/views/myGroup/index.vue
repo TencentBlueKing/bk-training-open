@@ -326,7 +326,6 @@
                     this.curGroup = res.data
                     // 当前用户没加入任何组的话提示
                     if (!this.groupsData || this.groupsData.length === 0) {
-                        this.iscurGroupLoad = false
                         this.$bkMessage({
                             theme: 'warning',
                             message: '您还没有加入任何组'
@@ -340,6 +339,8 @@
                     }
                     // 切换组成员信息
                     this.getGroupUsers(groupId)
+                }).finally(() => {
+                    this.iscurGroupLoad = false
                 })
             },
             // 获取组内成员
@@ -347,6 +348,7 @@
                 this.iscurGroupLoad = true
                 if (!groupId) {
                     // 如果没有加入任何组就不执行任何操作
+                    this.iscurGroupLoad = false
                     return
                 }
                 this.$http.get('/get_group_users/' + groupId + '/').then(res => {
@@ -361,6 +363,7 @@
                     })
                     this.groupUsers = groupUserDate
                     this.updateBkUserExceptGroupUser()
+                }).finally(() => {
                     this.iscurGroupLoad = false
                 })
             },
@@ -481,6 +484,8 @@
                             this.curGroupId = this.groupsData[0].id
                         }
                     })
+                }).finally(() => {
+                    this.iscurGroupLoad = false
                 })
             },
             // 新增组

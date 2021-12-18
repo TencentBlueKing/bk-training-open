@@ -159,13 +159,20 @@
                                 </div>
                                 <div>
                                     <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
-                                        <h4>{{dailyContnet.title}}</h4>
+                                        <h5 style="font-size: 16px !important;margin: 6px 0 !important;">{{dailyContnet.title}}</h5>
                                         <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                             <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                                                <pre>{{iiIndex + 1}}.{{row.text}}</pre><span v-if="!row.isPrivate">----({{row.cost}})</span>
+                                                <pre class="card-pre">
+                                                    <div v-show="!row.isPrivate" class="time-wapper">
+                                                        <bk-tag theme="info">
+                                                            {{row.cost}}
+                                                        </bk-tag>
+                                                    </div>
+                                                    <div class="content-wapper">{{row.text}}</div>
+                                                </pre>
                                             </div>
                                         </div>
-                                        <div v-else>
+                                        <div style="font-size:14px;line-height: 22px;" v-else>
                                             {{dailyContnet.text}}
                                         </div>
                                     </div>
@@ -711,10 +718,36 @@
     width: 300px;
     margin: 10px 0.5%;
 }
-.card >>> .bk-card-body{
+.card{
+    cursor: default;
+}
+.card /deep/ .bk-card-body{
     height: 200px;
     padding: 0 20px;
     overflow-y: scroll;
+}
+.card /deep/ .bk-card-body .card-pre{
+        white-space: normal;
+        display: flex;
+        flex-wrap: nowrap;
+}
+.card /deep/ .bk-card-body .card-pre .time-wapper{
+        width: 68px;
+        margin-right: 6px;
+}
+.card /deep/ .bk-card-body .card-pre .time-wapper .bk-tag{
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 68px;
+    text-align: center;
+}
+.card /deep/ .bk-card-body .card-pre .content-wapper{
+    font-size: 14px;
+    line-height: 20px;
+}
+.card /deep/ .bk-card-body .sub-title{
+    font-size: 16px !important;
+    margin: 6px 0 !important;
 }
 pre{
     white-space: pre-wrap;
