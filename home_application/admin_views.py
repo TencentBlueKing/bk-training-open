@@ -174,6 +174,9 @@ def send_evaluate_all(request, group_id):
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     all_username = User.objects.filter(id__in=user_id).values_list("username", flat=True)
+    # 排除管理员
+    admin_list = Group.objects.get(id=group_id).admin_list
+    all_username = set(all_username) - set(admin_list)
     evaluate_name = User.objects.get(username=request.user.username)
     if all_username:
         # 放进celery里
@@ -243,23 +246,27 @@ def display_personnel_information(request, group_id):
     # 组内所有人
     user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     users = User.objects.filter(id__in=user_ids)
+    # 请假的人
+    off_day_list = OffDay.objects.filter(end_date__gte=date, user__in=users.values_list("username", flat=True))
     # 这个时间段所有请假的人
-    off_day_list = OffDay.objects.filter(
+    off_day_now_list = OffDay.objects.filter(
         start_date__lte=date, end_date__gte=date, user__in=users.values_list("username", flat=True)
     )
     data = []
     # 展示对应组对应日期请假的人
     if sign == "0":
-        off_infos = {info.user: model_to_dict(info) for info in off_day_list}
+        off_infos = {info.id: model_to_dict(info) for info in off_day_list}
         users = users.filter(username__in=off_day_list.values_list("user", flat=True))
         for user in users:
-            user_data = model_to_dict(user)
-            user_data.update({"off_info": off_infos.get(user.username)})
-            data.append(user_data)
+            for id in range(1, off_infos.__len__() + 1):
+                if off_infos[id]["user"] == user.username:
+                    user_data = model_to_dict(user)
+                    user_data.update({"off_info": off_infos.get(id)})
+                    data.append(user_data)
     # 展示对应组对应日期未请假的人
     elif sign == "1":
         at_work_usernames = set(users.values_list("username", flat=True)) - set(
-            off_day_list.values_list("user", flat=True)
+            off_day_now_list.values_list("user", flat=True)
         )
         data = [model_to_dict(user) for user in users.filter(username__in=at_work_usernames)]
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
