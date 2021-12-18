@@ -136,7 +136,7 @@
                                 :data="singleContent.content"
                                 :virtual-render="true"
                             >
-                                <div slot="append" style="text-align: right;padding: 10px 70px">
+                                <div slot="append" style="text-align: left;padding: 10px 15px">
                                     <bk-button style="display: inline-block;" text @click="dealAdd(index)">
                                         新增一条内容
                                     </bk-button>
@@ -504,6 +504,9 @@
                             hasSomeContentEmpty = true
                             emptyContent.push(tableContent.title + '最后一条')
                         } else {
+                            for (const tableContentItem of tableContent.content) {
+                                tableContentItem.cost = parseFloat(tableContentItem.cost).toFixed(1)
+                            }
                             this.newPostDaily.content.push(tableContent)
                         }
                     } else {

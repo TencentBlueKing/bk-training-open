@@ -162,9 +162,14 @@
                                         <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                             <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
                                                 <pre class="card-pre">
-                                                    <div v-show="!row.isPrivate && row.cost" class="time-wapper">
+                                                    <div v-show="!row.isPrivate && judgeFloatString(row.cost)" class="time-wapper">
                                                         <bk-tag theme="info">
                                                             {{row.cost}}小时
+                                                        </bk-tag>
+                                                    </div>
+                                                    <div v-show="row.isPrivate || !judgeFloatString(row.cost)" class="time-wapper">
+                                                        <bk-tag theme="info">
+                                                            --
                                                         </bk-tag>
                                                     </div>
                                                     <div class="content-wapper">{{row.text}}</div>
@@ -416,6 +421,13 @@
                 ).then(res => {
                     this.newApplyData = res.data
                 })
+            },
+            judgeFloatString (value) {
+                if (value === '0.0' || value === '0') {
+                    return false
+                } else {
+                    return true
+                }
             },
             // 提醒用户写日报
             remindAll () {
