@@ -164,7 +164,7 @@
                                                 <pre class="card-pre">
                                                     <div v-show="!row.isPrivate && judgeFloatString(row.cost)" class="time-wapper">
                                                         <bk-tag theme="info">
-                                                            {{row.cost}}小时
+                                                            {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
                                                         </bk-tag>
                                                     </div>
                                                     <div v-show="row.isPrivate || !judgeFloatString(row.cost)" class="time-wapper">
@@ -423,7 +423,7 @@
                 })
             },
             judgeFloatString (value) {
-                if (value === '0.0' || value === '0') {
+                if (value === '0.0' || value === '0' || value === 0) {
                     return false
                 } else {
                     return true

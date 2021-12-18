@@ -74,7 +74,7 @@
                                         <pre class="card-pre">
                                             <div v-show="(curUserName === daily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" class="time-wapper">
                                                 <bk-tag theme="info">
-                                                    {{row.cost}}小时
+                                                    {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
                                                 </bk-tag>
                                             </div>
                                             <div v-show="!(curUserName === daily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" class="time-wapper">
@@ -155,7 +155,7 @@
                                             <pre class="card-pre">
                                                 <div v-if="(curUserName === pdaily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" class="time-wapper">
                                                     <bk-tag theme="info">
-                                                        {{row.cost}}小时
+                                                        {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
                                                     </bk-tag>
                                                 </div>
                                                 <div v-show="!(curUserName === pdaily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" class="time-wapper">
@@ -290,7 +290,7 @@
         },
         methods: {
             judgeFloatString (value) {
-                if (value === '0.0' || value === '0') {
+                if (value === '0.0' || value === '0' || value === 0) {
                     return false
                 } else {
                     return true

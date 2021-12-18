@@ -505,7 +505,8 @@
                             emptyContent.push(tableContent.title + '最后一条')
                         } else {
                             for (const tableContentItem of tableContent.content) {
-                                tableContentItem.cost = parseFloat(tableContentItem.cost).toFixed(1)
+                                tableContentItem.cost = parseFloat(tableContentItem.cost)
+                                console.log(typeof tableContentItem.cost)
                             }
                             this.newPostDaily.content.push(tableContent)
                         }
