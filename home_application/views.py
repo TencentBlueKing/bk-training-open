@@ -659,7 +659,7 @@ def report_filter(request, group_id):
             Daily.objects.get(date=report_date, create_by=request.user.username)
         except Daily.DoesNotExist:
             get_my_report = False
-    if check_user_is_admin(request):
+    if check_user_is_admin(request, True):
         get_my_report = True
     # 分页
     member_report = get_paginator(member_report, page, page_size)
@@ -685,7 +685,7 @@ def get_reports_dates(request):
 def check_yesterday_daily(request):
     """检查工作日日报是否已填写"""
     yesterday = datetime.now() - timedelta(days=1)
-    if check_user_is_admin(request):
+    if check_user_is_admin(request, True):
         return JsonResponse({"result": True, "code": 0, "message": "管理员不需写日报", "data": True})
     if CalendarHandler(yesterday).is_holiday:
         return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": []})
@@ -841,3 +841,9 @@ def check_user_in_group(request, group_id):
     if len(unjoined_users) > 0:
         return JsonResponse({"result": True, "code": 0, "message": "", "data": ",".join(unjoined_users) + "未加入当前小组"})
     return JsonResponse({"result": True, "code": 0, "message": "", "data": "查询的用户已加入当前小组中"})
+
+
+@require_http_methods(["GET"])
+def check_user_admin(request):
+    user_is_admin = check_user_is_admin(request, False)
+    return JsonResponse({"result": user_is_admin, "code": 200, "message": "", "data": []})
