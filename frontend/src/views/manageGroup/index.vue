@@ -115,7 +115,7 @@
                         <template v-for="(daily,index) in shareAllList">
                             <a :key="index" @click="removeFromShareList(index)" style="cursor:pointer">
                                 <bk-badge theme="danger" :val="'X'" :key="index" class="mr15">
-                                    <bk-button
+                                    <bk-tag
                                         :key="index"
                                         style="margin-bottom: 10px">
                                         {{daily.create_name}}
