@@ -258,10 +258,10 @@ def display_personnel_information(request, group_id):
         off_infos = {info.id: model_to_dict(info) for info in off_day_list}
         users = users.filter(username__in=off_day_list.values_list("user", flat=True))
         for user in users:
-            for id in range(1, off_infos.__len__() + 1):
-                if off_infos[id]["user"] == user.username:
+            for key, value in off_infos.items():
+                if off_infos[key]["user"] == user.username:
                     user_data = model_to_dict(user)
-                    user_data.update({"off_info": off_infos.get(id)})
+                    user_data.update({"off_info": off_infos.get(key)})
                     data.append(user_data)
     # 展示对应组对应日期未请假的人
     elif sign == "1":
