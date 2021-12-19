@@ -79,7 +79,7 @@
                                             </div>
                                             <div v-show="!(curUserName === daily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" class="time-wapper">
                                                 <bk-tag theme="info">
-                                                    --
+                                                    - -
                                                 </bk-tag>
                                             </div>
                                             <div class="content-wapper">{{row.text}}</div>
@@ -160,7 +160,7 @@
                                                 </div>
                                                 <div v-show="!(curUserName === pdaily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" class="time-wapper">
                                                     <bk-tag theme="info">
-                                                        --
+                                                        - -
                                                     </bk-tag>
                                                 </div>
                                                 <div class="content-wapper">{{row.text}}</div>

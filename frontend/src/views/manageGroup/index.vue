@@ -169,7 +169,7 @@
                                                     </div>
                                                     <div v-show="row.isPrivate || !judgeFloatString(row.cost)" class="time-wapper">
                                                         <bk-tag theme="info">
-                                                            --
+                                                            - -
                                                         </bk-tag>
                                                     </div>
                                                     <div class="content-wapper">{{row.text}}</div>
