@@ -292,6 +292,8 @@
             judgeFloatString (value) {
                 if (value === '0.0' || value === '0' || value === 0) {
                     return false
+                } else if (typeof value === 'string' && value[0] === '0') {
+                    return false
                 } else {
                     return true
                 }
