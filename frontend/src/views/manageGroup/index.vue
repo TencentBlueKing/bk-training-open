@@ -162,17 +162,17 @@
                                         <div v-if="dailyContnet.type === 'table'" style="font-size: 18px">
                                             <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
                                                 <pre class="card-pre">
-                                                    <div v-show="!row.isPrivate && judgeFloatString(row.cost)" class="time-wapper">
-                                                        <bk-tag theme="info">
-                                                            {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
-                                                        </bk-tag>
+                                                    <div class="content-wapper">
+                                                        <span class="time-wapper">
+                                                            <bk-tag v-show="!row.isPrivate && judgeFloatString(row.cost)" theme="info">
+                                                                {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
+                                                            </bk-tag>
+                                                            <bk-tag v-show="row.isPrivate || !judgeFloatString(row.cost)" theme="info">
+                                                                - -
+                                                            </bk-tag>
+                                                        </span>
+                                                        {{row.text}}
                                                     </div>
-                                                    <div v-show="row.isPrivate || !judgeFloatString(row.cost)" class="time-wapper">
-                                                        <bk-tag theme="info">
-                                                            - -
-                                                        </bk-tag>
-                                                    </div>
-                                                    <div class="content-wapper">{{row.text}}</div>
                                                 </pre>
                                             </div>
                                         </div>
@@ -767,7 +767,7 @@
 }
 .card /deep/ .bk-card-body .card-pre .content-wapper{
     font-size: 14px;
-    line-height: 20px;
+    line-height: 22px;
 }
 .card /deep/ .bk-card-body .sub-title{
     font-size: 16px !important;
