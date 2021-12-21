@@ -37,8 +37,8 @@ def apply_is_available_to_json(group):
 
 def check_user_is_admin(request, check_type):
     """
-    key为0时，判断用户是否在其所加入的所有组皆为管理员，若是返回True，反之返回False;
-    key为1时，判断用户是否在其所加入的所有组中，至少是其中一个组的管理员，若是返回True，反之返回False
+    check_type为0时，判断用户是否在其所加入的所有组皆为管理员，若是返回True，反之返回False;
+    check_type为1时，判断用户是否在其所加入的所有组中，至少是其中一个组的管理员，若是返回True，反之返回False
     """
     group_ids = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
     user_name = request.user.username
