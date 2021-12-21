@@ -59,7 +59,7 @@
                     <div v-if="defaultPaging.count === 0" class="all-empty">
                         没有日报内容哟~
                     </div>
-                    <div class="all-report-body">
+                    <div v-else class="all-report-body">
                         <bk-card class="all-report-card card"
                             v-for="(daily, index) in dailysData.dailys"
                             :key="index"
@@ -135,7 +135,7 @@
                         <div v-if="perfectPaging.count === 0" class="perfect-empty">
                             没有日报内容哟~
                         </div>
-                        <div class="perfect-cards">
+                        <div v-else class="perfect-cards">
                             <bk-card class="perfect-report-card card"
                                 v-for="(pdaily, pindex) in perfectDailysData.daily_list"
                                 :key="pindex"
