@@ -850,5 +850,5 @@ def check_user_in_group(request, group_id):
 
 @require_http_methods(["GET"])
 def check_user_admin(request):
-    user_is_admin = check_user_is_admin(request, False)
+    user_is_admin = check_user_is_admin(request, 1)
     return JsonResponse({"result": user_is_admin, "code": 200, "message": "", "data": []})
