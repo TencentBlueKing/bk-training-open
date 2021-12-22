@@ -423,7 +423,7 @@
                 })
             },
             judgeFloatString (value) {
-                if (value === '0.0' || value === '0' || value === 0) {
+                if (value === '0.0' || value === '0' || !value) {
                     return false
                 } else if (typeof value === 'string' && value[0] === '0') {
                     return false

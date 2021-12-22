@@ -79,12 +79,12 @@ if "BK_BROKER_URL" in os.environ:
 # 测试环境
 if os.getenv("BK_ENV") == "testing":
     BK_URL = os.environ.get("BK_URL", "%s/console/" % BK_PAAS_HOST)
-    SITE_URL = os.environ.get("BK_SITE_URL", "/t/%s/" % APP_CODE)
+    SITE_URL = os.environ.get("BKAPP_SITE_URL", "/t/%s/" % APP_CODE)
     STATIC_URL = "%sstatic/" % SITE_URL
 # 正式环境
 if os.getenv("BK_ENV") == "production":
     BK_URL = os.environ.get("BK_URL", "%s/console/" % BK_PAAS_HOST)
-    SITE_URL = os.environ.get("BK_SITE_URL", "/o/%s/" % APP_CODE)
+    SITE_URL = os.environ.get("BKAPP_SITE_URL", "/o/%s/" % APP_CODE)
     STATIC_URL = "%sstatic/" % SITE_URL
 
 # REMOTE_STATIC_URL
