@@ -270,14 +270,16 @@
                                             删除
                                         </bk-button>
                                     </template>
-                                    <bk-button
-                                        theme="primary"
-                                        title="确认"
-                                        class="mr10"
-                                        size="large"
-                                        @click="submitMyComment">
-                                        发送给他
-                                    </bk-button>
+                                    <template v-else>
+                                        <bk-button
+                                            theme="primary"
+                                            title="确认"
+                                            class="mr10"
+                                            size="large"
+                                            @click="submitMyComment">
+                                            保存并发送
+                                        </bk-button>
+                                    </template>
                                     <bk-button
                                         theme="default"
                                         title="关闭"
