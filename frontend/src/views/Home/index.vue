@@ -400,8 +400,8 @@
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    if (res.result.length !== 0 && res.result.length !== null) {
-                        this.yesterdayDaliy = !!res.result
+                    if (res.result !== undefined) {
+                        this.yesterdayDaliy = res.result
                     } else {
                         this.yesterdayDaliy = true
                     }
