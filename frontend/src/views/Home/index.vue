@@ -400,7 +400,11 @@
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.data
+                    if (res.result.length !== 0 && res.result.length !== null) {
+                        this.yesterdayDaliy = !!res.result
+                    } else {
+                        this.yesterdayDaliy = true
+                    }
                 })
             },
             // 界面初始化

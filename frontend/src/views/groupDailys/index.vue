@@ -365,7 +365,7 @@
                     if (res.result) {
                         this.defaultPaging.count = res.data.total_report_num
                         this.dailysData.dailys = res.data.reports
-                        if (res.data.my_today_report !== undefined) {
+                        if (res.data.my_today_report.length !== 0 && res.data.my_today_report.length !== null) {
                             this.myTodayReport = res.data.my_today_report
                         } else {
                             // 响应无my_today_report参数为查看成员全部日报，不提示补签

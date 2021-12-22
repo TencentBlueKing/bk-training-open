@@ -664,7 +664,7 @@ def report_filter(request, group_id):
             Daily.objects.get(date=report_date, create_by=request.user.username)
         except Daily.DoesNotExist:
             get_my_report = False
-    if check_user_is_admin(request, True):
+    if check_user_is_admin(request, 0):
         get_my_report = True
     # 分页
     member_report = get_paginator(member_report, page, page_size)
@@ -690,7 +690,7 @@ def get_reports_dates(request):
 def check_yesterday_daily(request):
     """检查工作日日报是否已填写"""
     yesterday = datetime.now() - timedelta(days=1)
-    if check_user_is_admin(request, True):
+    if check_user_is_admin(request, 0):
         return JsonResponse({"result": True, "code": 0, "message": "管理员不需写日报", "data": True})
     if CalendarHandler(yesterday).is_holiday:
         return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": []})
