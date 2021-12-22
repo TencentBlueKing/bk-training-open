@@ -99,7 +99,8 @@
                                         <bk-option v-for="group in availableApplyGroups"
                                             :key="group.id"
                                             :id="group.id"
-                                            :name="group.name">
+                                            :name="group.group_name"
+                                            :disabled="!group.is_available">
                                         </bk-option>
                                     </bk-select>
                                 </bk-form-item>
@@ -395,9 +396,6 @@
                     '/get_available_apply_groups/'
                 ).then(res => {
                     this.availableApplyGroups = res.data
-                    if (this.availableApplyGroups.length > 0) {
-                        this.applyForGroup.groupId = this.availableApplyGroups[0].id
-                    }
                 }).finally(() => {
                     this.availableGroupsIsLoding = false
                 })

@@ -361,6 +361,8 @@
                         message: res.message
                     })
                 }
+                // 加载当天的日报
+                this.getDailyReport()
             })
         },
         methods: {

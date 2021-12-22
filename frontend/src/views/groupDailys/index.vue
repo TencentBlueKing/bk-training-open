@@ -59,7 +59,7 @@
                     <div v-if="defaultPaging.count === 0" class="all-empty">
                         没有日报内容哟~
                     </div>
-                    <div class="all-report-body">
+                    <div v-else class="all-report-body">
                         <bk-card class="all-report-card card"
                             v-for="(daily, index) in dailysData.dailys"
                             :key="index"
@@ -72,17 +72,17 @@
                                 <div v-if="dailyContnet.type === 'table'" style="font-size: 14px">
                                     <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
                                         <pre class="card-pre">
-                                            <div v-show="(curUserName === daily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" class="time-wapper">
-                                                <bk-tag theme="info">
-                                                    {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
-                                                </bk-tag>
+                                            <div class="content-wapper">
+                                                <span class="time-wapper">
+                                                    <bk-tag v-show="(curUserName === daily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" theme="info">
+                                                        {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
+                                                    </bk-tag>
+                                                    <bk-tag v-show="!(curUserName === daily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" theme="info">
+                                                        - -
+                                                    </bk-tag>
+                                                </span>
+                                                {{row.text}}
                                             </div>
-                                            <div v-show="!(curUserName === daily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" class="time-wapper">
-                                                <bk-tag theme="info">
-                                                    - -
-                                                </bk-tag>
-                                            </div>
-                                            <div class="content-wapper">{{row.text}}</div>
                                         </pre>
                                     </div>
                                 </div>
@@ -135,7 +135,7 @@
                         <div v-if="perfectPaging.count === 0" class="perfect-empty">
                             没有日报内容哟~
                         </div>
-                        <div class="perfect-cards">
+                        <div v-else class="perfect-cards">
                             <bk-card class="perfect-report-card card"
                                 v-for="(pdaily, pindex) in perfectDailysData.daily_list"
                                 :key="pindex"
@@ -153,17 +153,17 @@
                                     <div v-if="perfectContnet.type === 'table'" style="font-size: 14px">
                                         <div v-for="(row, pfIndex) in perfectContnet.content" :key="pfIndex">
                                             <pre class="card-pre">
-                                                <div v-if="(curUserName === pdaily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" class="time-wapper">
-                                                    <bk-tag theme="info">
-                                                        {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
-                                                    </bk-tag>
+                                                <div class="content-wapper">
+                                                    <span class="time-wapper">
+                                                        <bk-tag v-if="(curUserName === pdaily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" theme="info">
+                                                            {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + '小时'}}
+                                                        </bk-tag>
+                                                        <bk-tag v-show="!(curUserName === pdaily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" theme="info">
+                                                            - -
+                                                        </bk-tag>
+                                                    </span>
+                                                    {{row.text}}
                                                 </div>
-                                                <div v-show="!(curUserName === pdaily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" class="time-wapper">
-                                                    <bk-tag theme="info">
-                                                        - -
-                                                    </bk-tag>
-                                                </div>
-                                                <div class="content-wapper">{{row.text}}</div>
                                             </pre>
                                         </div>
                                     </div>
@@ -286,6 +286,7 @@
                 this.init()
             } else {
                 this.getDailys()
+                this.getPerfectReport()
             }
         },
         methods: {
@@ -558,7 +559,7 @@
     }
     .card /deep/ .bk-card-body .card-pre .content-wapper{
         font-size: 14px;
-        line-height: 20px;
+        line-height: 22px;
     }
     .card /deep/ .bk-card-body .sub-title{
         font-size: 16px !important;

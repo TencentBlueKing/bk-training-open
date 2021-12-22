@@ -15,7 +15,6 @@ import math
 from datetime import timedelta
 
 from django.db import IntegrityError
-from django.db.models import Q
 from django.http import JsonResponse
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
@@ -43,6 +42,7 @@ from home_application.utils.decorator import is_group_member
 from home_application.utils.report_operation import content_format_as_json
 from home_application.utils.tools import (
     apply_info_to_json,
+    apply_is_available_to_json,
     check_param,
     check_user_is_admin,
     get_paginator,
@@ -373,11 +373,16 @@ def update_user(request):
 def get_available_apply_groups(request):
     """获取所有(未在、未申请)组信息"""
     # 获取用户已经在的组
-    user_groups = GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
-    # 获取用户已经申请的组
-    apply_groups = ApplyForGroup.objects.filter(user_id=request.user.id, status=0).values_list("group_id", flat=True)
-    available_groups = Group.objects.filter(Q(~Q(id__in=user_groups) & ~Q(id__in=apply_groups)))
-    group_list = [group.to_json() for group in available_groups]
+    sql_str = (
+        "select g.id, g.name, if (gu.id is null, if(apply.id is null, true, false), false) is_available "
+        "from home_application_group g "
+        "left join home_application_groupuser gu "
+        "on g.id = gu.group_id and gu.user_id = %s "
+        "left join home_application_applyforgroup apply "
+        "on g.id = apply.group_id and apply.user_id = %s and apply.status = 0"
+    )
+    group_infos = Group.objects.raw(sql_str, [request.user.id, request.user.id])
+    group_list = [apply_is_available_to_json(group) for group in group_infos]
     return JsonResponse({"result": True, "code": 0, "message": "获取成功", "data": group_list})
 
 
@@ -845,5 +850,5 @@ def check_user_in_group(request, group_id):
 
 @require_http_methods(["GET"])
 def check_user_admin(request):
-    user_is_admin = check_user_is_admin(request, False)
+    user_is_admin = check_user_is_admin(request, 1)
     return JsonResponse({"result": user_is_admin, "code": 200, "message": "", "data": []})
