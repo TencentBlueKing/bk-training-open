@@ -114,7 +114,12 @@
                                     </div>
                                     <bk-table-column label="人员信息" prop="info" min-width="150" show-overflow-tooltip="true"></bk-table-column>
                                     <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
-                                    <bk-table-column label="请假理由" prop="reason" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="请假理由" prop="reason" min-width="100" show-overflow-tooltip="true"></bk-table-column>
+                                    <bk-table-column label="操作" width="66">
+                                        <template slot-scope="props">
+                                            <bk-button class="mr10" theme="primary" text @click="removeLeave(props.row)">删除</bk-button>
+                                        </template>
+                                    </bk-table-column>
                                 </bk-table>
                             </div>
                         </div>
@@ -655,6 +660,15 @@
             },
             // 请假确认事件
             submitLeave () {
+                if (this.leaveFormData.reason === '') {
+                    this.$bkMessage({
+                        'offsetY': 80,
+                        'delay': 2000,
+                        'theme': 'warning',
+                        'message': '请填写请假原因'
+                    })
+                    return
+                }
                 const params = {}
                 params.start_date = moment(this.leaveFormData.dateTimeRange[0]).format(moment.HTML5_FMT.DATE)
                 params.end_date = moment(this.leaveFormData.dateTimeRange[1]).format(moment.HTML5_FMT.DATE)
@@ -682,6 +696,57 @@
             clickLeaveManage () {
                 this.leaveSetting.visible = true
                 this.getLeaveList(2)
+            },
+            // 删除请假信息
+            removeLeave (row) {
+                const groupId = this.selectedGroup
+                const offdayId = row.offdayId
+                const vm = this
+                if (groupId === -1) {
+                    this.$bkMessage({
+                        'offsetY': 80,
+                        'delay': 2000,
+                        'theme': 'warning',
+                        'message': '用户当前未加入任何组，无请假信息可删除。'
+                    })
+                } else {
+                    this.$bkInfo({
+                        title: '确认删除该请假信息？',
+                        confirmLoading: true,
+                        confirmFn: async () => {
+                            try {
+                                vm.$http.delete('/remove_off/' + groupId + '/' + offdayId + '/').then(res => {
+                                    if (res.result) {
+                                        vm.$bkMessage({
+                                            'offsetY': 80,
+                                            'delay': 2000,
+                                            'theme': 'success',
+                                            'message': res.message
+                                        })
+                                        vm.getLeaveList()
+                                        vm.getLeaveList(2)
+                                    } else {
+                                        vm.$bkMessage({
+                                            'offsetY': 80,
+                                            'delay': 2000,
+                                            'theme': 'warning',
+                                            'message': res.message
+                                        })
+                                    }
+                                })
+                                return true
+                            } catch (e) {
+                                vm.$bkMessage({
+                                    'offsetY': 80,
+                                    'delay': 2000,
+                                    'theme': 'warning',
+                                    'message': '删除请假信息失败'
+                                })
+                                return false
+                            }
+                        }
+                    })
+                }
             }
         }
     }
