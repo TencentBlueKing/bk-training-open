@@ -45,14 +45,11 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
     none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True)).exclude(
         username__in=group_admin
     )
-    # 组内所有人
-    user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
-    users = User.objects.filter(id__in=user_ids)
-    # 未写日报人名
+    # 请假人列表
     off_day_username_list = OffDay.objects.filter(
         start_date__lte=datetime.date.today(),
         end_date__gte=datetime.date.today(),
-        user__in=users.values_list("username", flat=True),
+        user__in=group_users.values_list("username", flat=True),
     ).values_list("user", flat=True)
     off_day_name_list = User.objects.filter(username__in=off_day_username_list).values_list("name", flat=True)
     # 返回数据
