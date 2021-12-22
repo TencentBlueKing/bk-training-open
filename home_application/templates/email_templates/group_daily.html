@@ -28,6 +28,12 @@
                 </td>
             </tr>
         </table>
+         <p style="width: 30%; font-size: 16px">
+                    请假人： {% for item in item.off_day_name_list%}
+                            {{ item }},
+
+         {% endfor %}
+          </p>
     </div>
     {% endfor %}
     <!-- 最小重复单元 END -->

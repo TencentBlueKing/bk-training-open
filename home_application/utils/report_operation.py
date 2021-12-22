@@ -4,7 +4,7 @@
 # @Remarks  : 日报的相关处理
 import datetime
 
-from home_application.models import Daily, Group, GroupUser, User
+from home_application.models import Daily, Group, GroupUser, OffDay, User
 
 
 def content_format_as_json(daily_reports):
@@ -45,6 +45,13 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
     none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True)).exclude(
         username__in=group_admin
     )
+    # 请假人列表
+    off_day_username_list = OffDay.objects.filter(
+        start_date__lte=datetime.date.today(),
+        end_date__gte=datetime.date.today(),
+        user__in=group_users.values_list("username", flat=True),
+    ).values_list("user", flat=True)
+    off_day_name_list = User.objects.filter(username__in=off_day_username_list).values_list("name", flat=True)
     # 返回数据
     return {
         "id": group.id,  # 组id
@@ -52,6 +59,7 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
         "admin": group_admin,  # 组管理员数组
         "report_users": report_users,  # 已完成日报成员 [User(0), User(1), ···]
         "none_report_users": none_report_users,  # 未完成日报成员 [User(0), User(1), ···]
+        "off_day_name_list": off_day_name_list,  # 请假成员姓名列表[崔, 王, ···]
         "reports": reports,  # 日报 [Daily(0), Daily(1), ···]
     }
 
