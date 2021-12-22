@@ -16,6 +16,8 @@
                         placeholder="选择日期"
                         :options="customOption"
                         @change="changeDate(reportDate)"
+                        :shortcuts="shortcuts"
+                        :shortcut-close="true"
                     >
                     </bk-date-picker>
                 </div>
@@ -244,7 +246,17 @@
 
 <script>
     import moment from 'moment'
-    import { bkInput, bkDatePicker, bkTable, bkTableColumn, bkButton, bkSideslider, bkForm, bkFormItem, bkAlert } from 'bk-magic-vue'
+    import {
+        bkAlert,
+        bkButton,
+        bkDatePicker,
+        bkForm,
+        bkFormItem,
+        bkInput,
+        bkSideslider,
+        bkTable,
+        bkTableColumn
+    } from 'bk-magic-vue'
 
     export default {
         name: '',
@@ -261,6 +273,14 @@
         },
         data () {
             return {
+                shortcuts: [
+                    {
+                        text: '今天',
+                        value () {
+                            return new Date()
+                        }
+                    }
+                ],
                 yesterdayDaliy: true,
                 curDate: new Date(),
                 reportDate: new Date(),
@@ -401,7 +421,7 @@
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.data
+                    this.yesterdayDaliy = res.result
                 })
             },
             // 界面初始化

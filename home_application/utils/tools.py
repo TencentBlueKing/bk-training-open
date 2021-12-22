@@ -17,7 +17,7 @@ def get_paginator(objects, page, size):
     try:
         return p.page(page)
     except Exception:
-        return p.page(1)
+        return None
 
 
 def apply_info_to_json(apply_info):

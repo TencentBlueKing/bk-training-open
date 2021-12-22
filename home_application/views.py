@@ -640,6 +640,8 @@ def report_filter(request, group_id):
 
         # 分页
         member_report = get_paginator(member_report, page, page_size)
+        if member_report is None:
+            return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
         # 查询完毕返回数据
         res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
@@ -664,10 +666,12 @@ def report_filter(request, group_id):
             Daily.objects.get(date=report_date, create_by=request.user.username)
         except Daily.DoesNotExist:
             get_my_report = False
-    if check_user_is_admin(request, True):
+    if check_user_is_admin(request, 0):
         get_my_report = True
     # 分页
     member_report = get_paginator(member_report, page, page_size)
+    if member_report is None:
+        return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
     # 查询完毕返回数据
     res_data = {
         "total_report_num": total_report_num,
@@ -690,7 +694,7 @@ def get_reports_dates(request):
 def check_yesterday_daily(request):
     """检查工作日日报是否已填写"""
     yesterday = datetime.now() - timedelta(days=1)
-    if check_user_is_admin(request, True):
+    if check_user_is_admin(request, 0):
         return JsonResponse({"result": True, "code": 0, "message": "管理员不需写日报", "data": True})
     if CalendarHandler(yesterday).is_holiday:
         return JsonResponse({"result": True, "code": 0, "message": "昨天非工作日", "data": []})
@@ -733,6 +737,8 @@ def get_prefect_dailys(request, group_id):
     page = request.GET.get("page")
     size = request.GET.get("size")
     daily_list = get_paginator(daily_list, page=page, size=size)
+    if daily_list is None:
+        return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
     # 返回日报数据
     res_data = {
         "total_num": total_num,
