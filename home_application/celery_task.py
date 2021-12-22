@@ -60,7 +60,7 @@ def send_apply_for_group_to_manager(user_name, group_admins, group_name, group_i
     )
     mail_title = "申请入组请求"
     link_text = "点击查看"
-    link_url = "%smanage-group?group={}".format(group_id) % settings.SITE_URL  # 组管理页面
+    link_url = "%smanage-group?group={}".format(group_id) % settings.BKAPP_FULL_SITE_URL  # 组管理页面
     mail_content = get_template("simple_notify.html").render(
         {
             "notify_title": mail_title,
