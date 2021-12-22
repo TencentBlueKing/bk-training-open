@@ -640,7 +640,7 @@ def report_filter(request, group_id):
 
         # 分页
         member_report = get_paginator(member_report, page, page_size)
-        if member_report == 404:
+        if member_report is None:
             return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
         # 查询完毕返回数据
         res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
@@ -670,7 +670,7 @@ def report_filter(request, group_id):
         get_my_report = True
     # 分页
     member_report = get_paginator(member_report, page, page_size)
-    if member_report == 404:
+    if member_report is None:
         return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
     # 查询完毕返回数据
     res_data = {
@@ -737,7 +737,7 @@ def get_prefect_dailys(request, group_id):
     page = request.GET.get("page")
     size = request.GET.get("size")
     daily_list = get_paginator(daily_list, page=page, size=size)
-    if daily_list == 404:
+    if daily_list is None:
         return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
     # 返回日报数据
     res_data = {
