@@ -134,7 +134,6 @@
                             <bk-table
                                 style="margin-top: 15px;"
                                 :data="singleContent.content"
-                                :virtual-render="true"
                             >
                                 <div slot="append" style="text-align: left;padding: 10px 15px">
                                     <bk-button style="display: inline-block;" text @click="dealAdd(index)">
@@ -328,10 +327,7 @@
                         }
                     }
                 },
-                curUserLeaveList: [],
-                virtualRenderConfig: {
-                    height: 226
-                }
+                curUserLeaveList: []
             }
         },
         created () {
@@ -347,23 +343,23 @@
         },
         activated () {
             // 如果没有加入任何组就跳转到我的小组页面
-            this.$http.get(
-                '/get_user_groups/'
-            ).then(res => {
-                if (res.result) {
-                    // 没有加入任何组就跳转到我的小组页面
-                    if (res.data.length === 0) {
-                        this.$router.push({ name: 'MyGroup' })
+            if (!this.groupList.length) {
+                this.$http.get(
+                    '/get_user_groups/'
+                ).then(res => {
+                    if (res.result) {
+                        // 没有加入任何组就跳转到我的小组页面
+                        if (res.data.length === 0) {
+                            this.$router.push({ name: 'MyGroup' })
+                        }
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: res.message
+                        })
                     }
-                } else {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: res.message
-                    })
-                }
-                // 加载当天的日报
-                this.getDailyReport()
-            })
+                })
+            }
         },
         methods: {
             changeDate (date) {
@@ -417,6 +413,7 @@
                             }
                         } else {
                             this.groupList = []
+                            this.$router.push({ name: 'MyGroup' })
                         }
                     } else {
                         this.$bkMessage({
@@ -448,7 +445,7 @@
                                 this.dailyDataTitle.push(singleContent.title)
                                 this.dailyDataContent.push(singleContent)
                             } else {
-                                this.newTemplateContent.push((singleContent))
+                                this.newTemplateContent.push(singleContent)
                             }
                         }
                     } else {
@@ -479,7 +476,7 @@
                         message: '前一条内容为空'
                     })
                 } else {
-                    const newobj = { 'text': '', 'cost': 0, 'isPrivate': this.allPrivate }
+                    const newobj = { 'text': '', 'cost': 0, 'isPrivate': this.allPrivate, '$index': contentLength }
                     this.dailyDataContent[index].content.push(newobj)
                 }
             },
@@ -508,7 +505,6 @@
                         } else {
                             for (const tableContentItem of tableContent.content) {
                                 tableContentItem.cost = parseFloat(tableContentItem.cost)
-                                console.log(typeof tableContentItem.cost)
                             }
                             this.newPostDaily.content.push(tableContent)
                         }
@@ -529,7 +525,6 @@
                         '/daily_report/', this.newPostDaily
                     ).then(res => {
                         this.hasWrittenToday = true
-                        console.log(this.newPostDaily)
                         this.newPostDaily = {
                             date: null,
                             content: [],
