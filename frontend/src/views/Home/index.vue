@@ -777,7 +777,7 @@
         border: 2px solid #EAEBF0 ;
         margin:0px 100px;
         padding: 20px 50px;
-        min-height: 80vh;
+        min-height: calc(100vh - 140px);
     }
     .demo-block.demo-alert .bk-alert{
         margin-bottom: 20px;
@@ -933,13 +933,7 @@
     .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
         width: 200px;
     }
-.body{
-    border: 2px solid #EAEBF0 ;
-    margin:0px 100px;
-    padding: 20px 50px;
-    min-height: 80vh;
-}
-.demo-block.demo-alert .bk-alert{
-    margin-bottom: 20px;
-}
+    .demo-block.demo-alert .bk-alert{
+        margin-bottom: 20px;
+    }
 </style>

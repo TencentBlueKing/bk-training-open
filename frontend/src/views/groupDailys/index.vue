@@ -13,7 +13,7 @@
                         :name="group.name">
                     </bk-option>
                 </bk-select>
-                <div style="margin-top:18px;height:707px;">
+                <div style="margin-top:18px">
                     <div class="users_list">
                         <div v-show="isLeftContentWork">
                             <bk-button v-for="user in groupUsers" :key="user.id"
@@ -512,6 +512,7 @@
         border: 2px solid #EAEBF0 ;
         margin:0 100px;
         padding: 20px 30px;
+        min-height: calc(100vh - 140px);
     }
     .container_title {
         font-size: 22px;
