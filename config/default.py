@@ -120,13 +120,13 @@ MAKO_DEFAULT_FILTERS = ["h"]
 IS_BKUI_HISTORY_MODE = True
 
 # 是否需要对AJAX弹窗登录强行打开
-IS_AJAX_PLAIN_MODE = False
+IS_AJAX_PLAIN_MODE = True
 
 # 国际化配置
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)  # noqa
 
 # 网站url，默认为线上正式环境的url
-BKAPP_FULL_SITE_URL = os.getenv("BKAPP_FULL_SITE_URL", "https://paas-edu.bktencent.com/o/%s/" % APP_CODE)  # noqa
+BKAPP_FULL_SITE_URL = os.getenv("BKAPP_FULL_SITE_URL")  # noqa
 
 USE_TZ = False
 TIME_ZONE = "Asia/Shanghai"
