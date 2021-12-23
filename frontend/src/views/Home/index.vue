@@ -508,6 +508,12 @@
             // 删除表格中的一行内容
             deleteContent (row, removeIndex) {
                 this.dailyDataContent[removeIndex]['content'].splice(row.$index, 1)
+                for (const itemContent of this.dailyDataContent[removeIndex]['content']) {
+                    if (row.$index < itemContent.$index) {
+                        itemContent.$index--
+                    }
+                }
+                console.log('row.$index', row.$index)
                 this.$bkMessage({
                     theme: 'success',
                     message: '移除成功'
