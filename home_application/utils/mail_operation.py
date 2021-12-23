@@ -7,9 +7,9 @@ import logging
 import os
 
 from celery.task import task
-from django.conf import settings
 from django.template.loader import get_template
 
+from blueapps.conf import settings
 from blueking.component.shortcuts import get_client_by_user
 from home_application.models import Daily, Group, OffDay
 from home_application.utils.report_operation import (
@@ -62,7 +62,7 @@ def remind_to_write_daily(username_list: list, date=None):
     if date is None:
         date = "今天"
     notify_content = "Hi, %s的日报还没完成，请" % date
-    link_url = settings.SITE_URL
+    link_url = settings.BKAPP_FULL_SITE_URL
     link_text = "填写日报"
 
     mail_content = get_template("simple_notify.html").render(
@@ -100,7 +100,9 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
                                 "daily_count": 10,              # 写了日报的人数
                                 "none_write_daily_count": 1,    # 没写日报的人数，包含请假的人
                                 "people_in_vacation_count": 0,  # 请假人数
-                                "group_link": settings.SITE_URL + "manage-group?date=2021-12-3&group=1"  # 组管理页面
+                                "off_day_name_list":off_day_name_list,#请假人姓名
+                                "group_link": settings.BKAPP_FULL_SITE_URL + "manage-group?date=2021-12-3&group=1"
+                                  # 组管理页面
                             },]
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
@@ -124,7 +126,6 @@ def notify_yesterday_report_info(report_date=None):
     group_ids = Group.objects.values_list("id", flat=True)
     if report_date is None:
         report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
-
     report_date_str = report_date.strftime("%Y-%m-%d")
     for g_id in group_ids:
         # 组信息
@@ -134,8 +135,11 @@ def notify_yesterday_report_info(report_date=None):
             "group_name": group_info["name"],  # 组名字
             "daily_count": len(group_info["report_users"]),  # 写了日报的人数
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
-            "people_in_vacation_count": 0,  # TODO 请假人数
-            "group_link": "{}manage-group?date={}&group={}".format(settings.SITE_URL, report_date_str, g_id),  # 组管理页面
+            "people_in_vacation_count": len(list(group_info["off_day_name_list"])),  # 请假人数
+            "off_day_name_list": list(group_info["off_day_name_list"]),  # 请假人姓名列表
+            "group_link": "{}manage-group?date={}&group={}".format(
+                settings.BKAPP_FULL_SITE_URL, report_date_str, g_id
+            ),  # 组管理页面
         }
 
         # 循环组内管理员，将组信息添到管理员管理的组信息中
