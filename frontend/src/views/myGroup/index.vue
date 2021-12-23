@@ -617,6 +617,8 @@
                             create_time: ''
                         }
                         this.groupUsers = []
+                        // 清除缓存curGroup
+                        sessionStorage.removeItem('curGroup')
                         this.curUser.isAdmin = false
                         // 更新页面全部信息
                         this.init()
