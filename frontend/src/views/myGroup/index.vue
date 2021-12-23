@@ -163,16 +163,10 @@
                         <bk-button class="add-user-button" ext-cls="mr5" @click="cancelAddUser" theme="default" title="取消">取消</bk-button>
                     </div>
 
-                    <bk-table style="margin-top: 15px;"
-                        height="383px"
+                    <bk-table
+                        style="margin-top: 15px;"
                         :data="groupUsers"
-                        :size="size"
-                        :pagination="pagination"
-                        :virtual-render="true"
-                        @row-mouse-enter="handleRowMouseEnter"
-                        @row-mouse-leave="handleRowMouseLeave"
-                        @page-change="handlePageChange"
-                        @page-limit-change="handlePageLimitChange">
+                    >
                         <bk-table-column label="序号" prop="listId" width="60"></bk-table-column>
                         <bk-table-column label="用户名" prop="username"></bk-table-column>
                         <bk-table-column label="姓名" prop="name"></bk-table-column>
@@ -759,6 +753,7 @@
     }
     .line-container  /deep/ .bk-card .bk-card-body {
         padding-top: 10px !important;
+        min-height: 462px;
         visibility:hidden;
         visibility:visible;
     }
