@@ -58,13 +58,9 @@ class ResponseHandler(object):
         width & height for adjusting iframe window, login_url as
         http://xxx/login/?c_url=http%3A//xxx/t/data/&app_id=data
         """
-        _next = request.build_absolute_uri(reverse("account:login_success"))
-
-        if self._conf.ADD_CROSS_PREFIX:
-            _next = self._conf.CROSS_PREFIX + _next
 
         _login_url = build_redirect_url(
-            _next,
+            settings.BKAPP_FULL_SITE_URL,
             self._conf.LOGIN_PLAIN_URL,
             self._conf.C_URL,
             extra_args=self._build_extra_args(),
