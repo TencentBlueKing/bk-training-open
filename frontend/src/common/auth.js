@@ -53,6 +53,10 @@ export default {
                         currentUser.isAuthenticated = true
                         resolve(currentUser)
                     }, err => {
+                        const loginError = err.response
+                        if (loginError.status === 401 && loginError.data.login_url !== undefined) {
+                            window.location.href = loginError.data.login_url
+                        }
                         if (err.response.status === this.HTTP_STATUS_UNAUTHORIZED || err.crossDomain) {
                             resolve({ ...ANONYMOUS_USER })
                         } else {

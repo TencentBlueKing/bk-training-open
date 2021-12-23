@@ -16,6 +16,8 @@
                         placeholder="选择日期"
                         :options="customOption"
                         @change="changeDate(reportDate)"
+                        :shortcuts="shortcuts"
+                        :shortcut-close="true"
                     >
                     </bk-date-picker>
                 </div>
@@ -131,7 +133,7 @@
             </div>
             <div class="bottom_container">
                 <template v-for="(singleContent, index) in dailyDataContent">
-                    <div :key="index">
+                    <div :key="index" style="margin-bottom: 20px">
                         <div style="display: flex;justify-content: space-between;margin: 10px 0">
                             <h2 contenteditable="true" @input="changeTitleText(index)" :ref="'title' + index" style="display: inline-block;margin: 0">{{singleContent.title}}</h2>
                         </div>
@@ -217,10 +219,10 @@
                 </bk-dialog>
             </div>
             <template v-for="(tem,index) in newTemplateContent">
-                <div :key="index">
+                <div :key="index" style="margin-top: 20px">
                     <div style="display: flex;justify-content: space-between;margin: 10px 0">
                         <h2 style="display: inline-block;margin: 0">{{tem.title}}</h2>
-                        <bk-button v-if="index > 0" style="display: inline-block" theme="primary" @click="deleteTemplate(index)">
+                        <bk-button v-if="index > 0" style="display: inline-block" text @click="deleteTemplate(index)">
                             删除该模板
                         </bk-button>
                     </div>
@@ -244,7 +246,17 @@
 
 <script>
     import moment from 'moment'
-    import { bkInput, bkDatePicker, bkTable, bkTableColumn, bkButton, bkSideslider, bkForm, bkFormItem, bkAlert } from 'bk-magic-vue'
+    import {
+        bkAlert,
+        bkButton,
+        bkDatePicker,
+        bkForm,
+        bkFormItem,
+        bkInput,
+        bkSideslider,
+        bkTable,
+        bkTableColumn
+    } from 'bk-magic-vue'
 
     export default {
         name: '',
@@ -261,6 +273,14 @@
         },
         data () {
             return {
+                shortcuts: [
+                    {
+                        text: '今天',
+                        value () {
+                            return new Date()
+                        }
+                    }
+                ],
                 yesterdayDaliy: true,
                 curDate: new Date(),
                 reportDate: new Date(),
@@ -401,7 +421,7 @@
                 this.$http.get(
                     '/check_yesterday_daliy/'
                 ).then(res => {
-                    this.yesterdayDaliy = !!res.data
+                    this.yesterdayDaliy = res.result
                 })
             },
             // 界面初始化
@@ -488,6 +508,12 @@
             // 删除表格中的一行内容
             deleteContent (row, removeIndex) {
                 this.dailyDataContent[removeIndex]['content'].splice(row.$index, 1)
+                for (const itemContent of this.dailyDataContent[removeIndex]['content']) {
+                    if (row.$index < itemContent.$index) {
+                        itemContent.$index--
+                    }
+                }
+                console.log('row.$index', row.$index)
                 this.$bkMessage({
                     theme: 'success',
                     message: '移除成功'
@@ -757,7 +783,7 @@
         border: 2px solid #EAEBF0 ;
         margin:0px 100px;
         padding: 20px 50px;
-        min-height: 80vh;
+        min-height: calc(100vh - 140px);
     }
     .demo-block.demo-alert .bk-alert{
         margin-bottom: 20px;
@@ -913,13 +939,7 @@
     .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
         width: 200px;
     }
-.body{
-    border: 2px solid #EAEBF0 ;
-    margin:0px 100px;
-    padding: 20px 50px;
-    min-height: 80vh;
-}
-.demo-block.demo-alert .bk-alert{
-    margin-bottom: 20px;
-}
+    .demo-block.demo-alert .bk-alert{
+        margin-bottom: 20px;
+    }
 </style>

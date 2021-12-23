@@ -163,16 +163,10 @@
                         <bk-button class="add-user-button" ext-cls="mr5" @click="cancelAddUser" theme="default" title="取消">取消</bk-button>
                     </div>
 
-                    <bk-table style="margin-top: 15px;"
-                        height="383px"
+                    <bk-table
+                        style="margin-top: 15px;"
                         :data="groupUsers"
-                        :size="size"
-                        :pagination="pagination"
-                        :virtual-render="true"
-                        @row-mouse-enter="handleRowMouseEnter"
-                        @row-mouse-leave="handleRowMouseLeave"
-                        @page-change="handlePageChange"
-                        @page-limit-change="handlePageLimitChange">
+                    >
                         <bk-table-column label="序号" prop="listId" width="60"></bk-table-column>
                         <bk-table-column label="用户名" prop="username"></bk-table-column>
                         <bk-table-column label="姓名" prop="name"></bk-table-column>
@@ -617,6 +611,8 @@
                             create_time: ''
                         }
                         this.groupUsers = []
+                        // 清除缓存curGroup
+                        sessionStorage.removeItem('curGroup')
                         this.curUser.isAdmin = false
                         // 更新页面全部信息
                         this.init()
@@ -690,8 +686,8 @@
 <style scoped>
     .body{
         border: 2px solid #EAEBF0 ;
-        margin:0px 100px;
-        min-height: 540px;
+        margin:0 100px;
+        min-height: calc(100vh - 140px);
     }
     .line-container {
         margin: 16px 50px 0px 50px;
@@ -757,6 +753,7 @@
     }
     .line-container  /deep/ .bk-card .bk-card-body {
         padding-top: 10px !important;
+        min-height: 462px;
         visibility:hidden;
         visibility:visible;
     }

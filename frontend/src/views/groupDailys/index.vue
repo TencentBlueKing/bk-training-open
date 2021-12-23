@@ -13,31 +13,20 @@
                         :name="group.name">
                     </bk-option>
                 </bk-select>
-                <bk-button :disabled="!isLeftContentWork" :theme="'primary'" type="submit" :title="'基础按钮'" style="margin-top:-21px;margin-left:5px;" @click="changeType" class="mr10">
-                    {{isUser ? '日期' : '成员'}}
-                </bk-button>
-                <div style="margin-top:18px;height:707px;">
-                    <div v-if="isUser" class="users_list">
+                <div style="margin-top:18px">
+                    <div class="users_list">
                         <div v-show="isLeftContentWork">
                             <bk-button v-for="user in groupUsers" :key="user.id"
                                 :theme="user.id === curUserId ? 'primary' : 'default'"
-                                style="width:130px;"
+                                ext-cls="user-btn"
                                 @click="changeDateOrUser(user.id, '')"
+                                :title="user.name"
                                 class="mr10">
                                 {{user.name}}
                             </bk-button>
                         </div>
                     </div>
-                    <div class="date_picker" style="margin-left:0px;" v-else>
-                        <bk-date-picker :disabled="!isLeftContentWork" class="mr15" @change="changeDateOrUser('', changeDate)" style="position:relative;" v-model="changeDate" format="yyyy-MM-dd"
-                            :placeholder="'选择日期'"
-                            :open="isLeftContentWork"
-                            :ext-popover-cls="'custom-popover-cls'"
-                            :options="customOption">
-                        </bk-date-picker>
-                    </div>
                 </div>
-
                 <!-- 清除浮动，撑开盒子 -->
                 <div style="clear:both;"></div>
             </div>
@@ -56,6 +45,17 @@
                     </div>
                 </div>
                 <div class="all-report-wapper report-wapper" v-if="activeTabTitle === tabTitleList[0]">
+                    <div class="right-top-bar">
+                        <bk-date-picker
+                            behavior="simplicity"
+                            format="yyyy-MM-dd"
+                            ext-cls="all-date-picker"
+                            v-model="changeDate"
+                            @change="changeDateOrUser('', changeDate)"
+                            :options="customOption"
+                            :placeholder="'选择日期'">
+                        </bk-date-picker>
+                    </div>
                     <div v-if="defaultPaging.count === 0" class="all-empty">
                         没有日报内容哟~
                     </div>
@@ -266,7 +266,8 @@
                 perfectDailysData: {
                     daily_list: []
                 },
-                isLeftContentWork: true
+                isLeftContentWork: true,
+                changeDate: moment(new Date()).format('YYYY-MM-DD')
             }
         },
         computed: {
@@ -352,6 +353,9 @@
                 this.curUserId = userId
                 if (this.curUserId === '' && this.curDate === '') {
                     this.curDate = moment(new Date()).format('YYYY-MM-DD')
+                }
+                if (userId !== '' && date === '') {
+                    this.changeDate = ''
                 }
                 this.getDailys()
             },
@@ -508,6 +512,7 @@
         border: 2px solid #EAEBF0 ;
         margin:0 100px;
         padding: 20px 30px;
+        min-height: calc(100vh - 140px);
     }
     .container_title {
         font-size: 22px;
@@ -515,24 +520,33 @@
     }
     .left_container{
         float: left;
-        width: 306px;
+        width: 240px;
         padding-left: 20px;
         border-right: 1px solid #EAEBF0 ;
     }
-    .users_list >>> .bk-button{
+    .users_list .user-btn{
         margin-bottom: 10px;
+        width: 90px;
+        overflow: hidden;
+        text-overflow:ellipsis;
+        white-space: nowrap;
+    }
+    .users_list .user-btn /deep/ div{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .right_container{
         float: right;
         min-width: 380px;
-        width: calc(100% - 310px);
+        width: calc(100% - 250px);
     }
     .card{
-        margin: 0 0.5%;
+        margin: 5px 0.5%;
         cursor: default;
     }
     .card /deep/ .bk-card-body{
-        height: 260px;
+        height: 250px;
         overflow-y: auto;
         padding-top: 10px;
     }
@@ -641,8 +655,22 @@
         width: 100%;
         flex-wrap: wrap;
     }
-    .right_container .all-report-wapper{
-        padding-top: 14px;
+    .right_container .all-report-wapper .right-top-bar{
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        align-items: center;
+        height: 60px;
+    }
+    .right_container .all-report-wapper .all-date-picker{
+        width: 150px !important;
+    }
+    .right_container .all-report-wapper .all-date-picker /deep/ .bk-date-picker-rel .bk-date-picker-editor{
+        font-size: 16px;
+    }
+    .right_container .all-report-wapper .perfallect-date-picker /deep/ .bk-date-picker-rel .icon-wrapper .picker-icon{
+        width: 20px;
+        height: 20px;
     }
     .right_container .all-report-wapper .all-empty{
         width: 100%;
@@ -654,6 +682,7 @@
     .right_container .all-report-wapper .all-report-body{
         height: 650px;
         width: 100%;
+        overflow: auto;
     }
     .right_container .all-report-wapper .all-report-body .all-report-card{
         float: left;
