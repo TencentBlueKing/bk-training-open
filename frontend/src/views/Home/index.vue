@@ -133,7 +133,7 @@
             </div>
             <div class="bottom_container">
                 <template v-for="(singleContent, index) in dailyDataContent">
-                    <div :key="index">
+                    <div :key="index" style="margin-bottom: 20px">
                         <div style="display: flex;justify-content: space-between;margin: 10px 0">
                             <h2 contenteditable="true" @input="changeTitleText(index)" :ref="'title' + index" style="display: inline-block;margin: 0">{{singleContent.title}}</h2>
                         </div>
@@ -219,10 +219,10 @@
                 </bk-dialog>
             </div>
             <template v-for="(tem,index) in newTemplateContent">
-                <div :key="index">
+                <div :key="index" style="margin-top: 20px">
                     <div style="display: flex;justify-content: space-between;margin: 10px 0">
                         <h2 style="display: inline-block;margin: 0">{{tem.title}}</h2>
-                        <bk-button v-if="index > 0" style="display: inline-block" theme="primary" @click="deleteTemplate(index)">
+                        <bk-button v-if="index > 0" style="display: inline-block" text @click="deleteTemplate(index)">
                             删除该模板
                         </bk-button>
                     </div>
@@ -777,7 +777,7 @@
         border: 2px solid #EAEBF0 ;
         margin:0px 100px;
         padding: 20px 50px;
-        min-height: 80vh;
+        min-height: calc(100vh - 140px);
     }
     .demo-block.demo-alert .bk-alert{
         margin-bottom: 20px;
@@ -933,13 +933,7 @@
     .leave-slide .leave-body .leave-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
         width: 200px;
     }
-.body{
-    border: 2px solid #EAEBF0 ;
-    margin:0px 100px;
-    padding: 20px 50px;
-    min-height: 80vh;
-}
-.demo-block.demo-alert .bk-alert{
-    margin-bottom: 20px;
-}
+    .demo-block.demo-alert .bk-alert{
+        margin-bottom: 20px;
+    }
 </style>
