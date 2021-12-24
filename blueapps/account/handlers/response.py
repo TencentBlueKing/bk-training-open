@@ -60,7 +60,7 @@ class ResponseHandler(object):
         """
 
         _login_url = build_redirect_url(
-            settings.BKAPP_FULL_SITE_URL,
+            request.META.get("HTTP_REFERER", None) or settings.BKAPP_FULL_SITE_URL,
             self._conf.LOGIN_PLAIN_URL,
             self._conf.C_URL,
             extra_args=self._build_extra_args(),
