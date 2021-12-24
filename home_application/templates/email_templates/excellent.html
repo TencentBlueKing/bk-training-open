@@ -1,36 +1,41 @@
 <meta charset="utf-8">
-<table class="content-wrap" style="margin: 0 auto; max-width: 600px;">
-    <tr>
-         <td style="margin: 0 auto; overflow: hidden; padding: 0; border: 0 dotted rgb(238, 238, 238);">
-            <!--logo图片-->
-            <!--用户日志-->
-            <div style="font-size:12pt;FONT-FAMILY: 宋体;text-indent : 20px; BACKGROUND: white; COLOR: #333333; LINE-HEIGHT: 150%; ">
-            <h2>hi!您的日报已被评价，快来<a style="color: #177EE6" href="https://paas-edu.bktencent.com/o/train-test/group-dailys">
-                查看您的日报吧</a></h2>
-             {% for group_reports in group_reports %}
-                {% for content in group_reports.content%}
-                        <b>{{content.title}}:</b>
+<!--logo图片-->
+<!--用户日志-->
+<div>
+    <div style="text-align:center;">
+        <h2>
+            日报评价提醒
+        </h2>
+        <a style="color: #177EE6;" href="{{group_link}}">点击查看</a>
+    </div>
+    <table style="max-width: 800px; margin: 36px auto; border-collapse: collapse;">
+        {% for group_reports in group_reports %}
+             <tr>
+                <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>评价内容</strong></td>
+                <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px;color: #336699">
+                    {{ group_reports.evaluate_content }}</td>
+            </tr>
+            <tr>
+                <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>评价人</strong></td>
+                <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px;color: #336699">{{ group_reports.evaluate_name }}</td>
+            </tr>
+
+            <tr>
+                <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>日报内容</strong></td>
+                <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px; font-size: 14px; color:#585858">
+                    {% for content in group_reports.content %}
+                         <pre style="margin: 0em;"><strong>{{ content.title }}</strong></pre>
                         {% for content in content.content %}
-                    <pre style=" text-indent: 0em;">{{ content.text }}</pre><hr>
+                            <pre style=" text-indent: 0em;margin: 0em;">{{ content.text }}</pre>
                         {% endfor %}
                         {% if content.text %}
-                    <pre style=" text-indent: 0em;">{{ content.text }} </pre><hr>
+                            <pre style=" text-indent: 0em;margin: 0em;">{{ content.text }} </pre>
                         {% endif %}
                     {% endfor %}
-                     <b>评价人：</b>{{ group_reports.evaluate_name}}<hr>
-                     <b>评价：</b> {{group_reports.evaluate_content}}
-            {% endfor %}
-            </div>
-            <!--分隔线-->
-            <div style="border: #CCCCCC 1px solid"></div>
-            <!--蓝鲸智云-->
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
 
-        </td>
-    </tr>
-</table>
- <div style="text-align:center; word-break: break-word; line-height: 20px; font-size: 12px; margin: 0;">
-                <a style="color: rgb(136, 136, 136); text-decoration: underline; font-weight: normal;"
-                   href="https://bk.tencent.com/" target="_blank" rel="noopener noreferrer">
-                    &nbsp蓝鲸智云 — 开创运维新局面&nbsp;
-                </a>
-            </div>
+

@@ -135,13 +135,12 @@ def notify_yesterday_report_info(report_date=None):
             "group_name": group_info["name"],  # 组名字
             "daily_count": len(group_info["report_users"]),  # 写了日报的人数
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
-            "people_in_vacation_count": len(list(group_info["off_day_name_list"])),  # 请假人数
-            "off_day_name_list": list(group_info["off_day_name_list"]),  # 请假人姓名列表
+            "people_in_vacation_count": len(group_info["off_day_name_list"]),  # TODO 请假人数
+            "off_day_name_list": ",".join(group_info["off_day_name_list"]),  # 请假人姓名列表
             "group_link": "{}manage-group?date={}&group={}".format(
                 settings.BKAPP_FULL_SITE_URL, report_date_str, g_id
             ),  # 组管理页面
         }
-
         # 循环组内管理员，将组信息添到管理员管理的组信息中
         for admin_username in group_info["admin"]:
             if admin_username not in admin_group_map.keys():

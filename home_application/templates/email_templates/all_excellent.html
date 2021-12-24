@@ -1,32 +1,36 @@
 <meta charset="utf-8">
-<table class="content-wrap" style="margin: 0 auto; max-width: 600px;">
-    <tr>
-         <td style="margin: 0 auto; overflow: hidden; padding: 0; border: 0 dotted rgb(238, 238, 238);">
-            <!--logo图片-->
-            <!--用户日志-->
-            <div style="font-size:12pt;FONT-FAMILY: 宋体;text-indent : 20px; BACKGROUND: white; COLOR: #333333; LINE-HEIGHT: 150%; ">
-        <h2>hi!{{ date }}日报推送到啦！快来<a style="color: #177EE6" href="https://paas-edu.bktencent.com/o/train-test/group-dailys">
-                查看吧</a></h2>
-       {% for daily in daily_list %}
-             {% for content in daily.content %}
-               <b>{{ content.title }}:</b>
-            {% for content in content.content %}
-                <pre style=" text-indent: 0em;">{{ content.text }}</pre><hr>
-                {% endfor %}
-                   {% if content.text %}
-                 <pre style=" text-indent: 0em;">{{ content.text }}</pre><hr>
-                 {% endif %}
-            {% endfor %}
-             <b>评价人：</b>{{ evaluate_name }}<br>
-             <b>评价：</b> {{daily.evaluate}}<br><br><br>
-            {% endfor %}
-            </div>
-        </td>
-    </tr>
-</table>
- <div style="text-align:center; word-break: break-word; line-height: 20px; font-size: 12px; margin: 0;">
-                <a style="color: rgb(136, 136, 136); text-decoration: underline; font-weight: normal;"
-                   href="https://bk.tencent.com/" target="_blank" rel="noopener noreferrer">
-                    &nbsp蓝鲸智云 — 开创运维新局面&nbsp;
-                </a>
+<div>
+    <!--logo图片-->
+    <!--用户日志-->
+    <div style="text-align:center;">
+        <h2>{{ date }}日报推送</h2><a style="color: #177EE6"
+                                  href="{{group_link}}">点击查看</a>
+    </div>
+    {% for daily in daily_list %}
+        <table style="width: 800px; margin: 36px auto; border-collapse: collapse;">
+            <tr>
+                <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>评价内容</strong></td>
+                <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px;color: #336699">{{ daily.evaluate }}</td>
+            </tr>
+            <tr>
+                <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>评价人</strong></td>
+                <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px;color: #336699">{{ evaluate_name }}</td>
+            </tr>
+            <tr>
+                <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>日报内容</strong>
+                <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px; font-size: 14px; color:#585858">
+                    <pre style="margin: 0em"><strong>{{ daily.create_name }}</strong></pre>
+                    {% for content in daily.content %}
+                        <pre style="margin: 0em"><strong>{{ content.title }}</strong></pre>
+                        {% for content in content.content %}
+                            <pre style=" text-indent: 0em;margin: 0em">{{ content.text }}</pre>
+                        {% endfor %}
+                        {% if content.text %}
+                            <pre style=" text-indent: 0em;margin: 0em">{{ content.text }}</pre>
+                        {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+    {% endfor %}
 </div>
