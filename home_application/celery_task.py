@@ -96,11 +96,11 @@ def send_apply_for_group_result(username, group_name, status):
 
 
 @task()
-def send_good_daily(evaluate_name, user_name, date, daily_list):
+def send_good_daily(evaluate_name, all_username_list, date, daily_list):
     """
     发送日报给组内所有人
     :param evaluate_name: 管理员
-    :param user_name: 用户名：username string(多人以逗号连接)
+    :param all_username_list: 用户名：username string(多人以逗号连接)
     :param date : 日报时间
     :param daily_list: 日报内容 日报评价
     """
@@ -115,7 +115,7 @@ def send_good_daily(evaluate_name, user_name, date, daily_list):
         }
     )
     send_mail(
-        receiver__username=user_name,
+        receiver__username=all_username_list,
         title=mail_title,
         content=mail_content,
         body_format="Html",

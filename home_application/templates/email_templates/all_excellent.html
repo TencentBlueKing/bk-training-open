@@ -1,13 +1,11 @@
+
 <meta charset="utf-8">
 <div>
-    <!--logo图片-->
-    <!--用户日志-->
     <div style="text-align:center;">
-        <h2>{{ date }}日报推送</h2><a style="color: #177EE6"
-                                  href="{{group_link}}">点击查看</a>
+        <h2>{{ date }}日报推送</h2><a style="color: #177EE6" href="{{ group_link }}">点击查看</a>
     </div>
-    {% for daily in daily_list %}
-        <table style="width: 800px; margin: 36px auto; border-collapse: collapse;">
+    <table style="max-width: 800px;width:100%; margin: 36px auto; border-collapse: collapse;">
+        {% for daily in daily_list %}
             <tr>
                 <td style="width: 80px; border: 2px solid #DCDEE5; padding: 6px;"><strong>评价内容</strong></td>
                 <td style="border: 2px solid #DCDEE5; min-height: 80px; padding: 6px;color: #336699">{{ daily.evaluate }}</td>
@@ -31,6 +29,9 @@
                     {% endfor %}
                 </td>
             </tr>
-        </table>
-    {% endfor %}
+            <tr>
+                <td style="height: 20px"></td>
+            </tr>
+        {% endfor %}
+    </table>
 </div>

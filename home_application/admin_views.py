@@ -80,8 +80,8 @@ def evaluate_daily(request):
     evaluate.append({"name": request.user.username, "evaluate": evaluate_content})
     Daily.objects.filter(id=daily_id).update(evaluate=evaluate)
     # 获取发邮件人的姓名
-    evaluate_name = User.objects.get(username=request.user.username)
-    evaluate_name = evaluate_name.username + "(" + evaluate_name.name + ")"
+    evaluate_user = User.objects.get(username=request.user.username)
+    evaluate_name = evaluate_user.username + "(" + evaluate_user.name + ")"
     send_evaluate_daily.apply_async(
         kwargs={"evaluate_name": evaluate_name, "daily_id": daily_id, "evaluate_content": evaluate_content}
     )
@@ -175,22 +175,18 @@ def send_evaluate_all(request, group_id):
         sign = True
     #  组内所有人
     user_id = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
-    all_username = User.objects.filter(id__in=user_id).values_list("username", "name")
-    all_username_name_list = []
-    for all_username in all_username:
-        all_username = all_username[0] + "(" + all_username[1] + ")"
-        all_username_name_list.append(all_username)
+    all_username_list = User.objects.filter(id__in=user_id).values_list("username", flat=True)
     # 排除管理员
     admin_list = Group.objects.get(id=group_id).admin_list
-    all_username = set(all_username) - set(admin_list)
-    evaluate_name = User.objects.get(username=request.user.username)
-    if all_username:
+    all_username_list = set(all_username_list) - set(admin_list)
+    evaluate_user = User.objects.get(username=request.user.username)
+    if all_username_list:
         # 放进celery里
-        all_username = ",".join(all_username_name_list)
+        all_username_list = ",".join(all_username_list)
         send_good_daily.apply_async(
             kwargs={
-                "evaluate_name": evaluate_name.username + "(" + evaluate_name.name + ")",
-                "user_name": all_username,
+                "evaluate_name": evaluate_user.username + "(" + evaluate_user.name + ")",
+                "all_username_list": all_username_list,
                 "date": date,
                 "daily_list": daily_list,
             }
