@@ -51,7 +51,9 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
         end_date__gte=datetime.date.today(),
         user__in=group_users.values_list("username", flat=True),
     ).values_list("user", flat=True)
-    off_day_name_list = User.objects.filter(username__in=off_day_username_list).values_list("name", flat=True)
+    off_day_name_list = list(User.objects.filter(username__in=off_day_username_list).values_list("name", flat=True))
+    for i in range(0, len(off_day_name_list)):
+        off_day_name_list[i] = off_day_username_list[i] + "(" + off_day_name_list[i] + ")"
     # 返回数据
     return {
         "id": group.id,  # 组id
