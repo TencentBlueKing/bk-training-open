@@ -557,7 +557,7 @@ def daily_report(request):
             except ValueError:
                 return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
             except Daily.DoesNotExist:
-                return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": []})
+                return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": {}})
 
     # 参数校验-----------------------------------------------------------------------------------------
     req = json.loads(request.body)
