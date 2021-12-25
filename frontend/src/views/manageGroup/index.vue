@@ -43,9 +43,8 @@
                     :width="newApplyDialog.width">
                     <bk-table
                         style="margin-top: 15px;"
-                        :virtual-render="true"
                         :data="newApplyData"
-                        height="200px">
+                    >
                         <bk-table-column prop="username" label="用户id"></bk-table-column>
                         <bk-table-column prop="name" label="姓名"></bk-table-column>
                         <bk-table-column label="操作" width="150">
@@ -707,13 +706,13 @@
     display: flex;
     justify-content: space-between;
 }
-.bk-dialog /deep/ .bk-table .bk-table-header-wrapper .bk-table-header{
+.top_container /deep/ .bk-table-header{
   width: 100% !important;
 }
-.bk-dialog /deep/ .bk-table .bk-table-body-wrapper .bk-table-body{
+.top_container /deep/ .bk-table-body{
   width: 100% !important;
 }
-.bk-dialog /deep/ .bk-table .bk-table-body-wrapper .bk-table-empty-block{
+.top_container /deep/ .bk-table-empty-block{
   width: 100% !important;
 }
 .bottom_container{
