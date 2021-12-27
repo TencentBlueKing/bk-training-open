@@ -37,9 +37,9 @@
 
 ```
 # 克隆自己git仓库代码到本地
-git clone https://github.com/wheel-w/bk-training-open.git
+git clone https://github.com/Jsummer121/bk-goods-application.git
 # 添加自己fork的主仓库源
-git remote add blueking-train https://github.com/TencentBlueKing/bk-training-open.git
+git remote add blueking-train https://github.com/Jsummer121/bk-goods-application.git
 git pull blueking-train
 ```
 
