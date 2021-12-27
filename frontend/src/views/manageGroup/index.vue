@@ -399,18 +399,21 @@
                             this.changeGroup(this.selectGroupId)
                         } else {
                             this.selectGroupId = this.groupList[0].id
+                            this.getCurrentAdmin()
                         }
-                        this.$http.get(
-                            '/list_group_admin/' + this.selectGroupId + '/'
-                        ).then(res => {
-                            if (res.result) {
-                                this.currentGroupAdmin = res.data
-                            } else {
-                                this.$bkMessage({
-                                    theme: 'warning',
-                                    message: res.message
-                                })
-                            }
+                    }
+                })
+            },
+            getCurrentAdmin () {
+                this.$http.get(
+                    '/list_group_admin/' + this.selectGroupId + '/'
+                ).then(res => {
+                    if (res.result) {
+                        this.currentGroupAdmin = res.data
+                    } else {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: res.message
                         })
                     }
                 })
@@ -636,6 +639,7 @@
                 this.selectGroupId = selectGroupId
                 this.shareAllList = []
                 this.shareAllIdList = []
+                this.getCurrentAdmin()
                 // 发送请求，获取选定组的信息
                 this.getDaily(this.selectGroupId, this.formatDate)
                 // 获取申请该组的列表
