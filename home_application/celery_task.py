@@ -96,19 +96,26 @@ def send_apply_for_group_result(username, group_name, status):
 
 
 @task()
-def send_good_daily(evaluate_name, user_name, date, daily_list):
+def send_good_daily(evaluate_name, all_username_list, date, daily_list):
     """
     发送日报给组内所有人
     :param evaluate_name: 管理员
-    :param user_name: 用户名：username string(多人以逗号连接)
+    :param all_username_list: 用户名：username string(多人以逗号连接)
     :param date : 日报时间
     :param daily_list: 日报内容 日报评价
     """
     mail_title = "{} 日报推送".format(date[0:10])
     html_template = get_template("all_excellent.html")
-    mail_content = html_template.render({"daily_list": daily_list, "evaluate_name": evaluate_name, "date": date[0:10]})
+    mail_content = html_template.render(
+        {
+            "daily_list": daily_list,
+            "evaluate_name": evaluate_name,
+            "date": date[0:10],
+            "group_link": "{}group-dailys".format(settings.BKAPP_FULL_SITE_URL),
+        }
+    )
     send_mail(
-        receiver__username=user_name,
+        receiver__username=all_username_list,
         title=mail_title,
         content=mail_content,
         body_format="Html",
@@ -121,7 +128,7 @@ def send_evaluate_daily(evaluate_name, daily_id, evaluate_content):
     将日报评价发生给个人
     :param daily_id:日报id
     :param evaluate_content: 日报内容
-    :param evaluate_name :评价人姓名
+    :param evaluate_name :评价人姓名 （账号）姓名
     """
     name = Daily.objects.filter(id=daily_id).values("create_name", "date", "content")
     username = User.objects.filter(name=name[0]["create_name"]).values("username")
@@ -139,7 +146,12 @@ def send_evaluate_daily(evaluate_name, daily_id, evaluate_content):
         }
     ]
     mail_content = html_template.render(
-        {"mail_title": mail_title, "mail_content": mail_content, "group_reports": group_reports}
+        {
+            "mail_title": mail_title,
+            "mail_content": mail_content,
+            "group_reports": group_reports,
+            "group_link": "{}group-dailys".format(settings.BKAPP_FULL_SITE_URL),
+        }
     )
     send_mail(
         receiver__username=username,
