@@ -125,7 +125,7 @@ IS_AJAX_PLAIN_MODE = True
 # 国际化配置
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)  # noqa
 
-# 网站url，默认为线上正式环境的url
+# 网站url
 BKAPP_FULL_SITE_URL = os.getenv("BKAPP_FULL_SITE_URL")  # noqa
 
 USE_TZ = False

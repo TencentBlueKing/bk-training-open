@@ -1,9 +1,9 @@
 <div style="max-width: 800px; margin: 40px auto;">
     <div style="text-align: center; font-weight:bold; font-size:2em">
-        {{ notify_title }}
+        [{{ date }}] 日报速览
     </div>
 
-    <!-- 最小重复单元 START -->
+    <!-- 组信息最小重复单元 START -->
     {% for item in group_dailies %}
         <div>
             <div style="margin: 20px 0; background-color: #d9ecff; height: 2px;"></div>
@@ -29,7 +29,7 @@
                 </tr>
                 <tr>
                     <td  colspan="4" style=" font-size: 16px">
-                        {% if   item.off_day_name_list%}
+                        {% if item.off_day_name_list %}
                                 请假人：
                             {{ item.off_day_name_list }}
                         {% endif %}
@@ -38,5 +38,69 @@
             </table>
         </div>
     {% endfor %}
-    <!-- 最小重复单元 END -->
+    <!-- 组信息最小重复单元 END -->
+
+    <!-- 日报详细信息 -->
+    {% if daily_infos %}
+    <div style="text-align: center; font-weight:bold; font-size:2em; margin-top: 40px">
+        [{{ date }}] 日报详情
+    </div>
+
+    <!-- 日报信息最小重复单元 START -->
+    {% for key, value in daily_infos.items %}
+        <div>
+            <div style="margin: 20px 0; background-color: #d9ecff; height: 2px;"></div>
+            <table style="width: 100%; font-size: 1.2em;">
+                <tr>
+                    <td style="font-size: 18px;">
+                        <strong>{{ key }}({{ value.report.create_name }})</strong>
+                        <br>
+                        <div style="font-size: 14px; color: #63656e; margin: 5px 0 0">
+                            {{ value.group_names }}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size: 16px">
+                        <ol style="margin: 0; padding-top: 0; padding-bottom: 0">
+                        {% for daily_item in value.report.content %}
+                            <li>
+                            <div style="margin: 10px 0 0">
+                                <strong>
+                                    {{ daily_item.title }}
+                                </strong>
+                            </div>
+                            <div style="margin: 5px 0 0">
+                                {# 日报内容分两种，一种是table形式，一种是text形式，table形式包含多条text形式 #}
+                                {% if daily_item.type == "table" %}
+                                    {% for daily_content in daily_item.content %}
+                                        <div style="margin: 10px 0 0">
+                                            {{ daily_content.text }}
+                                            {% if daily_content.cost %}
+                                                ({{ daily_content.cost }}小时)
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                {# 如果为text形式则直接将文本展示出来 #}
+                                {% if daily_item.type == "text" %}
+                                    <div style="margin: 5px 0 0">
+                                        {{ daily_item.text }}
+                                            {% if daily_item.cost %}
+                                                ({{ daily_item.cost }}小时)
+                                            {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            </li>
+                        {% endfor %}
+                        </ol>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    {% endfor %}
+    <!-- 日报信息最小重复单元 END -->
+
+    {% endif %}
 </div>
