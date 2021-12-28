@@ -168,7 +168,10 @@ def notify_yesterday_report_info(report_date=None):
                         daily_infos[cur_username]["group_names"], group_daily_info["group_name"]
                     )
             # 去除组信息中不可json格式化的日报数据
-            group_daily_info.pop("reports")
+            try:
+                group_daily_info.pop("reports")
+            except KeyError:
+                logger.error("去除组日报数据出错\n当前组信息为%s\n详细组信息为%s") % (group_daily_info, info)
         # 合并结束-------------------------------------------------------------------------------------------------------
 
         notify_admin_group_info.apply_async(
