@@ -62,39 +62,34 @@
                 </tr>
                 <tr>
                     <td style="font-size: 16px">
-                        <ol style="margin: 0; padding-top: 0; padding-bottom: 0">
                         {% for daily_item in value.report.content %}
-                            <li>
-                            <div style="margin: 10px 0 0">
-                                <strong>
-                                    {{ daily_item.title }}
-                                </strong>
-                            </div>
-                            <div style="margin: 5px 0 0">
-                                {# 日报内容分两种，一种是table形式，一种是text形式，table形式包含多条text形式 #}
-                                {% if daily_item.type == "table" %}
-                                    {% for daily_content in daily_item.content %}
-                                        <div style="margin: 10px 0 0">
-                                            {{ daily_content.text }}
-                                            {% if daily_content.cost %}
-                                                ({{ daily_content.cost }}小时)
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-                                {% endif %}
-                                {# 如果为text形式则直接将文本展示出来 #}
-                                {% if daily_item.type == "text" %}
-                                    <div style="margin: 5px 0 0">
-                                        {{ daily_item.text }}
-                                            {% if daily_item.cost %}
-                                                ({{ daily_item.cost }}小时)
-                                            {% endif %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            </li>
+                            <h3 style="margin-bottom: 10px">
+                                {{ daily_item.title }}
+                            </h3>
+                            <ol style="margin: 0; padding-top: 0; padding-bottom: 0">
+
+                            {# 日报内容分两种，一种是table形式，一种是text形式，table形式包含多条text形式 #}
+                            {% if daily_item.type == "table" %}
+                                {% for daily_content in daily_item.content %}
+                                    <li style="margin: 10px 5px 5px; font-size: 14px">
+                                        {{ daily_content.text }}
+                                        {% if not daily_content.isPrivate and daily_content.cost %}
+                                            ({{ daily_content.cost }}小时)
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                            {# 如果为text形式则直接将文本展示出来 #}
+                            {% if daily_item.type == "text" %}
+                                <li style="margin: 10px 5px 5px; font-size: 14px">
+                                    {{ daily_item.text }}
+                                        {% if not daily_item.isPrivate and daily_item.cost %}
+                                            ({{ daily_item.cost }}小时)
+                                        {% endif %}
+                                </li>
+                            {% endif %}
+                            </ol>
                         {% endfor %}
-                        </ol>
                     </td>
                 </tr>
             </table>

@@ -136,7 +136,6 @@ def notify_yesterday_report_info(report_date=None):
         g_info_for_mail = {
             "group_name": group_info["name"],  # 组名字
             "daily_count": len(group_info["report_users"]),  # 写了日报的人数
-            "reports": group_info["reports"],  # 组内所有日报 [Daily(0), Daily(1), ···]
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
             "people_in_vacation_count": len(group_info["off_day_name_list"]),  # 请假人数
             "off_day_name_list": ",".join(group_info["off_day_name_list"]),  # 请假人姓名列表
@@ -147,35 +146,29 @@ def notify_yesterday_report_info(report_date=None):
         # 循环组内管理员，将组信息添到管理员管理的组信息中
         for admin_username in group_info["admin"]:
             if admin_username not in admin_group_map.keys():
-                admin_group_map[admin_username] = []
-            admin_group_map[admin_username].append(g_info_for_mail)
+                admin_group_map[admin_username] = {"group_infos": [g_info_for_mail], "daily_infos": {}}
+            else:
+                admin_group_map[admin_username]["group_infos"].append(g_info_for_mail)
+            # 将这个组内的日报数据添加给管理员
+            for user_report in group_info["reports"]:
+                cur_username = user_report.create_by  # 谁写的日报
+                if cur_username not in admin_group_map[admin_username]["daily_infos"].keys():
+                    admin_group_map[admin_username]["daily_infos"][cur_username] = {
+                        "report": user_report.to_json(),  # 日报数据Daily
+                        "group_names": group_info["name"],  # 用户所在所有组的组名字
+                    }
+                else:
+                    admin_group_map[admin_username]["daily_infos"][cur_username]["group_names"] = "{} / {}".format(
+                        admin_group_map[admin_username]["daily_infos"][cur_username]["group_names"], group_info["name"]
+                    )
 
     logger.info("定时任务：工作日早10点告知管理员上个工作日的日报信息：%s" % admin_group_map)
     for admin_username, info in admin_group_map.items():
-        # 循环组内日报数据，将加入多个组的用户日报合并到一个------------------------------------------------------------------------
-        daily_infos = {}
-        for group_daily_info in info:
-            for user_report in group_daily_info["reports"]:
-                cur_username = user_report.create_by  # 当前处理用户的用户名
-                if cur_username not in daily_infos.keys():
-                    daily_infos[cur_username] = {
-                        "report": user_report.to_json(),  # 日报数据Daily
-                        "group_names": group_daily_info["group_name"],  # 用户所在所有组的组名字
-                    }
-                else:
-                    # 使用'/'拼接新的组名字
-                    daily_infos[cur_username]["group_names"] = "{} / {}".format(
-                        daily_infos[cur_username]["group_names"], group_daily_info["group_name"]
-                    )
-            # 去除组信息中不可json格式化的日报数据
-            group_daily_info.pop("reports")
-        # 合并结束-------------------------------------------------------------------------------------------------------
-
         notify_admin_group_info.apply_async(
             kwargs={
                 "admin_username": admin_username,
-                "group_infos": info,
-                "daily_infos": daily_infos,
+                "group_infos": info["group_infos"],
+                "daily_infos": info["daily_infos"],
                 "date": report_date_str,
             }
         )
