@@ -84,6 +84,8 @@ git pull blueking-train
    
    # 自己的用户名（蓝鲸开发者账号）
    BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
+   # 网站完整网址
+   BKAPP_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
    ```
 
    + 在PyCharm中配置环境变量以及主机名

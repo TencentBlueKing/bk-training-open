@@ -53,16 +53,6 @@ def home(request):
     """
     首页
     """
-    from django.db import connection
-
-    sql = (
-        "UPDATE `home_application_group` g "
-        "SET g.admin=REPLACE(REPLACE(REPLACE(g.admin, '\\'', ''), '[', ''), ']', '') "
-        "WHERE INSTR(g.admin, '[') = 1 "
-        "AND INSTR(g.admin, ']') = LENGTH(g.admin);"
-    )
-    with connection.cursor() as cursor:
-        cursor.execute(sql)
     return render(request, "index.html")
 
 
