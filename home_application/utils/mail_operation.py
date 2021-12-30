@@ -11,11 +11,8 @@ from django.template.loader import get_template
 
 from blueapps.conf import settings
 from blueking.component.shortcuts import get_client_by_user
-from home_application.models import Daily, Group, OffDay
-from home_application.utils.report_operation import (
-    get_none_reported_user_of_group,
-    get_report_info_by_group_and_date,
-)
+from home_application.models import Daily, Group, GroupUser, OffDay, User
+from home_application.utils.report_operation import get_none_reported_user_of_group
 
 logger = logging.getLogger("celery")
 
@@ -88,99 +85,128 @@ def notify_none_reported_user():
     remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
 
-@task()
-def notify_admin_group_info(admin_username: str, group_infos: list, daily_infos: dict, date=None):
+def notify_admin_group_info(admin_username: str, group_infos: list, date: datetime.date):
     """
     告知管理员组内日报信息
     :param admin_username:  管理员的用户名
-    :param date:            日报对应的日期字符串，默认为昨天
-    :param daily_infos:     日报信息数据，map数据，username为key，value为{"report": Daily日报数据, "group_names": 所在所有组名字}
-    :param group_infos:     组信息list，需包含以下数据：
-                            [{
-                                "group_name": 这是一个-很好听的名字, # 组名字
-                                "daily_count": 10,              # 写了日报的人数
-                                "none_write_daily_count": 1,    # 没写日报的人数，包含请假的人
-                                "people_in_vacation_count": 0,  # 请假人数
-                                "off_day_name_list":off_day_name_list,#请假人姓名
-                                "group_link": settings.BKAPP_FULL_SITE_URL + "manage-group?date=2021-12-3&group=1"
-                                  # 组管理页面
-                            },]
+    :param date:            日报对应的日期
+    :param group_infos:     该管理员管理的组信息list，每一包含组id、组名字、组管理员list
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
-    if date is None:
-        date = (datetime.datetime.today() - datetime.timedelta(days=1)).date().strftime("%Y-%m-%d")
-    mail_content = get_template("group_daily.html").render(
+    logger.info("定时任务：早上10点告知%s%s的日报信息: %s", admin_username, date, group_infos)
+    date_str = date.strftime("%Y-%m-%d")
+
+    # 组id-组name 对应关系
+    group_id_name = {g_info["group_id"]: g_info["group_name"] for g_info in group_infos}
+
+    # 组用户信息
+    users = GroupUser.objects.filter(group_id__in=group_id_name.keys())
+    user_ids = users.values_list("user_id", flat=True).distinct()
+    user_infos = User.objects.filter(id__in=user_ids).values("id", "username", "name")
+    user_usernames = user_infos.values_list("username", flat=True)
+
+    # 用户-组 对应关系
+    user_group_map = {}
+    for user_info in user_infos:
+        group_ids = users.filter(user_id=user_info["id"]).values_list("group_id", flat=True)
+        user_group_map[user_info["username"]] = [group_id_name[gid] for gid in group_ids]
+
+    # 用户日报渲染信息
+    reports = Daily.objects.filter(date=date, create_by__in=user_usernames)
+    report_data = [
         {
-            "date": date,
-            "group_dailies": group_infos,
-            "daily_infos": daily_infos,
+            "username": "{}({})".format(report.create_by, report.create_name),
+            "group": " / ".join(user_group_map.get(report.create_by)),
+            "content": report.content,
         }
+        for report in reports
+    ]
+
+    # 已完成日报用户
+    report_users = reports.values_list("create_by", flat=True)
+    # 未完成日报用户
+    none_report_users = user_infos.exclude(username__in=report_users)
+    none_report_user_usernames = none_report_users.values_list("username", flat=True)
+
+    # 请假用户
+    off_day_usernames = OffDay.objects.filter(
+        start_date__lte=date, end_date__gte=date, user__in=none_report_user_usernames
+    ).values_list("user", flat=True)
+
+    # 统计组内信息
+    group_template_infos = []
+    for g_info in group_infos:
+        # 普通成员
+        g_user_ids = users.filter(group_id=g_info["group_id"]).values_list("user_id", flat=True)
+        g_user_usernames = user_infos.filter(id__in=g_user_ids).values_list("username", flat=True)
+        simple_members = user_infos.filter(id__in=g_user_ids).exclude(username__in=g_info["admin_list"])
+        # 请假人
+        off_day_user = simple_members.filter(username__in=off_day_usernames)
+        # 请假人username(name)
+        off_day_user_format_name = " / ".join(
+            [
+                "{}({})".format(off_day_user_info["username"], off_day_user_info["name"])
+                for off_day_user_info in off_day_user
+            ]
+        )
+        # 没写日报的成员
+        group_none_report_user = simple_members.filter(username__in=none_report_user_usernames).exclude(
+            username__in=off_day_usernames
+        )
+        # 没写日报成员username(name)
+        group_none_report_user_format_name = " / ".join(
+            [
+                "{}({})".format(group_none_report_user_info["username"], group_none_report_user_info["name"])
+                for group_none_report_user_info in group_none_report_user
+            ]
+        )
+        group_template_infos.append(
+            {
+                "group_id": g_info["group_id"],
+                "group_name": g_info["group_name"],
+                "daily_count": reports.filter(create_by__in=g_user_usernames)
+                .exclude(create_by__in=g_info["admin_list"])
+                .count(),
+                "off_day_count": len(off_day_user),
+                "off_day_user": off_day_user_format_name,
+                "none_report_count": len(group_none_report_user),
+                "none_report_user": group_none_report_user_format_name,
+                "group_link": "{}manage-group?date={}&group={}".format(
+                    settings.BKAPP_FULL_SITE_URL, date_str, g_info["group_id"]
+                ),  # 组管理页面
+            }
+        )
+
+    # 发送邮件
+    mail_content = get_template("group_daily.html").render(
+        {"date": date_str, "group_dailies": group_template_infos, "reports": report_data}
     )
     return send_mail(receiver__username=admin_username, title="日报信息查看", content=mail_content, body_format="Html")
 
 
-def notify_yesterday_report_info(report_date=None):
+def notify_report_info(report_date: datetime.date):
     """
     发送指定日期的日报概览给管理员
-    :param report_date: 日报信息对应的日期，默认为昨天
+    :param report_date: 日报信息对应的日期
     """
-    admin_group_map = {}
-    group_ids = Group.objects.values_list("id", flat=True)
-    if report_date is None:
-        report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
-    report_date_str = report_date.strftime("%Y-%m-%d")
-    for g_id in group_ids:
-        # 组信息
-        group_info = get_report_info_by_group_and_date(group_id=g_id, report_date=report_date)
-        # 从组信息提取发送邮件需要的数据
-        g_info_for_mail = {
-            "group_name": group_info["name"],  # 组名字
-            "daily_count": len(group_info["report_users"]),  # 写了日报的人数
-            "reports": group_info["reports"],  # 组内所有日报 [Daily(0), Daily(1), ···]
-            "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
-            "people_in_vacation_count": len(group_info["off_day_name_list"]),  # 请假人数
-            "off_day_name_list": ",".join(group_info["off_day_name_list"]),  # 请假人姓名列表
-            "group_link": "{}manage-group?date={}&group={}".format(
-                settings.BKAPP_FULL_SITE_URL, report_date_str, g_id
-            ),  # 组管理页面
-        }
-        # 循环组内管理员，将组信息添到管理员管理的组信息中
-        for admin_username in group_info["admin"]:
-            if admin_username not in admin_group_map.keys():
-                admin_group_map[admin_username] = []
-            admin_group_map[admin_username].append(g_info_for_mail)
+    admin_group_map = {}  # 管理员管理的组
+    # 查询所有组id 组名 组管理员
+    group_name_and_admin = Group.objects.values("id", "name", "admin")
+    # 构造管理员-组信息map，方便之后获取组信息
+    for group_info in group_name_and_admin:
+        admin_list = group_info["admin"].split(",")
+        for admin_username in admin_list:
+            if admin_username in admin_group_map.keys():
+                admin_group_map[admin_username].append(
+                    {"group_id": group_info["id"], "group_name": group_info["name"], "admin_list": admin_list}
+                )
+            else:
+                admin_group_map[admin_username] = [
+                    {"group_id": group_info["id"], "group_name": group_info["name"], "admin_list": admin_list}
+                ]
 
-    logger.info("定时任务：工作日早10点告知管理员上个工作日的日报信息：%s" % admin_group_map)
-    for admin_username, info in admin_group_map.items():
-        # 循环组内日报数据，将加入多个组的用户日报合并到一个------------------------------------------------------------------------
-        daily_infos = {}
-        for group_daily_info in info:
-            for user_report in group_daily_info["reports"]:
-                cur_username = user_report.create_by  # 当前处理用户的用户名
-                if cur_username not in daily_infos.keys():
-                    daily_infos[cur_username] = {
-                        "report": user_report.to_json(),  # 日报数据Daily
-                        "group_names": group_daily_info["group_name"],  # 用户所在所有组的组名字
-                    }
-                else:
-                    # 使用'/'拼接新的组名字
-                    daily_infos[cur_username]["group_names"] = "{} / {}".format(
-                        daily_infos[cur_username]["group_names"], group_daily_info["group_name"]
-                    )
-            # 去除组信息中不可json格式化的日报数据
-            try:
-                group_daily_info.pop("reports")
-            except KeyError:
-                logger.error("去除组日报数据出错\n当前组信息为%s\n详细组信息为%s") % (group_daily_info, info)
-        # 合并结束-------------------------------------------------------------------------------------------------------
-
-        notify_admin_group_info.apply_async(
-            kwargs={
-                "admin_username": admin_username,
-                "group_infos": info,
-                "daily_infos": daily_infos,
-                "date": report_date_str,
-            }
-        )
+    for admin_username, group_infos in admin_group_map.items():
+        notify_admin_group_info(admin_username, group_infos, report_date)
     # 更新日报状态
-    Daily.objects.filter(date=report_date).update(send_status=True)
+    Daily.objects.filter(date=report_date).update(send_status=True, update_time=datetime.datetime.now())
+    logger.info("%s的日报信息已发送给管理员" % report_date)
