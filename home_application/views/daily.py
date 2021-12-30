@@ -309,3 +309,71 @@ def list_member_daily(request, group_id):
             daily["write_status"] = False
         data.append(daily)
     return JsonResponse({"result": True, "code": 0, "message": "", "data": data})
+
+
+@require_GET
+@is_group_member()
+def report_filter(request, group_id):
+    # 根据成员id分页获取他最近的日报-----------------------------------------------------------------------------
+    member_id = request.GET.get("member_id")
+    page = request.GET.get("page")
+    # 每一页显示日报数量
+    page_size = request.GET.get("size", 8)
+    if member_id:
+        # 根据member_id参数判断是根据成员id还是日期获取日报，
+        try:
+            # 安全校验，查看目标对象是否为同组成员
+            GroupUser.objects.get(group_id=group_id, user_id=member_id)
+            member_name = User.objects.get(id=member_id).username
+        except GroupUser.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "与目标用户非同组成员，查询被拒绝", "data": []})
+        except User.DoesNotExist:
+            return JsonResponse({"result": False, "code": -1, "message": "目标用户不存在", "data": []})
+        except ValueError:
+            return JsonResponse({"result": False, "code": -1, "message": "日报数量无效", "data": []})
+
+        # 查询当前成员的日报，按照日期降序
+        member_report = Daily.objects.filter(create_by=member_name).order_by("-date")
+        total_report_num = member_report.count()
+
+        # 分页
+        member_report = get_paginator(member_report, page, page_size)
+        if member_report is None:
+            return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
+        # 查询完毕返回数据
+        res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
+        return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
+
+    # 根据日期获取组内所有成员的日报------------------------------------------------------------------------------
+    report_date = request.GET.get("date")
+    try:
+        report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+    # 查询组内所有人
+    # 首选获取组内成员的id，然后再去查询成员对应的username
+    member_in_group = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    member_in_group = User.objects.filter(id__in=member_in_group).values_list("username", flat=True)
+    # 查询所有人的日报
+    member_report = Daily.objects.filter(date=report_date, create_by__in=member_in_group).order_by("-date")
+    total_report_num = member_report.count()
+    # 查找自己的日报
+    get_my_report = True
+    if not CalendarHandler(report_date).is_holiday:
+        try:
+            Daily.objects.get(date=report_date, create_by=request.user.username)
+        except Daily.DoesNotExist:
+            get_my_report = False
+    if check_user_is_admin(request, 0):
+        get_my_report = True
+    # 分页
+    member_report = get_paginator(member_report, page, page_size)
+    if member_report is None:
+        return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
+    # 查询完毕返回数据
+    res_data = {
+        "total_report_num": total_report_num,
+        "reports": content_format_as_json(member_report),
+        "my_today_report": get_my_report,
+    }
+    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": res_data})

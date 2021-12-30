@@ -8,6 +8,7 @@ from home_application.views.daily import (  # noqa
     get_reports_dates,
     list_member_daily,
     notice_non_report_users,
+    report_filter,
     send_evaluate_all,
     update_daily_perfect_status,
     update_evaluate_daily,
@@ -19,6 +20,7 @@ from home_application.views.free_time import (  # noqa
 )
 from home_application.views.group import (  # noqa
     add_group,
+    add_user,
     apply_for_group,
     check_user_in_group,
     deal_join_group,
@@ -38,10 +40,4 @@ from home_application.views.off_day import (  # noqa
     display_personnel_information,
     remove_off,
 )
-from home_application.views.user import (  # noqa
-    add_user,
-    check_user_admin,
-    get_user,
-    report_filter,
-    update_user,
-)
+from home_application.views.user import check_user_admin, get_user, update_user  # noqa

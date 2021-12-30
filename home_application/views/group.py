@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_http_methods
 
+from blueking.component.shortcuts import get_client_by_request
 from home_application.celery_task import (
     send_apply_for_group_result,
     send_apply_for_group_to_manager,
@@ -331,3 +332,49 @@ def check_user_in_group(request, group_id):
     if len(unjoined_users) > 0:
         return JsonResponse({"result": True, "code": 0, "message": "", "data": ",".join(unjoined_users) + "未加入当前小组"})
     return JsonResponse({"result": True, "code": 0, "message": "", "data": "查询的用户已加入当前小组中"})
+
+
+@require_http_methods(["POST"])
+@is_group_member(admin_needed=["POST"])
+def add_user(request, group_id):
+    """添加用户信息"""
+    req = json.loads(request.body)
+    new_user_ids = set(req.get("new_user_ids"))
+    # 获取日报数据库中没有的用户，将其信息从蓝鲸平台拉取过来
+    sign_in_user_ids = set(User.objects.filter(id__in=new_user_ids).values_list("id", flat=True))
+    user_not_in_platform = new_user_ids - sign_in_user_ids
+    # ↓↓↓当有不在本系统中的用户时去主平台拉取------------
+    if len(user_not_in_platform):
+        client = get_client_by_request(request=request)
+        response = client.usermanage.list_users(
+            lookup_field="id",
+            exact_lookups=",".join(map(str, user_not_in_platform)),  # 将set中的整数拼接成","连接的字符串，用做从蓝鲸平台精准获取用户信息
+            fields="id,username,display_name,email,telephone",
+            page=1,
+            pageSize=len(user_not_in_platform),
+        )
+        if not response.get("result"):
+            return JsonResponse({"result": False, "code": 1, "message": "从蓝鲸主平台拉取用户时出现错误"})
+        # 从蓝鲸主平台拿到的新用户
+        user_infos = response.get("data").get("results")
+        # 将新用户添加到数据库
+        new_users = []
+        for u_info in user_infos:
+            new_users.append(
+                User(
+                    id=u_info["id"],
+                    username=u_info["username"],
+                    name=u_info["display_name"],
+                    email=u_info["email"],
+                    phone=u_info["telephone"],
+                )
+            )
+        User.objects.bulk_create(new_users)
+    # ↑↑↑拉取成功-----------------------------------
+
+    # 添加组-用户表
+    new_group_user = []
+    for user_id in new_user_ids:
+        new_group_user.append(GroupUser(user_id=user_id, group_id=group_id))
+    GroupUser.objects.bulk_create(new_group_user)
+    return JsonResponse({"result": True, "code": 0, "message": "添加用户成功", "data": []})
