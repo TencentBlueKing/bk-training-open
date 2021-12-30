@@ -1,19 +1,7 @@
 from django.db import models
 from django_mysql.models import JSONField
 
-from .common import TimeBasic
-
-
-# 日报模板表
-class DailyReportTemplate(models.Model):
-    name = models.CharField(max_length=128, verbose_name="日报模板名字")
-    content = models.CharField(max_length=255, verbose_name="日报模板内容")
-    create_by = models.CharField(max_length=128, verbose_name="创建人")
-    create_name = models.CharField(max_length=128, verbose_name="创建人姓名")
-    group_id = models.IntegerField(verbose_name="组id")
-
-    def __str__(self):
-        return self.name
+from home_application.models import TimeBasic
 
 
 def daily_evaluate_default():

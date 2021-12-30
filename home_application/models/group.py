@@ -1,6 +1,6 @@
 from django.db import models
 
-from .common import TimeBasic
+from home_application.models import TimeBasic
 
 
 # 组
@@ -51,11 +51,13 @@ class ApplyForGroup(TimeBasic):
         return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
 
 
-class ss(TimeBasic):
+# 组-用户关联表
+class GroupUser(models.Model):
     group_id = models.IntegerField(verbose_name="组id")
     user_id = models.IntegerField(verbose_name="用户id")
-    operator = models.IntegerField(null=True, verbose_name="处理人id")
-    status = models.SmallIntegerField(verbose_name="申请状态")
 
     def __str__(self):
         return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
+
+    class Meta:
+        unique_together = ("group_id", "user_id")

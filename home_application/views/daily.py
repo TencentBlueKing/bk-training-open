@@ -6,14 +6,7 @@ from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_GET, require_http_methods
 
 from home_application.celery_task import send_evaluate_daily, send_good_daily
-from home_application.models import (
-    Daily,
-    DailyReportTemplate,
-    Group,
-    GroupUser,
-    OffDay,
-    User,
-)
+from home_application.models import Daily, Group, GroupUser, OffDay, User
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.decorator import is_group_member
 from home_application.utils.mail_operation import remind_to_write_daily
@@ -22,95 +15,6 @@ from home_application.utils.tools import check_user_is_admin, get_paginator
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
 # 装饰器引入 from blueapps.account.decorators import login_exempt
-
-
-def get_all_report_template(request):
-    """
-    获取用户所在组的所有的日报模板
-    """
-    # 默认的日报模板
-    templates = [
-        {"id": 0, "name": "日报", "content": "今日总结;明日计划;感想", "create_by": "系统默认", "create_name": "系统默认", "group_id": 0}
-    ]
-
-    user_id = request.user.id
-    groups_id = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
-    groups = Group.objects.filter(id__in=groups_id)
-    group_id_name_map = {}
-    for g in groups:
-        group_id_name_map[g.id] = g.name
-    group_templates = list(DailyReportTemplate.objects.filter(group_id__in=groups_id).values())
-    for t in group_templates:
-        t["name"] += "(%s)" % (group_id_name_map[t["group_id"]])
-    templates.extend(group_templates)
-    return JsonResponse({"result": True, "code": 0, "message": "", "data": templates})
-
-
-@require_http_methods(["GET", "POST", "PUT", "DELETE"])
-@is_group_member(admin_needed=["POST", "PUT", "DELETE"])
-def report_template(request, group_id):
-    """
-    日报模板的增删改查功能
-    """
-    # 获取模板
-    if request.method == "GET":
-        templates = list(DailyReportTemplate.objects.filter(group_id=group_id).values())
-        return JsonResponse({"result": True, "code": 0, "message": "", "data": templates})
-
-    # 删除模板
-    if request.method == "DELETE":
-        template_id = request.GET.get("template_id")
-        # 尝试删除模板，找不到则返回异常
-        try:
-            DailyReportTemplate.objects.get(id=template_id, group_id=group_id).delete()
-            return JsonResponse({"result": True, "code": 0, "message": "模板删除成功", "data": []})
-        except DailyReportTemplate.DoesNotExist:
-            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
-
-    req = json.loads(request.body)
-
-    # 创建模板
-    if request.method == "POST":
-        template_name = req.get("name")
-        template_content = req.get("content")
-        # 模板名字不可为空，但是模板内容支持为空
-        if not template_name:
-            return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
-
-        # 数据合法，创建新的日报模板
-        if template_content is None:
-            template_content = ""
-        try:
-            create_name = User.objects.get(username=request.user.username).name
-        except User.DoesNotExist:
-            return JsonResponse({"result": False, "code": -1, "message": "当前用户不存在", "data": []})
-        DailyReportTemplate.objects.create(
-            name=template_name,
-            content=template_content,
-            create_by=request.user.username,
-            create_name=create_name,
-            group_id=group_id,
-        )
-        return JsonResponse({"result": True, "code": 0, "message": "创建日报模板成功", "data": []})
-
-    # 修改模板
-    if request.method == "PUT":
-        template_name = req.get("name")
-        template_content = req.get("content")
-        template_id = req.get("template_id")
-        # 模板名字不可为空，但是模板内容支持为空
-        if not template_name:
-            return JsonResponse({"result": False, "code": -1, "message": "模板名不可为空", "data": []})
-
-        # 验证模板是否存在，存在则更新模板
-        try:
-            target_template = DailyReportTemplate.objects.get(id=template_id, group_id=group_id)
-        except DailyReportTemplate.DoesNotExist:
-            return JsonResponse({"result": False, "code": -1, "message": "对应组不存在相关模板", "data": []})
-        target_template.content = template_content
-        target_template.name = template_name
-        target_template.save()
-        return JsonResponse({"result": True, "code": 0, "message": "更新模板成功", "data": []})
 
 
 @require_http_methods(["POST", "GET"])

@@ -10,8 +10,7 @@ from celery.task import periodic_task, task
 from django.template.loader import get_template
 
 from blueapps.conf import settings
-from home_application.models.daily import Daily
-from home_application.models.user import User
+from home_application.models import Daily, User
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.mail_operation import (
     notify_none_reported_user,

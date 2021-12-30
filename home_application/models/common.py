@@ -25,13 +25,12 @@ class Holiday(TimeBasic):
         return "{}-{}-{} {}".format(self.year, self.month, self.day, self.note)
 
 
-# 组-用户关联表
-class GroupUser(models.Model):
-    group_id = models.IntegerField(verbose_name="组id")
-    user_id = models.IntegerField(verbose_name="用户id")
+# 用户表
+class User(TimeBasic):
+    username = models.CharField(max_length=128, unique=True, verbose_name="用户账号")
+    name = models.CharField(max_length=128, null=True, blank=True, verbose_name="用户姓名")
+    phone = models.CharField(max_length=30, null=True, blank=True, verbose_name="电话号码")
+    email = models.EmailField(null=True, blank=True, verbose_name="邮箱")
 
     def __str__(self):
-        return "组id：" + str(self.group_id) + " 用户id：" + str(self.user_id)
-
-    class Meta:
-        unique_together = ("group_id", "user_id")
+        return self.username

@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             model_name="daily",
             name="evaluate",
             field=django_mysql.models.JSONField(
-                default=home_application.models.daily.daily_evaluate_default, verbose_name="评价"
+                default=home_application.models.daily_evaluate_default, verbose_name="评价"
             ),
         ),
     ]

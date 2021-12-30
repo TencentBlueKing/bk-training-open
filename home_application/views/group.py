@@ -7,20 +7,19 @@ from django.http import JsonResponse
 # 装饰器引入 from blueapps.account.decorators import login_exempt
 from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_http_methods
-from views.user import auto_sign_users
 
 from home_application.celery_task import (
     send_apply_for_group_result,
     send_apply_for_group_to_manager,
 )
-from home_application.models import ApplyForGroup, DailyReportTemplate, Group, User
-from home_application.models.common import GroupUser
+from home_application.models import ApplyForGroup, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 from home_application.utils.tools import (
     apply_info_to_json,
     apply_is_available_to_json,
     check_param,
 )
+from home_application.views.user import auto_sign_users
 
 
 @is_group_member()
@@ -78,7 +77,6 @@ def add_group(request):
 @is_group_member(admin_needed=["POST"])
 def delete_group(request, group_id):
     try:
-        DailyReportTemplate.objects.filter(group_id=group_id).delete()
         GroupUser.objects.filter(group_id=group_id).delete()
         Group.objects.get(id=group_id).delete()
         return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})

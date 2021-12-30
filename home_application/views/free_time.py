@@ -4,8 +4,7 @@ from django.http import JsonResponse
 from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_GET, require_http_methods
 
-from home_application.models import FreeTime, User
-from home_application.models.common import GroupUser
+from home_application.models import FreeTime, GroupUser, User
 from home_application.utils.decorator import is_group_member
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
