@@ -29,9 +29,21 @@
                 </tr>
                 <tr>
                     <td  colspan="4" style=" font-size: 16px">
+                        {% if item.off_day_user %}
+                            请假名单：
+                            <span style="color: #313238">
+                                {{ item.off_day_user }}
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td  colspan="4" style=" font-size: 16px">
                         {% if item.none_report_user %}
-                                请假人：
-                            {{ item.none_report_user }}
+                            未写名单：
+                            <span style="color: #313238">
+                                {{ item.none_report_user }}
+                            </span>
                         {% endif %}
                     </td>
                 </tr>
@@ -42,7 +54,7 @@
 
     {# 日报详细信息 #}
     {% if reports %}
-    <div style="text-align: center; font-weight:bold; font-size:2em; margin-top: 40px">
+    <div style="text-align: center; font-weight:bold; font-size:2em; margin-top: 50px">
         [{{ date }}] 日报详情
     </div>
 
@@ -53,10 +65,10 @@
             <table style="width: 100%; font-size: 1.2em;">
                 <tr>
                     <td style="font-size: 18px;">
-                        <strong>{{ report_info.create_by }}({{ report_info.create_name }})</strong>
+                        <strong>{{ report_info.username }}</strong>
                         <br>
                         <div style="font-size: 14px; color: #63656e; margin: 5px 0 0">
-                            {{ report_info.group_names }}
+                            {{ report_info.group }}
                         </div>
                     </td>
                 </tr>

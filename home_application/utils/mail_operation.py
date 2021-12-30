@@ -93,80 +93,93 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date: dateti
     :param group_infos:     该管理员管理的组信息list，每一包含组id、组名字、组管理员list
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
+    logger.info("定时任务：早上10点告知%s%s的日报信息: %s", admin_username, date, group_infos)
     date_str = date.strftime("%Y-%m-%d")
-    # 获取组相关的数据开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-    # 构造组id和组name对应关系
+
+    # 组id-组name 对应关系
     group_id_name = {g_info["group_id"]: g_info["group_name"] for g_info in group_infos}
 
-    # 这些组下所有用户的id
-    group_users = GroupUser.objects.filter(group_id__in=group_id_name.keys())
-    group_user_ids = group_users.values_list("user_id", flat=True).distinct()
+    # 组用户信息
+    users = GroupUser.objects.filter(group_id__in=group_id_name.keys())
+    user_ids = users.values_list("user_id", flat=True).distinct()
+    user_infos = User.objects.filter(id__in=user_ids).values("id", "username", "name")
+    user_usernames = user_infos.values_list("username", flat=True)
 
-    # 组内所有成员
-    group_user_infos = User.objects.filter(id__in=group_user_ids).values("id", "username", "name")
-    group_user_usernames = group_user_infos.values_list("username", flat=True)
-
-    # 用户和组对应关系
+    # 用户-组 对应关系
     user_group_map = {}
-    for user_info in group_user_infos:
-        # 所在所有组id
-        group_ids = group_users.filter(user_id=user_info["id"]).values_list("group_id", flat=True)
-        user_group_map[user_info["username"]] = [group_id_name[g_id] for g_id in group_ids]
+    for user_info in user_infos:
+        group_ids = users.filter(user_id=user_info["id"]).values_list("group_id", flat=True)
+        user_group_map[user_info["username"]] = [group_id_name[gid] for gid in group_ids]
 
-    # 组内成员的日报信息
-    group_reports = Daily.objects.filter(date=date, create_by__in=group_user_usernames)
+    # 用户日报渲染信息
+    reports = Daily.objects.filter(date=date, create_by__in=user_usernames)
+    report_data = [
+        {
+            "username": "{}({})".format(report.create_by, report.create_name),
+            "group": " / ".join(user_group_map.get(report.create_by)),
+            "content": report.content,
+        }
+        for report in reports
+    ]
 
-    # 写了日报的用户名
-    report_users = group_reports.values_list("create_by", flat=True)
-    # 其余没写日报的用户（包含管理员）
-    none_report_users = group_user_infos.exclude(username__in=report_users)
+    # 已完成日报用户
+    report_users = reports.values_list("create_by", flat=True)
+    # 未完成日报用户
+    none_report_users = user_infos.exclude(username__in=report_users)
     none_report_user_usernames = none_report_users.values_list("username", flat=True)
 
-    # 请假的用户，请假但是写了日报的用户排除在外
+    # 请假用户
     off_day_usernames = OffDay.objects.filter(
         start_date__lte=date, end_date__gte=date, user__in=none_report_user_usernames
     ).values_list("user", flat=True)
-    # 获取组相关信息结束↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
-    # 组内速览信息
-    group_simple_infos = []
-    # 统计组内信息开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+    # 统计组内信息
+    group_template_infos = []
     for g_info in group_infos:
-        # 获取组内所有组员
-        g_user_ids = group_users.filter(group_id=g_info["group_id"]).values_list("user_id", flat=True)
-        simple_members = group_user_infos.filter(id__in=g_user_ids).exclude(username__in=g_info["admin_list"])
-
+        # 普通成员
+        g_user_ids = users.filter(group_id=g_info["group_id"]).values_list("user_id", flat=True)
+        g_user_usernames = user_infos.filter(id__in=g_user_ids).values_list("username", flat=True)
+        simple_members = user_infos.filter(id__in=g_user_ids).exclude(username__in=g_info["admin_list"])
         # 请假人
         off_day_user = simple_members.filter(username__in=off_day_usernames)
-        # 没写日报的
-        group_none_report_user = simple_members.filter(username__in=none_report_user_usernames)
-        group_simple_infos.append(
+        # 请假人username(name)
+        off_day_user_format_name = " / ".join(
+            [
+                "{}({})".format(off_day_user_info["username"], off_day_user_info["name"])
+                for off_day_user_info in off_day_user
+            ]
+        )
+        # 没写日报的成员
+        group_none_report_user = simple_members.filter(username__in=none_report_user_usernames).exclude(
+            username__in=off_day_usernames
+        )
+        # 没写日报成员username(name)
+        group_none_report_user_format_name = " / ".join(
+            [
+                "{}({})".format(group_none_report_user_info["username"], group_none_report_user_info["name"])
+                for group_none_report_user_info in group_none_report_user
+            ]
+        )
+        group_template_infos.append(
             {
                 "group_id": g_info["group_id"],
                 "group_name": g_info["group_name"],
-                "daily_count": len(simple_members) - len(off_day_user) - len(group_none_report_user),
+                "daily_count": reports.filter(create_by__in=g_user_usernames)
+                .exclude(create_by__in=g_info["admin_list"])
+                .count(),
                 "off_day_count": len(off_day_user),
-                "off_day_user": list(off_day_user),
+                "off_day_user": off_day_user_format_name,
                 "none_report_count": len(group_none_report_user),
-                "none_report_user": list(group_none_report_user),
+                "none_report_user": group_none_report_user_format_name,
                 "group_link": "{}manage-group?date={}&group={}".format(
                     settings.BKAPP_FULL_SITE_URL, date_str, g_info["group_id"]
                 ),  # 组管理页面
             }
         )
-    # 统计组内信息结束↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-
-    report_infos = []
-    # 日报数据处理开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-    for report in group_reports:
-        report_json = report.to_json()
-        report_json["group_names"] = " / ".join(user_group_map.get(report.create_by))
-        report_infos.append(report_json)
-    # 日报数据处理结束↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
     # 发送邮件
     mail_content = get_template("group_daily.html").render(
-        {"date": date_str, "group_dailies": group_simple_infos, "reports": report_infos}
+        {"date": date_str, "group_dailies": group_template_infos, "reports": report_data}
     )
     return send_mail(receiver__username=admin_username, title="日报信息查看", content=mail_content, body_format="Html")
 
@@ -183,12 +196,17 @@ def notify_report_info(report_date: datetime.date):
     for group_info in group_name_and_admin:
         admin_list = group_info["admin"].split(",")
         for admin_username in admin_list:
-            if admin_username not in admin_group_map.keys():
-                admin_group_map[admin_username] = []
-            admin_group_map[admin_username].append(
-                {"group_id": group_info["id"], "group_name": group_info["name"], "admin_list": admin_list}
-            )
+            if admin_username in admin_group_map.keys():
+                admin_group_map[admin_username].append(
+                    {"group_id": group_info["id"], "group_name": group_info["name"], "admin_list": admin_list}
+                )
+            else:
+                admin_group_map[admin_username] = [
+                    {"group_id": group_info["id"], "group_name": group_info["name"], "admin_list": admin_list}
+                ]
+
     for admin_username, group_infos in admin_group_map.items():
         notify_admin_group_info(admin_username, group_infos, report_date)
     # 更新日报状态
     Daily.objects.filter(date=report_date).update(send_status=True, update_time=datetime.datetime.now())
+    logger.info("%s的日报信息已发送给管理员" % report_date)
