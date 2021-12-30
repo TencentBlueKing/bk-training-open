@@ -1,0 +1,335 @@
+import json
+
+from django.db import IntegrityError
+from django.http import JsonResponse
+
+# 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
+# 装饰器引入 from blueapps.account.decorators import login_exempt
+from django.utils.datetime_safe import datetime
+from django.views.decorators.http import require_http_methods
+from views.user import auto_sign_users
+
+from home_application.celery_task import (
+    send_apply_for_group_result,
+    send_apply_for_group_to_manager,
+)
+from home_application.models import ApplyForGroup, DailyReportTemplate, Group, User
+from home_application.models.common import GroupUser
+from home_application.utils.decorator import is_group_member
+from home_application.utils.tools import (
+    apply_info_to_json,
+    apply_is_available_to_json,
+    check_param,
+)
+
+
+@is_group_member()
+def get_group_info(request, group_id):
+    group = Group.objects.get(id=group_id)
+    admin_usernames = group.admin_list
+    admin_list = User.objects.filter(username__in=admin_usernames).values("id", "username", "name")
+    data = {
+        "id": group.id,
+        "name": group.name,
+        "admin": group.admin,
+        "admin_list": list(admin_list),
+        "create_by": group.create_by,
+        "create_name": group.create_name,
+        "create_time": group.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    return JsonResponse({"result": True, "code": 0, "message": "获取组信息成功", "data": data})
+
+
+def add_group(request):
+    """添加组"""
+    req = json.loads(request.body)
+    params = {"name": "组名", "admin": "管理员"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    name = req.get("name")
+    admins = req.get("admin")
+    admin_names = []  # 管理员username连接字符串
+    has_create_user = False
+    for admin in admins:
+        admin_names.append(admin.get("username"))
+        if admin.get("username") == request.user.username:
+            has_create_user = True
+            create_name = admin.get("display_name")
+    if has_create_user is False:
+        return JsonResponse({"result": False, "code": 1, "message": "创建人未在管理员中"})
+    try:
+        group = Group.objects.create(
+            name=name, admin=",".join(admin_names), create_by=request.user.username, create_name=create_name
+        )
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
+    else:
+        # 添加未注册的用户信息
+        auto_sign_users(admin_names, admins)
+        # 添加组-用户信息
+        group_user_list = []
+        for admin in admins:
+            group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
+        GroupUser.objects.bulk_create(group_user_list)
+        return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": {"group_id": group.id}})
+
+
+@is_group_member(admin_needed=["POST"])
+def delete_group(request, group_id):
+    try:
+        DailyReportTemplate.objects.filter(group_id=group_id).delete()
+        GroupUser.objects.filter(group_id=group_id).delete()
+        Group.objects.get(id=group_id).delete()
+        return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})
+    except Group.DoesNotExist:
+        return JsonResponse({"result": True, "code": 0, "message": "组不存在", "data": []})
+
+
+@is_group_member(admin_needed=["POST", "PUT", "DELETE"])
+def update_group(request, group_id):
+    """编辑组信息"""
+    req = json.loads(request.body)
+    params = {"name": "组名", "admin": "管理员"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    name = req.get("name")
+    admins = req.get("admin")
+    admin_names = []
+    admin_ids = []
+    for admin in admins:
+        admin_ids.append(admin.get("id"))
+        admin_names.append(admin.get("username"))
+    # 添加未注册的用户信息
+    auto_sign_users(admin_names, admins)
+    # 批量添加用户-组信息
+    exist_user_ids = GroupUser.objects.filter(group_id=group_id, user_id__in=admin_ids).values("user_id")
+    group_user_list = []
+    for admin_id in admin_ids:
+        if not {"user_id": admin_id} in exist_user_ids:
+            group_user_list.append(GroupUser(group_id=group_id, user_id=admin_id))
+    GroupUser.objects.bulk_create(group_user_list)
+    try:
+        Group.objects.filter(id=group_id).update(name=name, admin=",".join(admin_names), update_time=datetime.now())
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
+    else:
+        return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
+
+
+def get_available_apply_groups(request):
+    """获取所有(未在、未申请)组信息"""
+    # 获取用户已经在的组
+    sql_str = (
+        "select g.id, g.name, if (gu.id is null, if(apply.id is null, true, false), false) is_available "
+        "from home_application_group g "
+        "left join home_application_groupuser gu "
+        "on g.id = gu.group_id and gu.user_id = %s "
+        "left join home_application_applyforgroup apply "
+        "on g.id = apply.group_id and apply.user_id = %s and apply.status = 0"
+    )
+    group_infos = Group.objects.raw(sql_str, [request.user.id, request.user.id])
+    group_list = [apply_is_available_to_json(group) for group in group_infos]
+    return JsonResponse({"result": True, "code": 0, "message": "获取成功", "data": group_list})
+
+
+def apply_for_group(request):
+    """用户申请入组"""
+    req = json.loads(request.body)
+    params = {"group_id": "组id"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    group_id = req.get("group_id")
+    user_id = request.user.id
+    # 获取组信息
+    try:
+        group = Group.objects.get(id=group_id)
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": "组不存在", "data": []})
+    # 检查是否已在组中
+    try:
+        GroupUser.objects.get(group_id=group_id, user_id=user_id)
+        # 用户已在组中
+        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group.name), "data": []})
+    except GroupUser.DoesNotExist:
+        # 用户不在组中
+        try:
+            ApplyForGroup.objects.get(group_id=group_id, user_id=user_id, status=0)
+            # 用户已申请过入组
+            return JsonResponse({"result": False, "code": 0, "message": u"已申请过入组-{}".format(group.name), "data": []})
+        except ApplyForGroup.DoesNotExist:
+            # 用户未申请入组
+            ApplyForGroup.objects.create(group_id=group_id, user_id=user_id, status=0)
+            # 给管理员发送邮件
+            # 获取用户信息
+            user = User.objects.get(id=user_id)
+            send_apply_for_group_to_manager.apply_async(
+                kwargs={
+                    "group_name": group.name,
+                    "group_admins": group.admin,
+                    "user_name": "{}({})".format(user.username, user.name),
+                    "group_id": group_id,
+                }
+            )
+            return JsonResponse({"result": True, "code": 0, "message": u"申请入组-{}成功".format(group.name), "data": []})
+
+
+@is_group_member(admin_needed=["GET"])
+def get_apply_for_group_users(request, group_id):
+    """ "获取申请入组列表"""
+    # 获取所有申请人id和申请时间
+    sql_str = (
+        "select user.id, user.username, user.name,apply.update_time "
+        "from home_application_applyforgroup apply, home_application_user user "
+        "where apply.user_id = user.id and apply.status = 0 and apply.group_id = %s"
+    )
+    apply_infos = ApplyForGroup.objects.raw(sql_str, [group_id])
+    apply_info_list = [apply_info_to_json(info) for info in apply_infos]
+    return JsonResponse({"result": True, "code": 0, "message": "获取申请人列表成功", "data": apply_info_list})
+
+
+@is_group_member(admin_needed=["POST"])
+def deal_join_group(request, group_id):
+    """管理员同意用户入组"""
+    # 校验参数
+    req = json.loads(request.body)
+    params = {"user_id": "用户id", "status": "处理操作"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    user_id = req.get("user_id")
+    # 操作 status = 1(同意), status = 2(拒绝)
+    status = req.get("status")
+    if status == 1:
+        status_message = "同意"
+    elif status == 2:
+        status_message = "拒绝"
+    else:
+        return JsonResponse({"result": False, "code": 0, "message": "参数status传值不合法", "data": []})
+    try:
+        # 获取用户信息
+        user = User.objects.get(id=user_id)
+        # 前端显示用户信息username(name)
+        user_name = u"{}({})".format(user.username, user.name)
+        # 前端显示组名
+        group_name = Group.objects.get(id=group_id).name
+        # 如果允许入组，添加组-用户信息（入组）
+        if status == 1:
+            GroupUser.objects.create(group_id=group_id, user_id=user_id)
+        # 更改申请入组状态
+        ApplyForGroup.objects.filter(group_id=group_id, user_id=user_id).update(
+            status=status, operator=request.user.id, update_time=datetime.now()
+        )
+        # 发送申请结果给用户
+        send_apply_for_group_result.apply_async(
+            kwargs={"username": user.username, "group_name": group_name, "status": status}
+        )
+    except User.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": u"用户(id={})不存在".format(user_id), "data": []})
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 0, "message": u"组（id={}）不存在".format(group_id), "data": []})
+    except IntegrityError:
+        return JsonResponse({"result": False, "code": 0, "message": u"用户已在组-{}中".format(group_name), "data": []})
+    return JsonResponse(
+        {
+            "result": True,
+            "code": 0,
+            "message": u"{}{}入组({})成功".format(status_message, user_name, group_name),
+            "data": [],
+        }
+    )
+
+
+def get_user_groups(request):
+    """查询用户组列表"""
+    user_id = request.user.id
+    group_ids = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
+    groups = Group.objects.in_bulk(list(group_ids))
+    group_list = []
+    for group in groups.values():
+        admin = group.admin_list
+        group_list.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "admin": admin,
+                "create_by": group.create_by,
+                "create_name": group.create_name,
+                "create_time": group.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": group_list})
+
+
+def get_group_users(request, group_id):
+    """查询组的成员列表"""
+    user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    users = User.objects.in_bulk(list(user_ids))
+    user_list = []
+    for user in users.values():
+        user_list.append(
+            {"id": user.id, "username": user.username, "name": user.name, "phone": user.phone, "email": user.email}
+        )
+    return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": user_list})
+
+
+def exit_group(request, group_id):
+    """组内移除用户（可能不是当前用户），用户退出组"""
+    req = json.loads(request.body)
+    params = {"user_id": "用户id"}
+    check_result, message = check_param(params, req)
+    if not check_result:
+        return JsonResponse({"result": False, "code": 1, "message": message})
+    user_id = req.get("user_id")
+    try:
+        GroupUser.objects.get(group_id=group_id, user_id=user_id).delete()
+    except GroupUser.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "该用户不在组中"})
+    return JsonResponse({"result": True, "code": 0, "message": "移除成功", "data": []})
+
+
+@require_http_methods(["GET"])
+@is_group_member(admin_needed=["GET"])
+def list_group_admin(request, group_id):
+    """
+    获取组内管理员列表
+    """
+    # 组内成员
+    try:
+        admins = Group.objects.get(id=group_id).admin_list
+    except Group.DoesNotExist:
+        return JsonResponse({"result": False, "code": 1, "message": "组不存在", "data": []})
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": admins})
+
+
+@require_http_methods(["GET"])
+def list_admin_group(request):
+    """
+    获取有权限管理的所有组
+    """
+    username = request.user.username
+    groups = Group.objects.all()
+    admin_group = []
+    for group in groups:
+        if username in group.admin_list:
+            admin_group.append(group.to_json())
+    return JsonResponse({"result": True, "code": 0, "manage": "", "data": admin_group})
+
+
+@is_group_member(admin_needed=["POST"])
+def check_user_in_group(request, group_id):
+    # 查询成员是否已加入指定小组，返回未加入小组的成员姓名
+    user_name = json.loads(request.body).get("UserName")
+    # 待查询姓名列表
+    user_name_list = str(user_name).split(" ")
+    id_list = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
+    joined_user_name_list = User.objects.filter(id__in=id_list).values_list("name", flat=True)
+    unjoined_users = []
+    for u in user_name_list:
+        if u not in joined_user_name_list:
+            unjoined_users.append(u)
+    if len(unjoined_users) > 0:
+        return JsonResponse({"result": True, "code": 0, "message": "", "data": ",".join(unjoined_users) + "未加入当前小组"})
+    return JsonResponse({"result": True, "code": 0, "message": "", "data": "查询的用户已加入当前小组中"})

@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
             model_name="daily",
             name="content",
             field=django_mysql.models.JSONField(
-                default=home_application.models.daily_content_default, verbose_name="日报内容"
+                default=home_application.models.daily.daily_content_default, verbose_name="日报内容"
             ),
         ),
     ]

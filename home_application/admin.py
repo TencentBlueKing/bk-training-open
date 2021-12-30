@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 from django.contrib import admin
 
 # 将节假日表注册到管理员页面
-from home_application.models import Holiday
+from home_application.models.common import Holiday
 
 # Register your models here.
 
