@@ -37,9 +37,9 @@
 
 ```
 # 克隆自己git仓库代码到本地
-git clone https://github.com/Jsummer121/bk-goods-application.git
+git clone https://github.com/wheel-w/bk-training-open.git
 # 添加自己fork的主仓库源
-git remote add blueking-train https://github.com/Jsummer121/bk-goods-application.git
+git remote add blueking-train https://github.com/TencentBlueKing/bk-training-open.git
 git pull blueking-train
 ```
 
@@ -84,6 +84,8 @@ git pull blueking-train
    
    # 自己的用户名（蓝鲸开发者账号）
    BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
+   # 网站完整网址
+   BKAPP_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
    ```
 
    + 在PyCharm中配置环境变量以及主机名

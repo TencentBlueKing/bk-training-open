@@ -39,6 +39,8 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
     group_users = User.objects.filter(id__in=group_user_ids)
     # 日报信息
     reports = Daily.objects.filter(date=report_date)
+    # 该组的日报信息
+    group_reports = reports.filter(create_by__in=group_users.values_list("username", flat=True))
     report_users = group_users.filter(username__in=reports.values_list("create_by", flat=True)).exclude(
         username__in=group_admin
     )
@@ -62,7 +64,7 @@ def get_report_info_by_group_and_date(group_id: int, report_date=None):
         "report_users": report_users,  # 已完成日报成员 [User(0), User(1), ···]
         "none_report_users": none_report_users,  # 未完成日报成员 [User(0), User(1), ···]
         "off_day_name_list": off_day_name_list,  # 请假成员姓名列表[崔, 王, ···]
-        "reports": reports,  # 日报 [Daily(0), Daily(1), ···]
+        "reports": group_reports,  # 组内日报，包含管理员写的 [Daily(0), Daily(1), ···]
     }
 
 

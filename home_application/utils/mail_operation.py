@@ -89,12 +89,13 @@ def notify_none_reported_user():
 
 
 @task()
-def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
+def notify_admin_group_info(admin_username: str, group_infos: list, daily_infos: dict, date=None):
     """
     告知管理员组内日报信息
     :param admin_username:  管理员的用户名
-    :param date:            日报对应的日期，默认为昨天
-    :param group_infos:     组信息list，具体数据格式如下：
+    :param date:            日报对应的日期字符串，默认为昨天
+    :param daily_infos:     日报信息数据，map数据，username为key，value为{"report": Daily日报数据, "group_names": 所在所有组名字}
+    :param group_infos:     组信息list，需包含以下数据：
                             [{
                                 "group_name": 这是一个-很好听的名字, # 组名字
                                 "daily_count": 10,              # 写了日报的人数
@@ -107,14 +108,15 @@ def notify_admin_group_info(admin_username: str, group_infos: list, date=None):
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
     if date is None:
-        date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
+        date = (datetime.datetime.today() - datetime.timedelta(days=1)).date().strftime("%Y-%m-%d")
     mail_content = get_template("group_daily.html").render(
         {
-            "notify_title": "[{}] 日报速览".format(date),
+            "date": date,
             "group_dailies": group_infos,
+            "daily_infos": daily_infos,
         }
     )
-    return send_mail(receiver__username=admin_username, title="日报提醒助手", content=mail_content, body_format="Html")
+    return send_mail(receiver__username=admin_username, title="日报信息查看", content=mail_content, body_format="Html")
 
 
 def notify_yesterday_report_info(report_date=None):
@@ -134,6 +136,7 @@ def notify_yesterday_report_info(report_date=None):
         g_info_for_mail = {
             "group_name": group_info["name"],  # 组名字
             "daily_count": len(group_info["report_users"]),  # 写了日报的人数
+            "reports": group_info["reports"],  # 组内所有日报 [Daily(0), Daily(1), ···]
             "none_write_daily_count": len(group_info["none_report_users"]),  # 没写日报的人数，包含请假的人
             "people_in_vacation_count": len(group_info["off_day_name_list"]),  # 请假人数
             "off_day_name_list": ",".join(group_info["off_day_name_list"]),  # 请假人姓名列表
@@ -149,10 +152,33 @@ def notify_yesterday_report_info(report_date=None):
 
     logger.info("定时任务：工作日早10点告知管理员上个工作日的日报信息：%s" % admin_group_map)
     for admin_username, info in admin_group_map.items():
+        # 循环组内日报数据，将加入多个组的用户日报合并到一个------------------------------------------------------------------------
+        daily_infos = {}
+        for group_daily_info in info:
+            for user_report in group_daily_info["reports"]:
+                cur_username = user_report.create_by  # 当前处理用户的用户名
+                if cur_username not in daily_infos.keys():
+                    daily_infos[cur_username] = {
+                        "report": user_report.to_json(),  # 日报数据Daily
+                        "group_names": group_daily_info["group_name"],  # 用户所在所有组的组名字
+                    }
+                else:
+                    # 使用'/'拼接新的组名字
+                    daily_infos[cur_username]["group_names"] = "{} / {}".format(
+                        daily_infos[cur_username]["group_names"], group_daily_info["group_name"]
+                    )
+            # 去除组信息中不可json格式化的日报数据
+            try:
+                group_daily_info.pop("reports")
+            except KeyError:
+                logger.error("去除组日报数据出错\n当前组信息为%s\n详细组信息为%s") % (group_daily_info, info)
+        # 合并结束-------------------------------------------------------------------------------------------------------
+
         notify_admin_group_info.apply_async(
             kwargs={
                 "admin_username": admin_username,
                 "group_infos": info,
+                "daily_infos": daily_infos,
                 "date": report_date_str,
             }
         )
