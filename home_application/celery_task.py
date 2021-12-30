@@ -14,7 +14,7 @@ from home_application.models import Daily, User
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.mail_operation import (
     notify_none_reported_user,
-    notify_yesterday_report_info,
+    notify_report_info,
     send_mail,
 )
 
@@ -39,7 +39,7 @@ def morning_task():
     today_date = datetime.date.today()
     today_info = CalendarHandler(today_date)
     if not today_info.is_holiday:
-        notify_yesterday_report_info(today_info.last_workday)
+        notify_report_info(today_info.last_workday)
 
 
 @task()
