@@ -495,11 +495,19 @@
             // 打开dialog, 增加一行
             dealAdd (index) {
                 const contentLength = this.dailyDataContent[index].content.length
-                if (contentLength && !this.dailyDataContent[index].content[contentLength - 1].text) {
-                    this.$bkMessage({
-                        theme: 'warning',
-                        message: '前一条内容为空'
-                    })
+                if (contentLength && (!this.dailyDataContent[index].content[contentLength - 1].text
+                    || (!this.dailyDataContent[index].content[contentLength - 1].cost && this.dailyDataContent[index].content[contentLength - 1].cost !== 0))) {
+                    if (!this.dailyDataContent[index].content[contentLength - 1].text) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: '前一条内容为空'
+                        })
+                    } else {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: '前一条时间为空'
+                        })
+                    }
                 } else {
                     const newobj = { 'text': '', 'cost': 0, 'isPrivate': this.allPrivate, '$index': contentLength }
                     this.dailyDataContent[index].content.push(newobj)
@@ -535,8 +543,12 @@
                             emptyContent.push(tableContent.title + '最后一条')
                         } else {
                             for (const tableContentItem of tableContent.content) {
-                                if (!tableContentItem.cost) {
-                                    tableContentItem.cost = 0
+                                if (!tableContentItem.cost && tableContentItem.cost !== 0) {
+                                    this.$bkMessage({
+                                        theme: 'warning',
+                                        message: '前一条时间为空'
+                                    })
+                                    return
                                 }
                                 tableContentItem.cost = parseFloat(tableContentItem.cost)
                             }
