@@ -22,49 +22,50 @@ def content_format_as_json(daily_reports):
     return report_list
 
 
-def get_report_info_by_group_and_date(group_id: int, report_date=None):
+def get_report_info_by_group_and_date(group_id: int, report_date: datetime.date):
     """
     获取指定日期指定组的日报信息
-    :param group_id: 组id
-    :param report_date: 日期，格式为2021-11-26，默认为昨天
+    :param group_id:    组id
+    :param report_date: 日期
     """
-    if report_date is None:
-        report_date = (datetime.datetime.today() - datetime.timedelta(days=1)).date()
     # 组
     group = Group.objects.get(id=group_id)
     # 组内管理员
     group_admin = group.admin_list
-    # 组内用户
+    # 所有成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids)
+    # 普通组员
+    simple_users = group_users.exclude(username__in=group_admin)
+
     # 日报信息
-    reports = Daily.objects.filter(date=report_date)
-    # 该组的日报信息
-    group_reports = reports.filter(create_by__in=group_users.values_list("username", flat=True))
-    report_users = group_users.filter(username__in=reports.values_list("create_by", flat=True)).exclude(
-        username__in=group_admin
-    )
-    none_report_users = group_users.exclude(username__in=reports.values_list("create_by", flat=True)).exclude(
-        username__in=group_admin
-    )
-    # 请假人列表
+    reports = Daily.objects.filter(date=report_date, create_by__in=group_users.values_list("username", flat=True))
+
+    # 写日报的组员
+    report_users = simple_users.filter(username__in=reports.values_list("create_by", flat=True))
+    # 没写日报的组员(含请假)
+    none_report_users = simple_users.exclude(username__in=report_users.values_list("username", flat=True))
+
+    # 请假组员(不含请假但是写了日报的)
     off_day_username_list = OffDay.objects.filter(
-        start_date__lte=datetime.date.today(),
-        end_date__gte=datetime.date.today(),
-        user__in=group_users.values_list("username", flat=True),
+        start_date__lte=report_date,
+        end_date__gte=report_date,
+        user__in=none_report_users.values_list("username", flat=True),
     ).values_list("user", flat=True)
-    off_day_name_list = list(User.objects.filter(username__in=off_day_username_list).values_list("name", flat=True))
-    for i in range(0, len(off_day_name_list)):
-        off_day_name_list[i] = off_day_username_list[i] + "(" + off_day_name_list[i] + ")"
+    off_day_users = none_report_users.filter(username__in=off_day_username_list)
+
+    # 没写日报且没请假组员
+    none_report_users = none_report_users.exclude(username__in=off_day_users.values_list("username", flat=True))
+
     # 返回数据
     return {
         "id": group.id,  # 组id
         "name": group.name,  # 组名
-        "admin": group_admin,  # 组管理员数组
+        "admin_list": group_admin,  # 组管理员数组
         "report_users": report_users,  # 已完成日报成员 [User(0), User(1), ···]
         "none_report_users": none_report_users,  # 未完成日报成员 [User(0), User(1), ···]
-        "off_day_name_list": off_day_name_list,  # 请假成员姓名列表[崔, 王, ···]
-        "reports": group_reports,  # 组内日报，包含管理员写的 [Daily(0), Daily(1), ···]
+        "off_day_users": off_day_users,  # 请假成员，不含请假但是写日报的 [User(0), User(1), ···]
+        "reports": reports,  # 组内日报，包含管理员写的 [Daily(0), Daily(1), ···]
     }
 
 
