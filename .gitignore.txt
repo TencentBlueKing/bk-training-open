@@ -1,5 +1,0 @@
-.gitignore
-__pycache__
-.idea
-node_modules
-local_settings.py
