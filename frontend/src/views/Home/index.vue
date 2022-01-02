@@ -164,6 +164,7 @@
                                             placeholder="所花时间"
                                             v-model="singleContent.content[props.row.$index].cost"
                                             type="number"
+                                            @blur="checkSpendTime(singleContent.content[props.row.$index].cost, props.row.$index)"
                                             :precision="1"
                                             :min="0"
                                             :max="24"
@@ -535,9 +536,6 @@
                             emptyContent.push(tableContent.title + '最后一条')
                         } else {
                             for (const tableContentItem of tableContent.content) {
-                                if (!tableContentItem.cost) {
-                                    tableContentItem.cost = 0
-                                }
                                 tableContentItem.cost = parseFloat(tableContentItem.cost)
                             }
                             this.newPostDaily.content.push(tableContent)
@@ -725,6 +723,12 @@
             clickLeaveManage () {
                 this.leaveSetting.visible = true
                 this.getLeaveList(2)
+            },
+            // 花费时间为空时 默认为0
+            checkSpendTime (value, index) {
+                if (!value) {
+                    this.dailyDataContent[0].content[index].cost = 0
+                }
             },
             // 删除请假信息
             removeLeave (row) {
