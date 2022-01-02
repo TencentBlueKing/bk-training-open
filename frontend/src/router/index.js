@@ -16,7 +16,6 @@ const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/Home')
 const groupDailys = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys')
 const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/myGroup')
 // 测试
-const myGroup1 = () => import(/* webpackChunkName: 'example3' */ '@/views/myGroup/test.vue')
 const manageGroup = () => import(/* webpackChunkName: 'example4' */ '@/views/manageGroup')
 
 const NotFound = () => import(/* webpackChunkName: 'none' */ '@/views/404')
@@ -48,12 +47,6 @@ const routes = [
                 path: 'manage-group',
                 name: 'ManageGroup',
                 component: manageGroup
-            },
-            // 测试
-            {
-                path: 'my-group1',
-                name: 'my-group1',
-                component: myGroup1
             }
         ]
     },
