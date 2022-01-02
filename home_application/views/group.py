@@ -263,11 +263,20 @@ def get_user_groups(request):
 
 
 def get_group_users(request, group_id):
-    """查询组的成员列表"""
+    """
+    查询组的成员列表
+    param sign :标记0 返回不包括管理员的组成员 标记 null 返回组成员
+    """
     user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
-    users = User.objects.in_bulk(list(user_ids))
+    users = User.objects.in_bulk(list(user_ids)).values()
     user_list = []
-    for user in users.values():
+    sign = request.GET.get("sign")
+    if sign == "0":
+        group = Group.objects.get(id=group_id)
+        admin_usernames = group.admin_list
+        admin_user = User.objects.filter(username__in=admin_usernames)
+        users = set(users) - set(admin_user)
+    for user in users:
         user_list.append(
             {"id": user.id, "username": user.username, "name": user.name, "phone": user.phone, "email": user.email}
         )
