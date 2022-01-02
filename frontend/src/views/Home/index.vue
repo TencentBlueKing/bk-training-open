@@ -164,6 +164,7 @@
                                             placeholder="所花时间"
                                             v-model="singleContent.content[props.row.$index].cost"
                                             type="number"
+                                            @blur="checkSpendTime(singleContent.content[props.row.$index].cost, props.row.$index)"
                                             :precision="1"
                                             :min="0"
                                             :max="24"
@@ -495,19 +496,11 @@
             // 打开dialog, 增加一行
             dealAdd (index) {
                 const contentLength = this.dailyDataContent[index].content.length
-                if (contentLength && (!this.dailyDataContent[index].content[contentLength - 1].text
-                    || (!this.dailyDataContent[index].content[contentLength - 1].cost && this.dailyDataContent[index].content[contentLength - 1].cost !== 0))) {
-                    if (!this.dailyDataContent[index].content[contentLength - 1].text) {
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: '前一条内容为空'
-                        })
-                    } else {
-                        this.$bkMessage({
-                            theme: 'warning',
-                            message: '前一条时间为空'
-                        })
-                    }
+                if (contentLength && !this.dailyDataContent[index].content[contentLength - 1].text) {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: '前一条内容为空'
+                    })
                 } else {
                     const newobj = { 'text': '', 'cost': 0, 'isPrivate': this.allPrivate, '$index': contentLength }
                     this.dailyDataContent[index].content.push(newobj)
@@ -543,13 +536,6 @@
                             emptyContent.push(tableContent.title + '最后一条')
                         } else {
                             for (const tableContentItem of tableContent.content) {
-                                if (!tableContentItem.cost && tableContentItem.cost !== 0) {
-                                    this.$bkMessage({
-                                        theme: 'warning',
-                                        message: '前一条时间为空'
-                                    })
-                                    return
-                                }
                                 tableContentItem.cost = parseFloat(tableContentItem.cost)
                             }
                             this.newPostDaily.content.push(tableContent)
@@ -737,6 +723,12 @@
             clickLeaveManage () {
                 this.leaveSetting.visible = true
                 this.getLeaveList(2)
+            },
+            // 花费时间为空时 默认为0
+            checkSpendTime (value, index) {
+                if (!value) {
+                    this.dailyDataContent[0].content[index].cost = 0
+                }
             },
             // 删除请假信息
             removeLeave (row) {
