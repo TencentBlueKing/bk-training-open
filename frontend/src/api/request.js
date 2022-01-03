@@ -8,11 +8,19 @@ export function getAlljurGroups (params) {
     })
 }
 
+// 获得全部组
+export function getallGroups (params) {
+    return new Promise((resolve, reject) => {
+        http.get('/get_user_groups/').then(res => {
+            resolve(res)
+        })
+    })
+}
+
 // 获取用户当前信息
 export function getUser (params) {
     return new Promise((resolve, reject) => {
         http.get('/get_user/').then(res => {
-            // 等待优化 做缓存
             resolve(res)
         })
     })
@@ -71,8 +79,6 @@ export function updateGroup (groupId, option) {
     return new Promise((resolve, reject) => {
         http.post(`/update_group/${groupId}/`, option).then(res => {
             resolve(res)
-        }).catch(err => {
-            console.log(err)
         })
     })
 }

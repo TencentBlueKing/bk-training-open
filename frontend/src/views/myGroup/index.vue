@@ -1,20 +1,19 @@
 <template>
     <!-- 我的小组 -->
-    <div class="myGroup">
+    <div class="mygroup">
         <!-- 顶部组基本信息 -->
-        <div class="Group-Msg">
-            <div class="Group-Msg-Title">基本信息</div>
-            <div class="Group-Msg-GroupName">
-                <div class="Group-Msg-Property">组名</div>
+        <div class="group-msg">
+            <div class="group-msg-title">基本信息</div>
+            <div class="group-msg-groupName">
+                <div class="group-msg-property">组名</div>
                 <!-- 选择组 -->
                 <bk-select
-                    :disabled="false"
                     v-model="curGroupId"
                     style="width: 250px"
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
                     @selected="changeGroup"
                     searchable
+                    ext-cls="group-msg-curgroupid"
+                    :clearable="false"
                 >
                     <bk-option
                         v-for="option in AllgGroupsist"
@@ -25,17 +24,17 @@
                     </bk-option>
                 </bk-select>
             </div>
-            <div class="Group-Msg-Admin">
-                <div class="Group-Msg-Property">管理员</div>
-                <div class="Group-Msg-Admin-List">
+            <div class="group-msg-admin">
+                <div class="group-msg-property">管理员</div>
+                <div class="group-msg-admin-list">
                     <div
-                        class="Group-Msg-Admin-Item"
+                        class="group-msg-admin-item"
                         v-for="(item, index) in curGroupData.admin_list"
                         :key="index"
                     >
                         {{ item.username }}({{ item.name }})
                         <span
-                            style="backgroundcolor: white"
+                            style="backgroundColor: white"
                             v-if="index !== curGroupData.admin_list.length - 1"
                         >&nbsp;/&nbsp;</span
                         >
@@ -43,68 +42,55 @@
                 </div>
             </div>
             <!-- 对组的功能 -->
-            <div class="Group-Func">
+            <div class="group-func">
                 <!-- 新增组 & 入组请求 -->
-                <div class="Group-Func-Major">
-                    <span @click="executeFunc('addGroup', '新增组')">新增小组 </span>
-                    <span> / </span>
-                    <span @click="executeFunc('applyJoinGroup', '请求入组')">
-                        请求入组</span
-                    >
+                <div class="group-func-major">
+                    <bk-button :theme="'primary'" type="submit"
+                        class="group-func-major-add"
+                        @click="executeFunc('addGroup', '新增组')">
+                        新增小组
+                    </bk-button>
+                    <bk-button :theme="'success '" class="group-func-major-beg" @click="executeFunc('applyJoinGroup', '请求入组')">
+                        请求入组
+                    </bk-button>
                 </div>
-                <!-- 更多功能 -->
-                <bk-dropdown-menu
-                    @show="largeDropdownShow"
-                    @hide="largeDropdownHide"
-                    ref="largeDropdown"
-                    :font-size="'medium'"
-                >
-                    <div class="dropdown-trigger-btn" slot="dropdown-trigger">
-                        更多操作
-                        <i
-                            :class="[
-                                'bk-icon icon-angle-down',
-                                { 'icon-flip': isDropdownShow }
-                            ]"
-                        ></i>
-                    </div>
-                    <ul class="bk-dropdown-list" slot="dropdown-content">
-                        <li @click="executeFunc('compileGroup', '编辑组')">编辑组</li>
-                        <li @click="delete_Group()">删除组</li>
-                    </ul>
-                </bk-dropdown-menu>
+                <div class="group-func-more" v-show="isAdmin">
+                    <bk-button :theme="'warning '" type="submit"
+                        class="group-func-more-edit"
+                        @click="executeFunc('compileGroup', '编辑组')">
+                        编辑小组
+                    </bk-button>
+                    <bk-button :theme="'danger '" class="group-func-more-del" @click="delete_Group()">
+                        删除小组
+                    </bk-button>
+                </div>
             </div>
         </div>
         <!-- 分割线 -->
         <div class="cut-off-rule"></div>
         <!-- 组内成员 -->
-        <div class="Group-Member">
+        <div class="group-member">
             <!-- 标题 -->
-            <div class="Group-Member-Title">组内成员</div>
+            <div class="group-member-title">组内成员</div>
             <!-- 新增成员 & 批量删除 -->
-            <div class="Group-Member-Func">
-                <div
-                    class="Group-Member-Func-add"
-                    @click="executeFunc('addGroupUser', '新增成员')"
-                >
+            <div class="group-member-func" v-show="isAdmin">
+                <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" class="group-member-func-add"
+                    @click="executeFunc('addGroupUser', '新增成员')">
                     新增成员
-                </div>
-                <div class="Group-Member-Func-batchDel" @click="alldeleteUsers">
+                </bk-button>
+                <bk-button :theme="'danger'" :title="'主要按钮'" class="group-member-func-batchDel" @click="alldeleteUsers">
                     批量删除
-                </div>
+                </bk-button>
             </div>
             <!-- 成员List -->
-            <div>
+            <div class="group-member-renderlist">
                 <bk-table
-                    style="margin-top: 15px"
                     :data="renderGroupUsers"
                     :size="size"
                     :pagination="pagination"
                     @selection-change="selecchange"
-                    @row-mouse-enter="handleRowMouseEnter"
-                    @row-mouse-leave="handleRowMouseLeave"
                     @page-change="handlePageChange"
-                    @page-limit-change="handlePageLimitChange"
+                    @page-limit-change="LimitChange"
                 >
                     <bk-table-column type="selection" width="60"></bk-table-column>
                     <bk-table-column
@@ -122,6 +108,7 @@
                                 class="mr10"
                                 theme="primary"
                                 text
+                                :disabled="!isAdmin"
                                 @click="removeGroupUser(props.row)"
                             >移除</bk-button
                             >
@@ -238,14 +225,13 @@
     import {
         bkSelect,
         bkOption,
-        bkDropdownMenu,
         bkDialog,
         bkTable,
         bkTableColumn,
         bkButton
     } from 'bk-magic-vue'
     import {
-        getAlljurGroups,
+        getallGroups,
         getGroupInfo,
         getAllUsers,
         getUser,
@@ -258,12 +244,12 @@
         updateGroup,
         ApplyJoinGroup
     } from '@/api/request.js'
-    //
+    
+    import { isAdmin } from '@/utils/index.js'
     export default {
         components: {
             bkSelect,
             bkOption,
-            bkDropdownMenu,
             bkDialog,
             bkTable,
             bkTableColumn,
@@ -271,6 +257,8 @@
         },
         data () {
             return {
+                // 我是不是管理员
+                isAdmin: '',
                 // 当前选择的用户组
                 curGroupId: '',
                 // 所有用户组列表
@@ -301,7 +289,7 @@
                 // 小组成员数据全部
                 groupUsers: [],
                 // 需要展示的数据
-                renderGroupUsers: [],
+                // renderGroupUsers: [],
                 // 未参与的用户
                 notakeUsers: [],
                 // 成员表格 多选的数据
@@ -309,6 +297,8 @@
                 funcName: '',
                 // 选择未参与的用户
                 size: 'small',
+                // 新增成员id
+                selectnotakeUsersID: [],
                 // 分页器配置
                 pagination: {
                     current: 1,
@@ -319,26 +309,36 @@
         },
         computed: {
             dialogConfirm () {
-                return this.funcName === 'addGroup'
-                    ? this.confirmAdd
-                    : this.funcName === 'applyJoinGroup'
-                        ? this.confirmApplyJoinGroup
-                        : this.funcName === 'compileGroup'
-                            ? this.compileGroup
-                            : this.funcName === 'addGroupUser'
-                                ? this.compileaddGroupUser
-                                : function () {}
+                let selectFunc = function () {}
+                if (this.funcName === 'addGroup') {
+                    selectFunc = this.confirmAdd
+                } else if (this.funcName === 'applyJoinGroup') {
+                    selectFunc = this.confirmApplyJoinGroup
+                } else if (this.funcName === 'compileGroup') {
+                    selectFunc = this.compileGroup
+                } else if (this.funcName === 'addGroupUser') {
+                    selectFunc = this.compileaddGroupUser
+                }
+                return selectFunc
             },
             dialogCancel () {
-                return this.funcName === 'addGroup'
-                    ? this.cancelAdd
-                    : this.funcName === 'applyJoinGroup'
-                        ? this.cancelApplyJoinGroup
-                        : this.funcName === 'compileGroup'
-                            ? this.cancelcompileGroup
-                            : this.funcName === 'addGroupUser'
-                                ? this.canceladdGroupUser
-                                : function () {}
+                let selectFunc = function () {}
+                if (this.funcName === 'addGroup') {
+                    selectFunc = this.cancelAdd
+                } else if (this.funcName === 'applyJoinGroup') {
+                    selectFunc = this.cancelApplyJoinGroup
+                } else if (this.funcName === 'compileGroup') {
+                    selectFunc = this.cancelcompileGroup
+                } else if (this.funcName === 'addGroupUser') {
+                    selectFunc = this.canceladdGroupUser
+                }
+                return selectFunc
+            },
+            // 分页切割
+            renderGroupUsers () {
+                return this.groupUsers.slice(
+                    (this.pagination.current - 1) * this.pagination.limit,
+                    this.pagination.current * this.pagination.limit)
             }
         },
         created () {
@@ -351,7 +351,7 @@
                 this.AllUsers = res
             })
             // 获取全部组
-            getAlljurGroups().then((res) => {
+            getallGroups().then((res) => {
                 if (res.data.length !== 0) {
                     // 有权限管理的所欲组
                     this.AllgGroupsist = res.data
@@ -360,16 +360,17 @@
                     this.curGroupname = res.data[0].name
                     getGroupInfo(this.curGroupId).then((res) => {
                         this.curGroupData = res.data
+                        this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
                         this.adminIdList()
                     })
                     getGroupUsers(this.curGroupId).then((res) => {
                         // 全部组内用户
                         this.groupUsers = res.data
                         this.pagination.count = res.data.length
-                        this.handlePageLimitChange(this.pagination.limit)
                     })
                 }
             })
+         
             // 获得未加入的组
             getNotJoinGroup().then((res) => {
                 this.NotJoinGroup = res
@@ -381,12 +382,12 @@
                 this.curGroupId = curGroupId
                 getGroupInfo(curGroupId).then((res) => {
                     this.curGroupData = res.data
+                    this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
                 })
                 // 获得组成员
                 getGroupUsers(curGroupId).then((res) => {
                     this.groupUsers = res.data
                     this.pagination.count = res.data.length
-                    this.handlePageLimitChange(this.pagination.limit)
                 })
             },
             // 执行对组/ 成员 的操作 根据不同的funcName进行不同操作
@@ -428,7 +429,7 @@
                         })
                         this.isshowDialog = false
                         // 获取全部组
-                        getAlljurGroups().then((res1) => {
+                        getallGroups().then((res1) => {
                             this.AllgGroupsist = res1.data
                             this.changeGroup(res.data.group_id)
                         })
@@ -450,17 +451,12 @@
             },
             // 确定申请入组
             async confirmApplyJoinGroup () {
-                /* console.log(this.selectJoinGroup[0])
-                ApplyJoinGroup({ group_id: this.selectJoinGroup[0] }).then((res) => {
-                    console.log(res)
-                }) */
                 const applyArr = [...this.selectJoinGroup]
                 Promise.all([
                     ...applyArr.map((item) => {
                         return ApplyJoinGroup({ group_id: item })
                     })
                 ]).then((res) => {
-                    console.log(res)
                     getNotJoinGroup().then((res) => {
                         this.selectJoinGroup = []
                         this.NotJoinGroup = res
@@ -476,7 +472,7 @@
             },
             // 取消申请入组
             cancelApplyJoinGroup () {
-                console.log('取消申请入组')
+                this.selectJoinGroup = []
             },
             // 确定编辑组
             compileGroup () {
@@ -493,7 +489,7 @@
                     this.isshowDialog = false
                     this.selectCompileadminList = []
                     this.selectCompileadminID = []
-                    getAlljurGroups().then((res1) => {
+                    getallGroups().then((res1) => {
                         this.AllgGroupsist = res1.data
                         this.changeGroup(this.curGroupId)
                     })
@@ -523,7 +519,7 @@
                             if (res.result) {
                                 // 获取全部组 默认第一组
                                 // 获取全部组
-                                getAlljurGroups().then((res) => {
+                                getallGroups().then((res) => {
                                     if (res.data.length !== 0) {
                                         // 有权限管理的所欲组
                                         this.AllgGroupsist = res.data
@@ -532,18 +528,16 @@
                                         this.curGroupname = res.data[0].name
                                         getGroupInfo(this.curGroupId).then((res) => {
                                             this.curGroupData = res.data
-                                            getGroupUsers(this.curGroupId).then((res) => {
-                                                console.log(res)
+                                            getGroupUsers(this.curGroupId).then((res2) => {
                                                 // 全部组内用户
-                                                this.groupUsers = res.data
-                                                this.pagination.count = res.data.length
-                                                this.handlePageLimitChange(this.pagination.limit)
+                                                this.groupUsers = res2.data
+                                                this.pagination.count = res2.data.length
+                                                this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
                                             })
                                         })
                                     } else {
                                         this.curGroupData = []
                                         this.curGroupId = ''
-                                        this.renderGroupUsers = []
                                         this.groupUsers = []
                                     }
                                     this.$bkMessage({
@@ -564,33 +558,36 @@
                 })
             },
             // 分页页数变化
-            handlePageLimitChange (limit) {
+            LimitChange (limit) {
                 this.pagination.limit = limit
-                this.renderGroupUsers = this.groupUsers.slice(0, limit)
                 this.pagination.current = 1
             },
             // 换页
             handlePageChange (newPage) {
                 this.pagination.current = newPage
-                this.renderGroupUsers = this.groupUsers.slice(
-                    (this.pagination.current - 1) * this.pagination.limit,
-                    this.pagination.current * this.pagination.limit
-                )
             },
             // 新增成员
             compileaddGroupUser () {
-                addGroupUsers(this.curGroupId, this.selectnotakeUsersID).then((res) => {
-                    if (res.result) {
-                        this.isshowDialog = false
-                        this.selectnotakeUsersID = []
-                        this.$bkMessage({
-                            offsetY: 80,
-                            message: '新成员添加成功',
-                            theme: 'success'
-                        })
-                        this.changeGroup(this.curGroupId)
-                    }
-                })
+                if (this.selectnotakeUsersID.length !== 0) {
+                    addGroupUsers(this.curGroupId, this.selectnotakeUsersID).then((res) => {
+                        if (res.result) {
+                            this.isshowDialog = false
+                            this.selectnotakeUsersID = []
+                            this.$bkMessage({
+                                offsetY: 80,
+                                message: '新成员添加成功',
+                                theme: 'success'
+                            })
+                            this.changeGroup(this.curGroupId)
+                        }
+                    })
+                } else {
+                    this.$bkMessage({
+                        offsetY: 80,
+                        message: '请先选择成员',
+                        theme: 'error'
+                    })
+                }
             },
             // 取消新增成员
             canceladdGroupUser () {

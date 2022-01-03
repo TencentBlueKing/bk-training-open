@@ -1,61 +1,59 @@
-.myGroup {
+.mygroup {
   width: 100%;
-  /* height: 100vh; */
+  box-sizing: content-box;
   background-color: white;
+  max-width: 1600px;
+  margin: auto;
 }
 
-.Group-Msg {
+.group-msg {
   position: relative;
   padding: 10px;
 }
 
-.Group-Msg-Title {
-  font-weight: bold;
+.group-msg-title {
   font-size: 18px;
   margin-bottom: 10px;
 }
 
-.Group-Msg-GroupName {
+.group-msg-groupName {
   display: flex;
 }
 
-.Group-Msg-Admin {
+.group-msg-admin {
   margin-top: 10px;
   display: flex;
 }
 
-.Group-Msg-Admin-List {
+.group-msg-admin-list {
   display: flex;
   justify-content: start;
   flex-wrap: wrap;
 }
 
-.Group-Msg-Admin-Item {
-  margin-right: 5px;
-  background-color: rgba(151, 155, 165, 0.1);
-}
-
-.Group-Msg-Property {
+.group-msg-property {
+  font-weight: bold;
   width: 60px;
   display: flex;
   flex-shrink: 0;
+  align-items: center;
 }
 
-.Group-Func {
+.group-func {
   position: absolute;
   right: 50px;
   top: 30px;
 }
 
-.Group-Func-Major {
+.group-func-Major {
   display: flex;
   justify-content: center;
   font-weight: bold;
   font-size: 16px;
 }
 
-.Group-Func-Major span {
-  cursor: pointer;
+.group-func-more {
+  margin-top: 5px;
 }
 
 .cut-off-rule {
@@ -65,26 +63,21 @@
   background-color: #a6a6a6;
 }
 
-.Group-Member {
+.group-member {
   padding: 10px;
 }
 
-.Group-Member-Title {
+.group-member-title {
   font-size: 18px;
-  font-weight: bold;
+  margin-bottom: 10px;
 }
 
-.Group-Member-Func {
-  padding: 5px;
+.group-member-func {
   display: flex;
   margin-top: 5px;
 }
 
-.Group-Member-Func-add {
-  color: #4088ff;
-}
-
-.Group-Member-Func-batchDel {
+.group-member-func-batchdel {
   color: red;
   margin-left: 10px;
 }
@@ -166,4 +159,18 @@
 .dot-menu-list:hover .dot-menu-item:hover {
   background-color: #eaf3ff;
   color: #3a84ff;
+}
+
+.group-msg-curgroupid {
+  color: black;
+  font-weight: bold;
+}
+
+.group-member-func-add {
+  margin-right: 5px;
+  margin-left: 20px;
+}
+
+.group-member-renderlist {
+  padding: 10px 20px;
 }
