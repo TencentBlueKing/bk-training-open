@@ -4,7 +4,6 @@
         <!-- 顶部组基本信息 -->
         <div class="group-msg">
             <div class="group-msg-groupname">
-                <div class="group-msg-property">组名</div>
                 <!-- 选择组 -->
                 <bk-select
                     v-model="curGroupId"
@@ -25,7 +24,6 @@
                 </bk-select>
             </div>
             <div class="group-msg-admin">
-                <div class="group-msg-property">管理员</div>
                 <div class="group-msg-admin-list">
                     <div
                         class="group-msg-admin-item"
@@ -64,8 +62,6 @@
                 </div>
             </div>
         </div>
-        <!-- 分割线 -->
-        <div class="cut-off-rule"></div>
         <!-- 组内成员 -->
         <div class="group-member">
             <!-- 新增成员 & 批量删除 -->
