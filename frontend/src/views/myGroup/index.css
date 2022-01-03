@@ -45,15 +45,8 @@
   top: 30px;
 }
 
-.Group-Func-Major {
-  display: flex;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-}
-
-.Group-Func-Major span {
-  cursor: pointer;
+.group-func-more {
+  margin-top: 5px;
 }
 
 .cut-off-rule {
