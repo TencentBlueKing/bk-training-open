@@ -327,7 +327,7 @@
             // 获取组内成员
             getGroupUsers (groupId) {
                 // 根据组id获取组成员
-                this.$http.get('/get_group_users/' + groupId + '/').then((res) => {
+                this.$http.get('/get_group_users/' + groupId + '/?sign=0').then((res) => {
                     if (res.result) {
                         this.groupUsers = []
                         if (res.data.length !== 0 && res.data.length !== null) {
