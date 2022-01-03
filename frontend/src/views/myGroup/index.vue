@@ -3,13 +3,13 @@
     <div class="mygroup">
         <!-- 顶部组基本信息 -->
         <div class="group-msg">
-            <div class="group-msg-title">基本信息</div>
-            <div class="group-msg-groupName">
+            <div class="group-msg-groupname">
                 <div class="group-msg-property">组名</div>
                 <!-- 选择组 -->
                 <bk-select
                     v-model="curGroupId"
                     style="width: 250px"
+                    behavior="simplicity"
                     @selected="changeGroup"
                     searchable
                     ext-cls="group-msg-curgroupid"
@@ -45,22 +45,20 @@
             <div class="group-func">
                 <!-- 新增组 & 入组请求 -->
                 <div class="group-func-major">
-                    <bk-button :theme="'primary'" type="submit"
+                    <bk-button title="primary" :text="true" :hover-theme="'primary'"
                         class="group-func-major-add"
                         @click="executeFunc('addGroup', '新增组')">
                         新增小组
                     </bk-button>
-                    <bk-button :theme="'success '" class="group-func-major-beg" @click="executeFunc('applyJoinGroup', '请求入组')">
+                    <bk-button title="primary" :text="true" :hover-theme="'primary'" class="group-func-major-beg" @click="executeFunc('applyJoinGroup', '请求入组')">
                         请求入组
                     </bk-button>
-                </div>
-                <div class="group-func-more" v-show="isAdmin">
-                    <bk-button :theme="'warning '" type="submit"
+                    <bk-button v-show="isAdmin" :text="true" :hover-theme="'primary'"
                         class="group-func-more-edit"
                         @click="executeFunc('compileGroup', '编辑组')">
                         编辑小组
                     </bk-button>
-                    <bk-button :theme="'danger '" class="group-func-more-del" @click="delete_Group()">
+                    <bk-button v-show="isAdmin" :text="true" :hover-theme="'danger'" class="group-func-more-del" @click="delete_Group()">
                         删除小组
                     </bk-button>
                 </div>
@@ -70,15 +68,13 @@
         <div class="cut-off-rule"></div>
         <!-- 组内成员 -->
         <div class="group-member">
-            <!-- 标题 -->
-            <div class="group-member-title">组内成员</div>
             <!-- 新增成员 & 批量删除 -->
             <div class="group-member-func" v-show="isAdmin">
-                <bk-button :theme="'primary'" type="submit" :title="'基础按钮'" class="group-member-func-add"
+                <bk-button :text="true" :hover-theme="'primary'" class="group-member-func-add"
                     @click="executeFunc('addGroupUser', '新增成员')">
                     新增成员
                 </bk-button>
-                <bk-button :theme="'danger'" :title="'主要按钮'" class="group-member-func-batchDel" @click="alldeleteUsers">
+                <bk-button :theme="'danger'" :hover-theme="'danger'" class="group-member-func-batchDel" @click="alldeleteUsers">
                     批量删除
                 </bk-button>
             </div>
@@ -222,6 +218,7 @@
 </template>
 
 <script>
+    import { isAdmin } from '@/utils/index.js'
     import {
         bkSelect,
         bkOption,
@@ -230,22 +227,20 @@
         bkTableColumn,
         bkButton
     } from 'bk-magic-vue'
-    import {
-        getallGroups,
-        getGroupInfo,
-        getAllUsers,
-        getUser,
-        addGroup,
-        getNotJoinGroup,
-        deleteGroup,
-        getGroupUsers,
-        addGroupUsers,
-        deleteGroupUsers,
-        updateGroup,
-        ApplyJoinGroup
-    } from '@/api/request.js'
-    
-    import { isAdmin } from '@/utils/index.js'
+    import requestApi from '@/api/request.js'
+    const { getallGroups,
+            getGroupInfo,
+            getAllUsers,
+            getUser,
+            addGroup,
+            getNotJoinGroup,
+            deleteGroup,
+            getGroupUsers,
+            addGroupUsers,
+            deleteGroupUsers,
+            updateGroup,
+            ApplyJoinGroup } = requestApi
+            
     export default {
         components: {
             bkSelect,
