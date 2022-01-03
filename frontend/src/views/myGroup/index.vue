@@ -46,19 +46,19 @@
                 <!-- 新增组 & 入组请求 -->
                 <div class="group-func-major">
                     <bk-button title="primary" :text="true" :hover-theme="'primary'"
-                        class="group-func-major-add"
+                        class="group-func-major-item"
                         @click="executeFunc('addGroup', '新增组')">
                         新增小组
                     </bk-button>
-                    <bk-button title="primary" :text="true" :hover-theme="'primary'" class="group-func-major-beg" @click="executeFunc('applyJoinGroup', '请求入组')">
+                    <bk-button title="primary" :text="true" :hover-theme="'primary'" class="group-func-major-item" @click="executeFunc('applyJoinGroup', '请求入组')">
                         请求入组
                     </bk-button>
                     <bk-button v-show="isAdmin" :text="true" :hover-theme="'primary'"
-                        class="group-func-more-edit"
+                        class="group-func-major-item"
                         @click="executeFunc('compileGroup', '编辑组')">
                         编辑小组
                     </bk-button>
-                    <bk-button v-show="isAdmin" :text="true" :hover-theme="'danger'" class="group-func-more-del" @click="delete_Group()">
+                    <bk-button v-show="isAdmin" :text="true" :hover-theme="'danger'" class="group-func-major-item" @click="delete_Group()">
                         删除小组
                     </bk-button>
                 </div>
@@ -104,7 +104,7 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!isAdmin"
+                                :disabled="!isAdmin || curGroupData.admin.includes(props.row.username)"
                                 @click="removeGroupUser(props.row)"
                             >移除</bk-button
                             >
@@ -601,24 +601,22 @@
             },
             // 删除组内成员
             removeGroupUser (row) {
-                if (this.existAdmin(row.id)) {
-                    const deleteForm = { user_id: row.id }
-                    deleteGroupUsers(this.curGroupId, deleteForm).then((res) => {
-                        if (res.result) {
-                            this.$bkInfo({
-                                title: '确认要删除数据？',
-                                confirmFn: () => {
-                                    this.$bkMessage({
-                                        offsetY: 80,
-                                        message: '移除成功',
-                                        theme: 'success'
-                                    })
-                                    this.changeGroup(this.curGroupId)
-                                }
-                            })
-                        }
-                    })
-                }
+                const deleteForm = { user_id: row.id }
+                deleteGroupUsers(this.curGroupId, deleteForm).then((res) => {
+                    if (res.result) {
+                        this.$bkInfo({
+                            title: '确认要删除数据？',
+                            confirmFn: () => {
+                                this.$bkMessage({
+                                    offsetY: 80,
+                                    message: '移除成功',
+                                    theme: 'success'
+                                })
+                                this.changeGroup(this.curGroupId)
+                            }
+                        })
+                    }
+                })
             },
             // 表格选项发生变化
             selecchange (val) {
@@ -649,36 +647,30 @@
                 }
             },
             // 判断删除人员中有无管理员
-            existAdmin (id) {
-                if (id) {
-                    // 单删
-                    if (this.curGroupData.admin_list.map((item) => item.id).includes(id)) {
-                        this.handleBox({
-                            theme: 'error',
-                            message: '不能选择删除管理员',
-                            offsetY: 80
-                        })
-                        return false
-                    }
-                    return true
-                } else {
-                    // 群删
-                    let flat = true
-                    this.curGroupData.admin_list
-                        .map((item) => item.id)
-                        .forEach((id) => {
-                            if (this.tableSelect.map((item) => item.id).includes(id)) {
-                                // 删除人员中有管理员
-                                this.handleBox({
-                                    theme: 'error',
-                                    message: '不能选择删除管理员',
-                                    offsetY: 80
-                                })
-                                flat = false
-                            }
-                        })
-                    return flat
+            existAdmin () {
+                let flat = true
+                if (this.tableSelect.length === 0) {
+                    this.handleBox({
+                        theme: 'error',
+                        message: '未选中成员',
+                        offsetY: 80
+                    })
+                    flat = false
                 }
+                this.curGroupData.admin_list
+                    .map((item) => item.id)
+                    .forEach((id) => {
+                        if (this.tableSelect.map((item) => item.id).includes(id)) {
+                            // 删除人员中有管理员
+                            this.handleBox({
+                                theme: 'error',
+                                message: '不能选择删除管理员',
+                                offsetY: 80
+                            })
+                            flat = false
+                        }
+                    })
+                return flat
             }
         }
     }
