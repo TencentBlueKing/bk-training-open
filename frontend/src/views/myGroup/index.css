@@ -1,0 +1,222 @@
+.mygroup {
+  width: 100%;
+  box-sizing: content-box;
+  background-color: white;
+  max-width: 1600px;
+  margin: auto;
+  padding: 20px 40px 0;
+  box-sizing: border-box;
+}
+
+.group-msg {
+  position: relative;
+}
+
+.group-msg-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.group-msg-groupname {
+  display: flex;
+}
+
+.group-msg-admin {
+  margin: 20px 0;
+  display: flex;
+}
+
+.group-msg-admin-list {
+  display: flex;
+  justify-content: start;
+  flex-wrap: wrap;
+}
+
+.group-msg-property {
+  font-size: 18px;
+  width: 70px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.group-func {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+}
+
+.group-func-Major {
+  display: flex;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.group-func-more {
+  margin-top: 5px;
+}
+
+.cut-off-rule {
+  margin: 40px 0;
+  width: 100%;
+  height: 10px;
+  background-color: #c4c6cc;
+}
+
+.group-member-func {
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+  height: 42px;
+  border: 1px solid #dfe0e5;
+  border-bottom: none;
+}
+
+.bk-dropdown-list li {
+  text-align: center;
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+/* 下拉更多的ui */
+.dropdown-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c4c6cc;
+  height: 20px;
+  min-width: 68px;
+  border-radius: 2px;
+  padding: 0 5px;
+  color: #63656e;
+  width: 150px;
+}
+.dropdown-trigger-btn.bk-icon {
+  font-size: 18px;
+}
+.dropdown-trigger-btn .bk-icon {
+  font-size: 22px;
+}
+.dropdown-trigger-btn:hover {
+  cursor: pointer;
+  border-color: #979ba5;
+}
+
+.dot-menu {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.tippy-tooltip.dot-menu-theme {
+  padding: 0;
+}
+.dot-menu-trigger {
+  display: block;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 0;
+  cursor: pointer;
+}
+.dot-menu-trigger:hover {
+  color: #3a84ff;
+  background-color: #dcdee5;
+}
+.dot-menu-trigger:before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: currentColor;
+  box-shadow: 0 -4px 0 currentColor, 0 4px 0 currentColor;
+}
+.dot-menu-list {
+  margin: 0;
+  padding: 5px 0;
+  min-width: 50px;
+  list-style: none;
+}
+.dot-menu-list .dot-menu-item {
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 26px;
+  cursor: pointer;
+}
+
+.dot-menu-list:hover .dot-menu-item:hover {
+  background-color: #eaf3ff;
+  color: #3a84ff;
+}
+
+.group-msg-curgroupid {
+  font-size: 25px;
+  color: black;
+  font-weight: bold;
+}
+
+/deep/ .bk-select-name {
+  padding-left: 0;
+  font-size: 20px;
+}
+
+.group-msg-admin-title {
+  color: #979ba5;
+  font-size: 14px;
+  width: 60px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.bk-select-name {
+  padding-left: 0;
+}
+
+.group-member-func-add,
+.group-member-func-batchdel {
+  padding: 0;
+  font-size: 12px;
+  border: none;
+}
+
+.group-member-func-add:hover {
+  border: none;
+  color: #699df4;
+}
+
+.group-member-func-batchdel:hover {
+  border: none;
+  color: red;
+}
+
+.group-member-func-add {
+  margin-right: 5px;
+  border: none;
+  color: #699df4;
+}
+.group-member-func-batchdel {
+  border: none;
+  color: red;
+}
+
+.group-msg-admin-item {
+  display: flex;
+  color: #979ba5;
+  align-items: center;
+  font-size: 12px;
+}
+
+/deep/ .bk-table-pagination-wrapper .bk-select-name {
+  font-size: 12px;
+}
+
+.group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content {
+  width: 480px !important;
+}
+
+.group-dialog /deep/ .bk-dialog-body .bk-form-content {
+  margin-left: 120px !important;
+  width: 250px;
+}

@@ -27,6 +27,7 @@
                                     {{ item.name }}
                                 </router-link>
                             </li>
+                           
                         </bk-popover>
                     </ol>
                     <div v-else class="header-title">
@@ -73,6 +74,8 @@
         bkNavigation,
         bkPopover
     } from 'bk-magic-vue'
+    import requestApi from '@/api/request.js'
+    const { getUser } = requestApi
     export default {
         name: 'monitor-navigation',
         components: {
@@ -141,6 +144,9 @@
         },
         created () {
             this.checkUserIsAdmin()
+            getUser().then(res => {
+                window.localStorage.setItem('userMsg', JSON.stringify(res.data))
+            })
         },
         methods: {
             handleSelect (id, item) {
@@ -172,17 +178,28 @@
 
 <style>
 /* 以下样式是为了适应例子父级的宽高而设置 */
-body{
-    height:100%;
+body,html{
+    height:100vh;
+background-color: white !important;
+}
+
+.monitor-navigation {
+  height: 100vh;
+  background-color: white !important;
 }
 .bk-navigation {
-  width: 100%;
   height: 100%;
   outline: 1px solid #ebebeb;
+  background-color: #182132;
 }
 .header-nav-item a {
   text-decoration: none ;
 }
+
+.bk-navigation-wrapper .navigation-container .container-content{
+  background-color: white;
+}
+
 .container-content{
     padding:0px!important;
 }
@@ -202,6 +219,19 @@ body{
     height: 100%;
     overflow-y: auto;
 }
+
+.bk-navigation-header {
+  width: 100%;
+  padding: 0 40px;
+  max-width: 1600px;
+  margin: auto;
+}
+
+.bk-navigation-title {
+  flex: 0 0 160px;
+  padding: 0;
+}
+
 .bk-navigation .bk-navigation-header{
   z-index: 100 !important;
 }
@@ -409,11 +439,10 @@ body{
   color: #d3d9e4;
 }
 .monitor-navigation-content {
+  max-width: 1600px;
+  margin: auto;
   background: #ffffff;
-  -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
-  box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   border-radius: 2px;
-  border: 1px solid rgba(220, 222, 229, 1);
   min-height: calc(100vh - 136px);
 }
 .monitor-navigation-footer {
