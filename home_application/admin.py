@@ -22,9 +22,8 @@ from home_application.models import Group, Holiday
 @admin.register(Holiday)
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ["year", "month", "day", "is_holiday", "note"]
-    list_filter = ["year", "month", "is_holiday", "note"]
+    list_filter = ["year", "month", "is_holiday"]
     search_fields = ["note"]
-    list_per_page = 15
 
 
 @admin.register(Group)
