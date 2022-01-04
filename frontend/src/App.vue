@@ -23,10 +23,11 @@
                                 style="margin-right:0px;margin-left:0px;text-decoration:none;"
                             >
                                 <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;"
-                                    :class="{ 'item-active': item.routerName === activeRouter }">
+                                    :class="{ 'item-active': activeRouter && activeRouter.includes(item.routerName) }">
                                     {{ item.name }}
                                 </router-link>
                             </li>
+                           
                         </bk-popover>
                     </ol>
                     <div v-else class="header-title">
@@ -73,6 +74,8 @@
         bkNavigation,
         bkPopover
     } from 'bk-magic-vue'
+    import requestApi from '@/api/request.js'
+    const { getUser } = requestApi
     export default {
         name: 'monitor-navigation',
         components: {
@@ -101,30 +104,30 @@
                         {
                             name: '填写日报',
                             id: 1,
-                            url: 'home',
+                            url: '/home',
                             show: true,
-                            routerName: 'Home'
+                            routerName: '/home'
                         },
                         {
                             name: '日报查看',
                             id: 2,
-                            url: 'group-dailys',
+                            url: '/group-dailys',
                             show: true,
-                            routerName: 'GroupDailys'
+                            routerName: '/group-dailys'
                         },
                         {
                             name: '我的小组',
                             id: 3,
-                            url: 'my-group',
+                            url: '/my-group',
                             show: true,
-                            routerName: 'MyGroup'
+                            routerName: '/my-group'
                         },
                         {
                             name: '管理组',
                             id: 4,
-                            url: 'manage-group',
+                            url: '/manage-group',
                             show: false,
-                            routerName: 'ManageGroup'
+                            routerName: '/manage-group'
                         }
                     ],
                     bizId: 1
@@ -141,6 +144,9 @@
         },
         created () {
             this.checkUserIsAdmin()
+            getUser().then(res => {
+                window.localStorage.setItem('userMsg', JSON.stringify(res.data))
+            })
         },
         methods: {
             handleSelect (id, item) {
@@ -173,10 +179,13 @@
 <style>
 /* 以下样式是为了适应例子父级的宽高而设置 */
 body{
-    height:100%;
+    height:100vh;
+}
+
+.monitor-navigation {
+  height: 100vh;
 }
 .bk-navigation {
-  width: 100%;
   height: 100%;
   outline: 1px solid #ebebeb;
 }
@@ -202,6 +211,14 @@ body{
     height: 100%;
     overflow-y: auto;
 }
+
+.bk-navigation-header {
+  width: 100%;
+  padding: 0 40px;
+  max-width: 1600px;
+  margin: auto;
+}
+
 .bk-navigation .bk-navigation-header{
   z-index: 100 !important;
 }
@@ -413,7 +430,6 @@ body{
   -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   border-radius: 2px;
-  border: 1px solid rgba(220, 222, 229, 1);
   min-height: calc(100vh - 136px);
 }
 .monitor-navigation-footer {
