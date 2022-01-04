@@ -26,8 +26,6 @@ RUN_MODE = "DEVELOP"
 # LOG_LEVEL = "DEBUG"
 # LOGGING = set_log_level(locals())
 
-# APP本地静态资源目录
-STATIC_URL = "/static/"
 # 前端静态url
 BK_STATIC_URL = STATIC_URL + "dist/"
 
