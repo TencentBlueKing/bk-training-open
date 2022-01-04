@@ -228,6 +228,7 @@ background-color: white !important;
 }
 
 .bk-navigation-title {
+  flex: 0 0 160px;
   padding: 0;
 }
 
