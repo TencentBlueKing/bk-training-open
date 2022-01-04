@@ -14,7 +14,16 @@ specific language governing permissions and limitations under the License.
 from django.contrib import admin
 
 # 将节假日表注册到管理员页面
-from home_application.models import Group, Holiday
+from home_application.models import (
+    ApplyForGroup,
+    Daily,
+    FreeTime,
+    Group,
+    GroupUser,
+    Holiday,
+    OffDay,
+    User,
+)
 
 # Register your models here.
 
@@ -26,6 +35,44 @@ class HolidayAdmin(admin.ModelAdmin):
     search_fields = ["note"]
 
 
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ["username", "name", "phone", "email"]
+    search_fields = ["username", "name"]
+
+
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ["name", "create_by", "create_time", "update_time"]
+    list_display = ["name", "admin", "create_by", "create_name"]
+    search_fields = ["name", "create_by", "admin", "create_name"]
+
+
+@admin.register(ApplyForGroup)
+class ApplyForGroupAdmin(admin.ModelAdmin):
+    list_display = ["group_id", "user_id", "operator", "status"]
+    list_filter = ["group_id", "status"]
+
+
+@admin.register(GroupUser)
+class GroupUserAdmin(admin.ModelAdmin):
+    list_display = ["group_id", "user_id"]
+    list_filter = ["group_id"]
+
+
+@admin.register(Daily)
+class DailyAdmin(admin.ModelAdmin):
+    list_display = ["create_by", "create_name", "date", "is_normal", "is_perfect"]
+    search_fields = ["create_by", "create_name"]
+    list_filter = ["is_normal", "is_perfect"]
+
+
+@admin.register(FreeTime)
+class FreeTimeAdmin(admin.ModelAdmin):
+    list_display = ["username", "start_time", "end_time"]
+    search_fields = ["username"]
+
+
+@admin.register(OffDay)
+class OffDayAdmin(admin.ModelAdmin):
+    list_display = ["user", "start_date", "end_date", "reason"]
+    list_filter = ["user"]
