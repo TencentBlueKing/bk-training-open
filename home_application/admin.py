@@ -19,7 +19,11 @@ from home_application.models import Group, Holiday
 # Register your models here.
 
 
-admin.site.register(Holiday)
+@admin.register(Holiday)
+class HolidayAdmin(admin.ModelAdmin):
+    list_display = ["year", "month", "day", "is_holiday", "note"]
+    list_filter = ["year", "month", "is_holiday"]
+    search_fields = ["note"]
 
 
 @admin.register(Group)

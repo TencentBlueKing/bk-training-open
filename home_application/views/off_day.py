@@ -32,7 +32,7 @@ def add_off_info(request):
 def remove_off(request, group_id, offday_id):
     """
     撤回请假条
-    不能撤回之前的e
+    不能撤回之前的
     主要作用与请假错误想撤回
     """
     try:
