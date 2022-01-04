@@ -178,21 +178,28 @@
 
 <style>
 /* 以下样式是为了适应例子父级的宽高而设置 */
-body{
+body,html{
     height:100vh;
+background-color: white !important;
 }
 
 .monitor-navigation {
   height: 100vh;
+  background-color: white !important;
 }
 .bk-navigation {
   height: 100%;
   outline: 1px solid #ebebeb;
-  background: #f5f7fa;
+  background-color: #182132;
 }
 .header-nav-item a {
   text-decoration: none ;
 }
+
+.bk-navigation-wrapper .navigation-container .container-content{
+  background-color: white;
+}
+
 .container-content{
     padding:0px!important;
 }
@@ -430,8 +437,6 @@ body{
   max-width: 1600px;
   margin: auto;
   background: #ffffff;
-  -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
-  box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   border-radius: 2px;
   min-height: calc(100vh - 136px);
 }

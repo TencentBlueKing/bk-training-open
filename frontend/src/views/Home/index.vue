@@ -783,7 +783,6 @@
 
 <style scoped>
     .body{
-        border: 2px solid #EAEBF0 ;
         margin:0px 100px;
         padding: 20px 50px;
         min-height: calc(100vh - 140px);
