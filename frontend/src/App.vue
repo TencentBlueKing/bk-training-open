@@ -188,6 +188,7 @@ body{
 .bk-navigation {
   height: 100%;
   outline: 1px solid #ebebeb;
+  background: #f5f7fa;
 }
 .header-nav-item a {
   text-decoration: none ;
@@ -426,6 +427,8 @@ body{
   color: #d3d9e4;
 }
 .monitor-navigation-content {
+  max-width: 1600px;
+  margin: auto;
   background: #ffffff;
   -webkit-box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
   box-shadow: 0px 2px 4px 0px rgba(25, 25, 41, 0.05);
