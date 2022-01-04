@@ -64,13 +64,12 @@
 }
 
 .group-member-func {
+  padding-left: 10px;
   display: flex;
-  margin-bottom: 10px;
-}
-
-.group-member-func-batchdel {
-  color: red;
-  margin-left: 10px;
+  align-items: center;
+  height: 42px;
+  border: 1px solid #dfe0e5;
+  border-bottom: none;
 }
 
 .bk-dropdown-list li {
@@ -156,6 +155,33 @@
   font-size: 25px;
   color: black;
   font-weight: bold;
+}
+
+/deep/ .bk-select-name {
+  padding-left: 0;
+}
+
+.group-msg-admin-title {
+  color: #979ba5;
+  font-size: 14px;
+  width: 60px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.bk-select-name {
+  padding-left: 0;
+}
+
+.group-member-func-add,
+.group-member-func-batchdel {
+  padding: 0;
+  font-size: 12px;
+}
+
+.group-member-func-add:hover {
+  border: none;
+  color: #699df4;
 }
 
 .group-member-func-add {
