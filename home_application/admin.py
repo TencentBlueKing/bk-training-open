@@ -14,9 +14,14 @@ specific language governing permissions and limitations under the License.
 from django.contrib import admin
 
 # 将节假日表注册到管理员页面
-from home_application.models import Holiday
+from home_application.models import Group, Holiday
 
 # Register your models here.
 
 
 admin.site.register(Holiday)
+
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ["name", "create_by", "create_time", "update_time"]
