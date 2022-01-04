@@ -7,7 +7,7 @@
                 <!-- 选择组 -->
                 <bk-select
                     v-model="curGroupId"
-                    style="width: 250px"
+                    style="width: 250px;"
                     behavior="simplicity"
                     @selected="changeGroup"
                     searchable
@@ -24,6 +24,7 @@
                 </bk-select>
             </div>
             <div class="group-msg-admin">
+                <div class="group-msg-admin-title">管理员: </div>
                 <div class="group-msg-admin-list">
                     <div
                         class="group-msg-admin-item"
@@ -66,11 +67,11 @@
         <div class="group-member">
             <!-- 新增成员 & 批量删除 -->
             <div class="group-member-func" v-show="isAdmin">
-                <bk-button :text="true" :hover-theme="'primary'" class="group-member-func-add"
+                <bk-button ext-cls="group-member-func-add"
                     @click="executeFunc('addGroupUser', '新增成员')">
                     新增成员
                 </bk-button>
-                <bk-button :theme="'danger'" :hover-theme="'danger'" class="group-member-func-batchDel" @click="alldeleteUsers">
+                <bk-button ext-cls="group-member-func-batchdel" @click="alldeleteUsers">
                     批量删除
                 </bk-button>
             </div>

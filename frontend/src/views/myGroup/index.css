@@ -4,7 +4,7 @@
   background-color: white;
   max-width: 1600px;
   margin: auto;
-  padding: 20px 40px 0;
+  padding: 40px;
   box-sizing: border-box;
 }
 
@@ -32,13 +32,6 @@
   flex-wrap: wrap;
 }
 
-.group-msg-property {
-  font-size: 18px;
-  width: 70px;
-  display: flex;
-  flex-shrink: 0;
-}
-
 .group-func {
   position: absolute;
   right: 0px;
@@ -63,14 +56,14 @@
   background-color: #c4c6cc;
 }
 
-.group-member-func {
-  display: flex;
-  margin-bottom: 10px;
+.group-member {
+  padding: 20px;
+  border: 2px solid #f0f0f0;
 }
 
-.group-member-func-batchdel {
-  color: red;
-  margin-left: 10px;
+.group-member-func {
+  display: flex;
+  margin-bottom: 20px;
 }
 
 .bk-dropdown-list li {
@@ -153,17 +146,56 @@
 }
 
 .group-msg-curgroupid {
-  font-size: 25px;
+  font-size: 20px;
   color: black;
   font-weight: bold;
 }
 
+/deep/ .bk-select-name {
+  padding-left: 0;
+}
+
+.group-msg-admin-title {
+  color: #979ba5;
+  font-size: 14px;
+  width: 60px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.bk-select-name {
+  padding-left: 0;
+}
+
+.group-member-func-add,
+.group-member-func-batchdel {
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.group-member-func-add:hover {
+  border: none;
+  color: #699df4;
+}
+
 .group-member-func-add {
-  margin-right: 5px;
+  border: none;
+  color: #699df4;
+}
+
+.group-member-func-batchdel {
+  color: red;
+  border: none;
+}
+
+.group-member-func-batchdel:hover {
+  color: red;
+  border: none;
 }
 
 .group-msg-admin-item {
   display: flex;
   color: #979ba5;
   align-items: center;
+  font-size: 12px;
 }
