@@ -23,7 +23,7 @@
                                 style="margin-right:0px;margin-left:0px;text-decoration:none;"
                             >
                                 <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;"
-                                    :class="{ 'item-active': activeRouter && activeRouter.includes(item.routerName) }">
+                                    :class="{ 'item-active': item.routerName === activeRouter }">
                                     {{ item.name }}
                                 </router-link>
                             </li>
@@ -104,30 +104,30 @@
                         {
                             name: '填写日报',
                             id: 1,
-                            url: '/home',
+                            url: 'home',
                             show: true,
-                            routerName: '/home'
+                            routerName: 'Home'
                         },
                         {
                             name: '日报查看',
                             id: 2,
-                            url: '/group-dailys',
+                            url: 'group-dailys',
                             show: true,
-                            routerName: '/group-dailys'
+                            routerName: 'GroupDailys'
                         },
                         {
                             name: '我的小组',
                             id: 3,
-                            url: '/my-group',
+                            url: 'my-group',
                             show: true,
-                            routerName: '/my-group'
+                            routerName: 'MyGroup'
                         },
                         {
                             name: '管理组',
                             id: 4,
-                            url: '/manage-group',
+                            url: 'manage-group',
                             show: false,
-                            routerName: '/manage-group'
+                            routerName: 'ManageGroup'
                         }
                     ],
                     bizId: 1
@@ -225,6 +225,10 @@ background-color: white !important;
   padding: 0 40px;
   max-width: 1600px;
   margin: auto;
+}
+
+.bk-navigation-title {
+  padding: 0;
 }
 
 .bk-navigation .bk-navigation-header{

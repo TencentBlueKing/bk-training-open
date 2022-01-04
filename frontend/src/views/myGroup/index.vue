@@ -119,6 +119,7 @@
             @confirm="dialogConfirm()"
             @cancel="dialogCancel()"
             :title="dialogTitle"
+            class="group-dialog"
         >
             <!-- 如果是新增组 -->
             <div v-show="funcName === 'addGroup'">
@@ -146,8 +147,8 @@
             </div>
             <!-- 请求入组 -->
             <div v-show="funcName === 'applyJoinGroup'">
-                <bk-form label-width="60">
-                    <bk-form-item label="组" required="true">
+                <bk-form label-width="120">
+                    <bk-form-item label="组名称" required="true">
                         <bk-select
                             searchable
                             multiple
