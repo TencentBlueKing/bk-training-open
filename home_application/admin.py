@@ -33,6 +33,7 @@ class HolidayAdmin(admin.ModelAdmin):
     list_display = ["year", "month", "day", "is_holiday", "note"]
     list_filter = ["year", "month", "is_holiday"]
     search_fields = ["note"]
+    ordering = ["-year", "-month", "-day"]
 
 
 @admin.register(User)
