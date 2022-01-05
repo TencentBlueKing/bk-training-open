@@ -43,8 +43,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ["name", "admin", "create_by", "create_name"]
-    search_fields = ["name", "create_by", "admin", "create_name"]
+    list_display = ["name", "create_by", "create_time", "update_time"]
 
 
 @admin.register(ApplyForGroup)
