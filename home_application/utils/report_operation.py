@@ -71,7 +71,7 @@ def get_report_info_by_group_and_date(group_id: int, report_date: datetime.date)
 
 def get_none_reported_user_of_group(group_id: int, date=None):
     """
-    获取一个组里边没写日报的用户，管理员无需写日报
+    获取一个组里边没写日报的用户，管理员无需写日报 请假的无需写日报
     :param group_id:    组id
     :param date:        日期，默认为今天
     :return:            用户名set
@@ -86,5 +86,9 @@ def get_none_reported_user_of_group(group_id: int, date=None):
     write_report_usernames = Daily.objects.filter(create_by__in=member_usernames, date=date).values_list(
         "create_by", flat=True
     )
+    # 请假的用户
+    off_day_list = OffDay.objects.filter(
+        start_date__lte=datetime.date.today(), end_date__gte=datetime.date.today(), user__in=member_usernames
+    ).values_list("user", flat=True)
     # 做差集得到没写日报的用户
-    return set(member_usernames) - set(write_report_usernames) - set(group.admin_list)
+    return set(member_usernames) - set(write_report_usernames) - set(group.admin_list) - set(off_day_list)
