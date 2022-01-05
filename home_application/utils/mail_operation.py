@@ -98,15 +98,14 @@ def notify_admin_group_info(group_id: int, date: datetime.date):
     mail_content = get_template("daily_email.html").render(
         {
             "group_name": group_info["name"],
+            "group_id": group_info["id"],
             "report_date": date_str,
             "reports": [report.to_json() for report in group_info["reports"]],
             "off_day_users": [{"username": user.username, "name": user.name} for user in group_info["off_day_users"]],
             "none_report_users": [
                 {"username": user.username, "name": user.name} for user in group_info["none_report_users"]
             ],
-            "group_link": "{}manage-group?date={}&group={}".format(
-                settings.BKAPP_FULL_SITE_URL, date_str, group_info["id"]
-            ),  # 组管理页面
+            "bk_site_link": settings.BKAPP_FULL_SITE_URL,  # 网站根url
         }
     )
     return send_mail(

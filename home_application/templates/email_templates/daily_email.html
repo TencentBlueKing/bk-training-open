@@ -75,14 +75,6 @@
         border: 1px solid #ddd;
     }
 
-    .data-table tbody tr td:first-child {
-        border-left: none !important;
-    }
-
-    .data-table tbody tr td:last-child {
-        border-right: none !important;
-    }
-
     .data-table2 thead tr th {
         padding: 13px;
         border-top: 1px solid #eee;
@@ -166,7 +158,7 @@
     }
 
     .full_td {
-        width: 100%;
+        width: 50%;
         overflow-wrap: break-word;
         word-wrap: break-word;
         padding: 10px 10px 10px 10px;
@@ -200,7 +192,7 @@
        width="100%">
     <tr>
         <td style="font-family: '微软雅黑', Arial, '宋体';">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" style="background:#fff; max-width: 800px;"
+            <table align="center" border="0" cellpadding="0" cellspacing="0" style="background:#fff; min-width: 600px; max-width: 1000px;"
                    width="100%">
                 <tr>
                     <td>
@@ -231,44 +223,51 @@
                                     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
                                         {# 日报内容 START #}
                                         {% for report in reports %}
-                                            <tr>
-                                                <td class="full_td" style="word-break : break-all; " width="100%">
-                                                    <p style="font-weight: bold">
-                                                        {{ report.create_by }}({{ report.create_name }})
-                                                    </p>
-                                                    <p>
-                                                        {% for daily_content in report.content %}
-                                                            <h3 class="report_content_title"
-                                                                style="margin-bottom: 10px">
-                                                                {{ daily_content.title }}
-                                                            </h3>
-                                                            <ol class="report_content"
-                                                                style="margin: 0; padding-top: 0; padding-bottom: 0">
-                                                                {% if daily_content.type == "table" %}
-                                                                    {% for content_item in daily_content.content %}
-                                                                        <li class="report_content_li"
-                                                                            style="margin: 10px 5px 5px; font-size: 14px">
-                                                                            {{ content_item.text }}
-                                                                            {% if not content_item.isPrivate and content_item.cost %}
-                                                                                ({{ content_item.cost }}小时)
-                                                                            {% endif %}
-                                                                        </li>
-                                                                    {% endfor %}
-                                                                {% else %}
-                                                                    <li class="report_content_li"
-                                                                        style="margin: 10px 5px 5px; font-size: 14px">
-                                                                        {{ daily_content.text }}
-                                                                        {% if not daily_content.isPrivate and daily_content.cost %}
-                                                                            ({{ daily_content.cost }}小时)
-                                                                        {% endif %}
-                                                                    </li>
+                                            {% if not forloop.counter|divisibleby:2 %}
+                                                <tr>
+                                            {% endif %}
+                                        <td class="full_td" style="word-break : break-all; " width="50%">
+                                            <p style="font-weight: bold">
+                                                <a href="{{ bk_site_link }}group-dailys?group={{ group_id }}&username={{ report.create_by }}">{{ report.create_by }}({{ report.create_name }})</a>
+                                            </p>
+                                            <p>
+                                                {% for daily_content in report.content %}
+                                                    <h3 class="report_content_title"
+                                                        style="margin-bottom: 10px">
+                                                        {{ daily_content.title }}
+                                                    </h3>
+                                                    <ol class="report_content"
+                                                        style="margin: 0; padding-top: 0; padding-bottom: 0">
+                                                        {% if daily_content.type == "table" %}
+                                                            {% for content_item in daily_content.content %}
+                                                                <li class="report_content_li"
+                                                                    style="margin: 10px 5px 5px; font-size: 14px">
+                                                                    {{ content_item.text }}
+                                                                    {% if not content_item.isPrivate and content_item.cost %}
+                                                                        ({{ content_item.cost }}小时)
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <li class="report_content_li"
+                                                                style="margin: 10px 5px 5px; font-size: 14px">
+                                                                {{ daily_content.text }}
+                                                                {% if not daily_content.isPrivate and daily_content.cost %}
+                                                                    ({{ daily_content.cost }}小时)
                                                                 {% endif %}
-                                                            </ol>
-                                                        {% endfor %}
-                                                    </p>
-                                                </td>
+                                                            </li>
+                                                        {% endif %}
+                                                    </ol>
+                                                {% endfor %}
+                                            </p>
+                                        </td>
+                                        {% if forloop.counter|divisibleby:2 %}
                                             </tr>
+                                        {% endif %}
                                         {% endfor %}
+                                        {% if not reports|length|divisibleby:2 %}
+                                            </tr>
+                                        {% endif %}
                                         {# 日报内容 END #}
                                     </table>
                                 </td>
@@ -294,7 +293,7 @@
                                 {% for user in off_day_users %}
                                     <li class="report_content_li"
                                         style="margin: 10px 5px 5px; font-size: 14px">
-                                        {{ user.username }}({{ user.name }})
+                                        <a href="{{ bk_site_link }}group-dailys?group={{ group_id }}&username={{ user.username }}">{{ user.username }}({{ user.name }})</a>
                                     </li>
                                 {% endfor %}
                             </ol>
@@ -319,7 +318,7 @@
                                 {% for user in none_report_users %}
                                     <li class="report_content_li"
                                         style="margin: 10px 5px 5px; font-size: 14px">
-                                        {{ user.username }}({{ user.name }})
+                                        <a href="{{ bk_site_link }}group-dailys?group={{ group_id }}&username={{ user.username }}">{{ user.username }}({{ user.name }})</a>
                                     </li>
                                 {% endfor %}
                             </ol>
@@ -334,7 +333,7 @@
                     <td colspan="3" class="group_link"
                         style="height: 40px; background: #5AAFEF; text-align: center; color: #FFFFFF">
                         <a class="group_link" style="text-align: center; color: #FFFFFF"
-                           href="{{ group_link }}">查看详情</a>
+                           href="{{ bk_site_link }}manage-group?date={{ report_date }}&group={{ group_id }}">查看详情</a>
                     </td>
                 </tr>
             </table>
