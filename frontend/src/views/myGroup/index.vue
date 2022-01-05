@@ -281,8 +281,6 @@
                 selectCompileadminList: [],
                 // 小组成员数据全部
                 groupUsers: [],
-                // 未参与的用户
-                notakeUsers: [],
                 // 成员表格 多选的数据
                 tableSelect: [],
                 funcName: '',
@@ -330,6 +328,20 @@
                 return this.groupUsers.slice(
                     (this.pagination.current - 1) * this.pagination.limit,
                     this.pagination.current * this.pagination.limit)
+            },
+            // 管理员List
+            adminIDList () {
+                return this.curGroupData.admin_list.map((item) => item.id)
+            },
+            // 过滤出没有在组里面的成员
+            notakeUsers () {
+                const GroupUserID = this.groupUsers.map((item) => item.id)
+                // 未参与的用户
+                return this.AllUsers.filter((item) => {
+                    if (!GroupUserID.includes(item.id)) {
+                        return item
+                    }
+                })
             }
         },
         created () {
@@ -352,11 +364,8 @@
                     getGroupInfo(this.curGroupId).then((res) => {
                         this.curGroupData = res.data
                         this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
-                        this.adminIdList()
-                        getGroupUsers(this.curGroupId).then((res) => {
-                            this.pagination.count = res.data.length
-                            this.groupUsers = this.rankRenderUsers(res.data)
-                        })
+                        this.selectCompileadminID = this.adminIDList
+                        this.updateRender(this.curGroupId)
                     })
                 }
             })
@@ -373,21 +382,15 @@
                 getGroupInfo(curGroupId).then((res) => {
                     this.curGroupData = res.data
                     this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
-                })
-                // 获得组成员
-                getGroupUsers(curGroupId).then((res) => {
-                    this.groupUsers = this.rankRenderUsers(res.data)
-                    this.pagination.count = res.data.length
+                    // 更新列表数据 & 排序
+                    this.updateRender(curGroupId)
                 })
             },
             // 执行对组/ 成员 的操作 根据不同的funcName进行不同操作
             executeFunc (funcName, Title) {
                 if (funcName === 'compileGroup') {
-                    this.adminIdList()
+                    this.selectCompileadminID = this.adminIDList
                     this.getadminMsg()
-                }
-                if (funcName === 'addGroupUser') {
-                    this.filternoGroupUser()
                 }
                 this.isshowDialog = true
                 // 是谁执行了这个方法 把弹出框打开就渲染对应的东西
@@ -485,12 +488,6 @@
                     })
                 })
             },
-            // 过滤出管理员的ID
-            adminIdList () {
-                this.selectCompileadminID = this.curGroupData.admin_list.map((item) => {
-                    return item.id
-                })
-            },
             // 根据id获取管理员用户数据
             getadminMsg () {
                 this.selectCompileadminList = []
@@ -504,46 +501,31 @@
             delete_Group () {
                 this.$bkInfo({
                     title: '确认要删除？',
-                    confirmFn: () => {
-                        deleteGroup(this.curGroupId).then((res) => {
-                            if (res.result) {
-                                // 获取全部组 默认第一组
-                                // 获取全部组
-                                getallGroups().then((res) => {
-                                    if (res.data.length !== 0) {
-                                        // 有权限管理的所欲组
-                                        this.AllgGroupsist = res.data
-                                        // 首屏是第一组数据
-                                        this.curGroupId = res.data[0].id
-                                        this.curGroupname = res.data[0].name
-                                        getGroupInfo(this.curGroupId).then((res) => {
-                                            this.curGroupData = res.data
-                                            getGroupUsers(this.curGroupId).then((res2) => {
-                                                // 全部组内用户
-                                                this.groupUsers = res2.data
-                                                this.pagination.count = res2.data.length
-                                                this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
-                                            })
-                                        })
-                                    } else {
-                                        this.curGroupData = []
-                                        this.curGroupId = ''
-                                        this.groupUsers = []
-                                    }
-                                    this.$bkMessage({
-                                        offsetY: 80,
-                                        message: '删除成功',
-                                        theme: 'success'
-                                    })
+                    confirmFn: async () => {
+                        const res1 = await deleteGroup(this.curGroupId)
+                        const res2 = await getallGroups()
+                        if (res1.result) {
+                            if (res2.data.length !== 0) {
+                                // 有权限管理的所欲组
+                                this.AllgGroupsist = res2.data
+                                // 首屏是第一组数据
+                                this.curGroupId = res2.data[0].id
+                                this.curGroupname = res2.data[0].name
+                                getGroupInfo(this.curGroupId).then((res) => {
+                                    this.curGroupData = res.data
+                                    this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
+                                    // 更新列表 & 排序
+                                    this.updateRender(this.curGroupId)
                                 })
                             } else {
-                                this.$bkMessage({
-                                    offsetY: 80,
-                                    message: '删除失败',
-                                    theme: 'error'
-                                })
+                                this.curGroupData = []
+                                this.curGroupId = ''
+                                this.groupUsers = []
                             }
-                        })
+                            this.$bkMessage({ offsetY: 80, message: '删除成功', theme: 'success' })
+                        } else {
+                            this.$bkMessage({ offsetY: 80, message: '删除失败', theme: 'error' })
+                        }
                     }
                 })
             },
@@ -583,16 +565,6 @@
             canceladdGroupUser () {
                 this.isshowDialog = false
                 this.selectnotakeUsersID = []
-            },
-            // 过滤出没有在组里面的成员
-            filternoGroupUser () {
-                const GroupUserID = this.groupUsers.map((item) => item.id)
-                // 未参与的用户
-                this.notakeUsers = this.AllUsers.filter((item) => {
-                    if (!GroupUserID.includes(item.id)) {
-                        return item
-                    }
-                })
             },
             // 删除组内成员
             removeGroupUser (row) {
@@ -667,19 +639,17 @@
                     })
                 return flat
             },
-            // 用户重排 管理员置顶
-            rankRenderUsers (renderData) {
-                const adminIDList = this.curGroupData.admin_list.map((item) => item.id)
-                return renderData.sort((a, b) => {
-                    if (adminIDList.includes(a.id) && adminIDList.includes(b.id)) {
-                        return -1
-                    } else if (adminIDList.includes(a.id) && !adminIDList.includes(b.id)) {
-                        return -1
-                    } else if (!adminIDList.includes(a.id) && adminIDList.includes(b.id)) {
+            updateRender (curGroupId) {
+                // 获得组成员 放里面等curGroupData 更新了才能排序
+                getGroupUsers(curGroupId).then((res) => {
+                    this.pagination.count = res.data.length
+                    const adminIDList = this.adminIDList
+                    this.groupUsers = res.data.sort((a, b) => {
+                        if ((adminIDList.includes(a.id) && adminIDList.includes(b.id)) || (adminIDList.includes(a.id) && !adminIDList.includes(b.id)) || (adminIDList.includes(a.id) && !adminIDList.includes(b.id))) {
+                            return -1
+                        }
                         return 1
-                    } else if (!adminIDList.includes(a.id) && !adminIDList.includes(b.id)) {
-                        return -1
-                    }
+                    })
                 })
             }
         }
