@@ -11,7 +11,7 @@ from django.template.loader import get_template
 
 from blueapps.conf import settings
 from blueking.component.shortcuts import get_client_by_user
-from home_application.models import Daily, Group, OffDay
+from home_application.models import Daily, Group
 from home_application.utils.report_operation import (
     get_none_reported_user_of_group,
     get_report_info_by_group_and_date,
@@ -80,10 +80,6 @@ def notify_none_reported_user():
     group_ids = Group.objects.values_list("id", flat=True)
     for group_id in group_ids:
         all_user_none_reported |= get_none_reported_user_of_group(group_id)
-        off_day_list = OffDay.objects.filter(
-            start_date__lte=datetime.date.today(), end_date__gte=datetime.date.today(), user__in=all_user_none_reported
-        )
-        all_user_none_reported = set(all_user_none_reported) - set(off_day_list)
     logger.info("定时任务：每晚8点提醒未写日报的用户：%s" % all_user_none_reported)
     remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
