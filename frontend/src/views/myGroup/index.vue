@@ -281,8 +281,6 @@
                 selectCompileadminList: [],
                 // 小组成员数据全部
                 groupUsers: [],
-                // 需要展示的数据
-                // renderGroupUsers: [],
                 // 未参与的用户
                 notakeUsers: [],
                 // 成员表格 多选的数据
@@ -355,11 +353,10 @@
                         this.curGroupData = res.data
                         this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
                         this.adminIdList()
-                    })
-                    getGroupUsers(this.curGroupId).then((res) => {
-                        // 全部组内用户
-                        this.groupUsers = res.data
-                        this.pagination.count = res.data.length
+                        getGroupUsers(this.curGroupId).then((res) => {
+                            this.pagination.count = res.data.length
+                            this.groupUsers = this.rankRenderUsers(res.data)
+                        })
                     })
                 }
             })
@@ -379,7 +376,7 @@
                 })
                 // 获得组成员
                 getGroupUsers(curGroupId).then((res) => {
-                    this.groupUsers = res.data
+                    this.groupUsers = this.rankRenderUsers(res.data)
                     this.pagination.count = res.data.length
                 })
             },
@@ -669,6 +666,21 @@
                         }
                     })
                 return flat
+            },
+            // 用户重排 管理员置顶
+            rankRenderUsers (renderData) {
+                const adminIDList = this.curGroupData.admin_list.map((item) => item.id)
+                return renderData.sort((a, b) => {
+                    if (adminIDList.includes(a.id) && adminIDList.includes(b.id)) {
+                        return -1
+                    } else if (adminIDList.includes(a.id) && !adminIDList.includes(b.id)) {
+                        return -1
+                    } else if (!adminIDList.includes(a.id) && adminIDList.includes(b.id)) {
+                        return 1
+                    } else if (!adminIDList.includes(a.id) && !adminIDList.includes(b.id)) {
+                        return -1
+                    }
+                })
             }
         }
     }
