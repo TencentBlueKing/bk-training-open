@@ -24,26 +24,23 @@ def daily_report(request):
     if request.method == "GET":
         # 获取日期
         date = request.GET.get("date")
-        if date:
-            try:
-                date = datetime.strptime(date, "%Y-%m-%d").date()
-                today_report = Daily.objects.get(create_by=request.user.username, date=date)
-                return JsonResponse({"result": True, "code": 0, "message": "获取今天日报成功", "data": today_report.to_json()})
-            except ValueError:
-                return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
-            except Daily.DoesNotExist:
-                return JsonResponse({"result": True, "code": 0, "message": "今天还没有写日报", "data": {}})
+        try:
+            date = datetime.strptime(date, "%Y-%m-%d").date()
+            today_report = Daily.objects.get(create_by=request.user.username, date=date)
+            return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": today_report.to_json()})
+        except ValueError:
+            return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
+        except Daily.DoesNotExist:
+            return JsonResponse({"result": True, "code": 0, "message": "这一天还没有写日报", "data": {}})
 
     # 参数校验-----------------------------------------------------------------------------------------
     req = json.loads(request.body)
     report_content = req.get("content")
     report_date_str = req.get("date")
-    template_id = req.get("template_id")
     try:
-        template_id = int(template_id)
         report_date = datetime.strptime(report_date_str, "%Y-%m-%d").date()
     except ValueError:
-        return JsonResponse({"result": False, "code": -1, "message": "日期或模板id数据格式错误", "data": []})
+        return JsonResponse({"result": False, "code": -1, "message": "日期格式错误", "data": []})
     if report_date > datetime.today():
         return JsonResponse({"result": False, "code": -1, "message": "日期不合法", "data": []})
 
@@ -56,12 +53,11 @@ def daily_report(request):
             if target_report.send_status:
                 return JsonResponse({"result": False, "code": -1, "message": "日报已经发送管理员查看，不可修改", "data": []})
             target_report.content = report_content
-            target_report.template_id = template_id
             target_report.save()
             message = "修改日报成功"
         except Daily.DoesNotExist:
             # 抛出异常表示找不到，说明还没有写日报，可以添加新的日报
-            create_name = User.objects.get(username=request.user.username).name
+            create_name = request.user.nickname
 
             # 如果是补签之前的日报直接修改发送状态为'已发送'，但是在当天10点之前补签昨天的日报仍为'未发送'
             datetime_now = datetime.now()
@@ -77,7 +73,8 @@ def daily_report(request):
                 create_by=request.user.username,
                 create_name=create_name,
                 date=report_date,
-                template_id=template_id,
+                # TODO 移除日报模板相关内容
+                template_id=0,
                 send_status=send_status,
                 is_normal=not send_status,
             )
