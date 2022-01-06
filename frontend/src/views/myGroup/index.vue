@@ -34,7 +34,7 @@
                         {{ item.username }}({{ item.name }})
                         <span
                             style="backgroundColor: white"
-                            v-if="index !== curGroupData.admin_list.length - 1"
+                            v-if="index !== adminIDList.length - 1"
                         >&nbsp;/&nbsp;</span
                         >
                     </div>
@@ -281,10 +281,6 @@
                 selectCompileadminList: [],
                 // 小组成员数据全部
                 groupUsers: [],
-                // 需要展示的数据
-                // renderGroupUsers: [],
-                // 未参与的用户
-                notakeUsers: [],
                 // 成员表格 多选的数据
                 tableSelect: [],
                 funcName: '',
@@ -332,6 +328,37 @@
                 return this.groupUsers.slice(
                     (this.pagination.current - 1) * this.pagination.limit,
                     this.pagination.current * this.pagination.limit)
+            },
+            // 管理员List
+            adminIDList () {
+                return this.curGroupData.admin_list.map((item) => item.id)
+            },
+            // 过滤出没有在组里面的成员
+            notakeUsers () {
+                const GroupUserID = this.groupUsers.map((item) => item.id)
+                // 未参与的用户
+                return this.AllUsers.filter((item) => {
+                    if (!GroupUserID.includes(item.id)) {
+                        return item
+                    }
+                })
+            },
+            // 判断删除人员中有无管理员
+            existAdmin () {
+                let flat = true
+                if (this.tableSelect.length === 0) {
+                    this.handleBox('error', '未选中成员')
+                    flat = false
+                }
+                this.adminIDList
+                    .forEach((id) => {
+                        if (this.tableSelect && this.tableSelect.map((item) => item.id).includes(id)) {
+                            // 删除人员中有管理员
+                            this.handleBox('error', '不能选择删除管理员')
+                            flat = false
+                        }
+                    })
+                return flat
             }
         },
         created () {
@@ -343,54 +370,53 @@
             getAllUsers().then((res) => {
                 this.AllUsers = res
             })
-            // 获取全部组
-            getallGroups().then((res) => {
-                if (res.data.length !== 0) {
-                    // 有权限管理的所欲组
-                    this.AllgGroupsist = res.data
-                    // 首屏是第一组数据
-                    this.curGroupId = res.data[0].id
-                    this.curGroupname = res.data[0].name
-                    getGroupInfo(this.curGroupId).then((res) => {
-                        this.curGroupData = res.data
-                        this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
-                        this.adminIdList()
-                    })
-                    getGroupUsers(this.curGroupId).then((res) => {
-                        // 全部组内用户
-                        this.groupUsers = res.data
-                        this.pagination.count = res.data.length
-                    })
-                }
-            })
-         
+            // 初始化第一组
+            this.initGroup()
             // 获得未加入的组
             getNotJoinGroup().then((res) => {
                 this.NotJoinGroup = res
             })
         },
         methods: {
+            // 初始化选中第一组
+            initGroup () {
+                getallGroups().then((res) => {
+                    if (res.data.length !== 0) {
+                        // 有权限管理的所欲组
+                        this.AllgGroupsist = res.data
+                        // 首屏是第一组数据
+                        this.curGroupId = res.data[0].id
+                        this.curGroupname = res.data[0].name
+                        this.getGroupInfoData(res.data[0].id)
+                        this.selectCompileadminID = this.adminIDList
+                    } else {
+                        // 如果没有第一组
+                        this.curGroupData = []
+                        this.curGroupId = ''
+                        this.groupUsers = []
+                        this.AllgGroupsist = []
+                    }
+                })
+            },
             //  跟换组
             changeGroup (curGroupId) {
                 this.curGroupId = curGroupId
+                this.getGroupInfoData(curGroupId)
+            },
+            // 获得组的基本数据 & 调用更新成员列表
+            getGroupInfoData (curGroupId) {
                 getGroupInfo(curGroupId).then((res) => {
                     this.curGroupData = res.data
                     this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
-                })
-                // 获得组成员
-                getGroupUsers(curGroupId).then((res) => {
-                    this.groupUsers = res.data
-                    this.pagination.count = res.data.length
+                    // 更新列表数据 & 排序
+                    this.updateRender(curGroupId)
                 })
             },
             // 执行对组/ 成员 的操作 根据不同的funcName进行不同操作
             executeFunc (funcName, Title) {
                 if (funcName === 'compileGroup') {
-                    this.adminIdList()
+                    this.selectCompileadminID = this.adminIDList
                     this.getadminMsg()
-                }
-                if (funcName === 'addGroupUser') {
-                    this.filternoGroupUser()
                 }
                 this.isshowDialog = true
                 // 是谁执行了这个方法 把弹出框打开就渲染对应的东西
@@ -401,7 +427,7 @@
             confirmAdd () {
                 // 内容没选
                 if (this.newGroup === '') {
-                    this.handleBox({ theme: 'error', message: '请补全内容', offsetY: 80 })
+                    this.handleBox('error', '请补全内容')
                     return
                 }
                 // 自己也需要加到管理员里面
@@ -409,17 +435,13 @@
                 this.selectAdminList.unshift(this.myMsg)
                 // id 转化为需要的admin
                 this.AllUsers.forEach((user) => {
-                    if (this.selectAdminIDList.includes(user.id)) {
+                    if (this.selectAdminIDList.includes(user.id) && user.id !== this.myMsg.id) {
                         this.selectAdminList.push(user)
                     }
                 })
                 addGroup({ name: this.newGroup, admin: this.selectAdminList }).then(
                     (res) => {
-                        this.$bkMessage({
-                            offsetY: 80,
-                            message: '添加成功',
-                            theme: 'success'
-                        })
+                        this.handleBox('success', '添加成功')
                         this.isshowDialog = false
                         // 获取全部组
                         getallGroups().then((res1) => {
@@ -428,18 +450,21 @@
                         })
                     }
                 )
-                this.newGroup = ''
-                this.selectAdminIDList = []
-                this.selectAdminList = []
+                this.clearAddInput()
             },
             // 取消添加组
             cancelAdd () {
+                this.clearAddInput()
+            },
+            // 清空添加组的input数据
+            clearAddInput () {
                 this.newGroup = ''
                 this.selectAdminIDList = []
                 this.selectAdminList = []
             },
             // 提示框
-            handleBox (config) {
+            handleBox (type, title) {
+                const config = type === 'success' ? { offsetY: 80, message: title, theme: 'success' } : { offsetY: 80, message: title, theme: 'error' }
                 this.$bkMessage(config)
             },
             // 确定申请入组
@@ -455,11 +480,7 @@
                         this.NotJoinGroup = res
                         this.isshowDialog = false
                         // 申请成功
-                        this.$bkMessage({
-                            offsetY: 80,
-                            message: '申请成功',
-                            theme: 'success'
-                        })
+                        this.handleBox('success', '申请成功')
                     })
                 })
             },
@@ -478,7 +499,7 @@
                     name: this.curGroupData.name,
                     admin: this.selectCompileadminList
                 }).then((res) => {
-                    this.$bkMessage({ offsetY: 80, message: '编辑成功', theme: 'success' })
+                    this.handleBox('success', '编辑成功')
                     this.isshowDialog = false
                     this.selectCompileadminList = []
                     this.selectCompileadminID = []
@@ -486,12 +507,6 @@
                         this.AllgGroupsist = res1.data
                         this.changeGroup(this.curGroupId)
                     })
-                })
-            },
-            // 过滤出管理员的ID
-            adminIdList () {
-                this.selectCompileadminID = this.curGroupData.admin_list.map((item) => {
-                    return item.id
                 })
             },
             // 根据id获取管理员用户数据
@@ -505,48 +520,17 @@
             },
             // 删除组
             delete_Group () {
-                this.$bkInfo({
-                    title: '确认要删除？',
-                    confirmFn: () => {
-                        deleteGroup(this.curGroupId).then((res) => {
-                            if (res.result) {
-                                // 获取全部组 默认第一组
-                                // 获取全部组
-                                getallGroups().then((res) => {
-                                    if (res.data.length !== 0) {
-                                        // 有权限管理的所欲组
-                                        this.AllgGroupsist = res.data
-                                        // 首屏是第一组数据
-                                        this.curGroupId = res.data[0].id
-                                        this.curGroupname = res.data[0].name
-                                        getGroupInfo(this.curGroupId).then((res) => {
-                                            this.curGroupData = res.data
-                                            getGroupUsers(this.curGroupId).then((res2) => {
-                                                // 全部组内用户
-                                                this.groupUsers = res2.data
-                                                this.pagination.count = res2.data.length
-                                                this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
-                                            })
-                                        })
-                                    } else {
-                                        this.curGroupData = []
-                                        this.curGroupId = ''
-                                        this.groupUsers = []
-                                    }
-                                    this.$bkMessage({
-                                        offsetY: 80,
-                                        message: '删除成功',
-                                        theme: 'success'
-                                    })
-                                })
-                            } else {
-                                this.$bkMessage({
-                                    offsetY: 80,
-                                    message: '删除失败',
-                                    theme: 'error'
-                                })
-                            }
-                        })
+                this.showBkInfo('确认要删除？', this.deleteCurGroup)
+            },
+            // 删除当前组
+            deleteCurGroup () {
+                deleteGroup(this.curGroupId).then((res) => {
+                    if (res.result) {
+                        // 初始化到第一组
+                        this.initGroup()
+                        this.handleBox('success', '删除成功')
+                    } else {
+                        this.handleBox('error', '删除失败')
                     }
                 })
             },
@@ -566,20 +550,12 @@
                         if (res.result) {
                             this.isshowDialog = false
                             this.selectnotakeUsersID = []
-                            this.$bkMessage({
-                                offsetY: 80,
-                                message: '新成员添加成功',
-                                theme: 'success'
-                            })
+                            this.handleBox('success', '成员添加成功')
                             this.changeGroup(this.curGroupId)
                         }
                     })
                 } else {
-                    this.$bkMessage({
-                        offsetY: 80,
-                        message: '请先选择成员',
-                        theme: 'error'
-                    })
+                    this.handleBox('error', '请先选择成员')
                 }
             },
             // 取消新增成员
@@ -587,88 +563,63 @@
                 this.isshowDialog = false
                 this.selectnotakeUsersID = []
             },
-            // 过滤出没有在组里面的成员
-            filternoGroupUser () {
-                const GroupUserID = this.groupUsers.map((item) => item.id)
-                // 未参与的用户
-                this.notakeUsers = this.AllUsers.filter((item) => {
-                    if (!GroupUserID.includes(item.id)) {
-                        return item
-                    }
-                })
-            },
             // 删除组内成员
             removeGroupUser (row) {
-                const deleteForm = { user_id: row.id }
-                deleteGroupUsers(this.curGroupId, deleteForm).then((res) => {
-                    if (res.result) {
-                        this.$bkInfo({
-                            title: '确认要删除数据？',
-                            confirmFn: () => {
-                                this.$bkMessage({
-                                    offsetY: 80,
-                                    message: '移除成功',
-                                    theme: 'success'
-                                })
-                                this.changeGroup(this.curGroupId)
-                            }
-                        })
-                    }
-                })
+                this.showBkInfo('确认删除该用户？', this.confirmDelete(row))
             },
+            // 确认单删用户
+            confirmDelete (row) {
+                // 闭包 & 箭头函数
+                return () => {
+                    const deleteForm = { user_id: row.id }
+                    deleteGroupUsers(this.curGroupId, deleteForm).then((res) => {
+                        this.handleBox('success', '移除成功')
+                        this.changeGroup(this.curGroupId)
+                    })
+                }
+            },
+
             // 表格选项发生变化
             selecchange (val) {
                 this.tableSelect = val
             },
             // 批量删除数据
             alldeleteUsers () {
-                if (this.existAdmin()) {
-                    this.$bkInfo({
-                        title: '确认要批量删除数据？',
-                        confirmFn: () => {
-                            Promise.all(
-                                this.tableSelect
-                                    .map((item) => item.id)
-                                    .map((item2) => {
-                                        deleteGroupUsers(this.curGroupId, { user_id: item2 })
-                                    })
-                            ).then((res) => {
-                                this.$bkMessage({
-                                    offsetY: 80,
-                                    message: `成功移除${res.length}个成员`,
-                                    theme: 'success'
-                                })
-                                this.changeGroup(this.curGroupId)
-                            })
-                        }
-                    })
-                }
+                // 判断有没有选中管理员
+                if (this.existAdmin) this.showBkInfo('确认要批量删除数据？', this.confirmAllDelete)
             },
-            // 判断删除人员中有无管理员
-            existAdmin () {
-                let flat = true
-                if (this.tableSelect.length === 0) {
-                    this.handleBox({
-                        theme: 'error',
-                        message: '未选中成员',
-                        offsetY: 80
-                    })
-                    flat = false
-                }
-                this.curGroupData.admin_list
-                    .map((item) => item.id)
-                    .forEach((id) => {
-                        if (this.tableSelect.map((item) => item.id).includes(id)) {
-                            // 删除人员中有管理员
-                            this.handleBox({
-                                theme: 'error',
-                                message: '不能选择删除管理员',
-                                offsetY: 80
-                            })
-                            flat = false
+            updateRender (curGroupId) {
+                // 获得组成员 放里面等curGroupData 更新了才能排序
+                getGroupUsers(curGroupId).then((res) => {
+                    this.pagination.count = res.data.length
+                    this.groupUsers = res.data.sort((a, b) => {
+                        if ((this.adminIDList.includes(a.id) && this.adminIDList.includes(b.id)) || (this.adminIDList.includes(a.id) && !this.adminIDList.includes(b.id)) || (this.adminIDList.includes(a.id) && !this.adminIDList.includes(b.id))) {
+                            return -1
                         }
+                        return 1
                     })
-                return flat
+                })
+            },
+            // 公共确认框
+            showBkInfo (title, confirmFn) {
+                this.$bkInfo({
+                    title,
+                    confirmFn
+                })
+            },
+            // 确认批量删除
+            confirmAllDelete () {
+                Promise.all(
+                    this.tableSelect
+                        .map((item) => item.id)
+                        .map((item2) => {
+                            deleteGroupUsers(this.curGroupId, { user_id: item2 })
+                        })
+                ).then((res) => {
+                    this.handleBox('success', `成功移除${res.length}个成员`)
+                    // 列表视图更新
+                    this.changeGroup(this.curGroupId)
+                })
             }
         }
     }
