@@ -309,13 +309,6 @@
                 newTitle: '',
                 // 指向dailyData.content的下标
                 currentIndex: 0,
-                // 提交数据的格式化对象
-                newPostDaily: {
-                    date: null,
-                    content: [],
-                    template_id: 0,
-                    send_email: false
-                },
                 // 今日写日报状况（已写，未写）
                 hasWrittenToday: false,
                 customOption: {
@@ -524,7 +517,13 @@
             saveDaily () {
                 let hasSomeContentEmpty = false
                 const emptyContent = []
-                this.newPostDaily.date = this.formatDate
+                // 提交数据的格式化对象
+                const newPostDaily = {
+                    date: this.formatDate,
+                    content: [],
+                    template_id: 0,
+                    send_email: false
+                }
                 for (const index in this.dailyDataContent) {
                     this.dailyDataContent[index].title = this.dailyDataTitle[index]
                 }
@@ -538,7 +537,7 @@
                             for (const tableContentItem of tableContent.content) {
                                 tableContentItem.cost = parseFloat(tableContentItem.cost)
                             }
-                            this.newPostDaily.content.push(tableContent)
+                            newPostDaily.content.push(tableContent)
                         }
                     } else {
                         hasSomeContentEmpty = true
@@ -550,19 +549,13 @@
                         hasSomeContentEmpty = true
                         emptyContent.push(textContent.title)
                     }
-                    this.newPostDaily.content.push(textContent)
+                    newPostDaily.content.push(textContent)
                 }
                 if (!hasSomeContentEmpty) {
                     this.$http.post(
-                        '/daily_report/', this.newPostDaily
+                        '/daily_report/', newPostDaily
                     ).then(res => {
                         this.hasWrittenToday = true
-                        this.newPostDaily = {
-                            date: null,
-                            content: [],
-                            template_id: 0,
-                            send_email: false
-                        }
                         this.$bkMessage({
                             theme: 'success',
                             message: res.message
@@ -573,7 +566,6 @@
                         theme: 'warning',
                         message: emptyContent.join(',') + ' 内容为空！'
                     })
-                    this.newPostDaily.content = []
                 }
             },
             // 增加自定义模板标题
