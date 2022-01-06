@@ -5,6 +5,7 @@
 import datetime
 import logging
 import os
+import time
 
 from celery.task import task
 from django.template.loader import get_template
@@ -43,6 +44,8 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
         "body_format": body_format,
         "attachments": attachments,
     }
+    # 发邮件前sleep 1秒，防止调用太频繁导致ESB挂掉
+    time.sleep(1)
     send_result = bk_client.cmsi.send_mail(kwargs)
     if send_result["result"]:
         logger.info(send_result)
