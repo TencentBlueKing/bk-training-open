@@ -435,7 +435,7 @@
                 this.selectAdminList.unshift(this.myMsg)
                 // id 转化为需要的admin
                 this.AllUsers.forEach((user) => {
-                    if (this.selectAdminIDList.includes(user.id)) {
+                    if (this.selectAdminIDList.includes(user.id) && user.id !== this.myMsg.id) {
                         this.selectAdminList.push(user)
                     }
                 })

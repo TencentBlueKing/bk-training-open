@@ -27,7 +27,6 @@
                                     {{ item.name }}
                                 </router-link>
                             </li>
-                           
                         </bk-popover>
                     </ol>
                     <div v-else class="header-title">
