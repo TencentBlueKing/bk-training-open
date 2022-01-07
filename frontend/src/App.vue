@@ -23,7 +23,7 @@
                                 style="margin-right:0px;margin-left:0px;text-decoration:none;"
                             >
                                 <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;"
-                                    :class="{ 'item-active': item.routerName === activeRouter }">
+                                    :class="{ 'item-active': activeRouter && activeRouter.includes(item.routerName) }">
                                     {{ item.name }}
                                 </router-link>
                             </li>
@@ -103,30 +103,30 @@
                         {
                             name: '填写日报',
                             id: 1,
-                            url: 'home',
+                            url: '/home',
                             show: true,
-                            routerName: 'Home'
+                            routerName: '/home'
                         },
                         {
                             name: '日报查看',
                             id: 2,
-                            url: 'group-dailys',
+                            url: '/group-dailys/groupDaily',
                             show: true,
-                            routerName: 'GroupDailys'
+                            routerName: '/group-dailys'
                         },
                         {
                             name: '我的小组',
                             id: 3,
-                            url: 'my-group',
+                            url: '/my-group',
                             show: true,
-                            routerName: 'MyGroup'
+                            routerName: '/my-group'
                         },
                         {
                             name: '管理组',
                             id: 4,
-                            url: 'manage-group',
+                            url: '/manage-group',
                             show: false,
-                            routerName: 'ManageGroup'
+                            routerName: '/manage-group'
                         }
                     ],
                     bizId: 1
@@ -177,6 +177,10 @@
 
 <style>
 /* 以下样式是为了适应例子父级的宽高而设置 */
+body{
+    height:100vh;
+}
+
 body,html{
     height:100vh;
 background-color: white !important;
@@ -200,6 +204,7 @@ background-color: white !important;
 }
 
 .container-content{
+  height: 100vh;
     padding:0px!important;
 }
 .bk-navigation .bk-navigation-wrapper {

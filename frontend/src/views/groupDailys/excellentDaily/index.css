@@ -1,0 +1,135 @@
+.excellentdaily {
+  width: 100%;
+}
+
+.excellentdaily-btn {
+  display: flex;
+  margin-top: 20px;
+  height: 32px;
+}
+
+.excellentdaily-date-select {
+  margin-left: 10px;
+}
+
+.excellentdaily .bk-select-name {
+  padding-left: 0px;
+}
+
+/* 卡片 */
+.excellentdaily-renderlistbox {
+  position: relative;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.excellentdaily-renderlistbox:after {
+  content: "";
+  width: 30%;
+}
+
+.renderlistbox-pagination {
+  position: absolute;
+  bottom: -30px;
+  right: 0px;
+  background-color: white;
+  z-index: 10;
+}
+
+.exception-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  cursor: default;
+  width: 30%;
+  margin-bottom: 20px;
+  overflow-y: auto;
+  height: 250px;
+}
+
+.card /deep/ .bk-card-body {
+  overflow-y: auto;
+  padding-top: 10px;
+}
+.card /deep/ .bk-card-body .card-pre {
+  white-space: normal;
+  display: flex;
+  flex-wrap: nowrap;
+}
+.card /deep/ .bk-card-head .card-header {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 16px;
+}
+.card /deep/ .bk-card-body .card-pre .time-wapper {
+  width: 68px;
+}
+.card /deep/ .bk-card-body .card-pre .time-wapper .bk-tag {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 48px;
+  text-align: center;
+}
+
+.card-time {
+  font-size: 14px !important;
+}
+
+.card /deep/ .bk-card-body .sub-title {
+  font-size: 16px !important;
+}
+
+.sub-title {
+  margin: 10px 0;
+}
+
+.card-pre {
+  margin: 10px 0;
+}
+
+.exception-wrap .exception-wrap-item {
+  margin: 10px;
+  height: 420px;
+  padding-top: 22px;
+}
+.exception-wrap-item.exception-part {
+  height: 260px;
+  padding-top: 48px;
+  flex: 1;
+}
+.exception-wrap-item.exception-gray {
+  background-color: #f5f6fa;
+}
+.exception-wrap .exception-wrap-item .text-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3a84ff;
+  font-size: 14px;
+  margin-top: 12px;
+}
+.exception-wrap .exception-wrap-item .text-wrap.text-part {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.exception-wrap .exception-wrap-item .text-subtitle {
+  color: #979ba5;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 14px;
+}
+.text-wrap .text-btn {
+  margin: 0 10px;
+}
+.text-wrap .text-btn:hover {
+  cursor: pointer;
+}
+
+.excellentdaily-card-time {
+  font-size: 14px;
+}

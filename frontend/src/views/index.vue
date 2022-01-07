@@ -1,5 +1,5 @@
 <template>
     <keep-alive>
-        <router-view :key="$route.path"></router-view>
+        <router-view></router-view>
     </keep-alive>
 </template>

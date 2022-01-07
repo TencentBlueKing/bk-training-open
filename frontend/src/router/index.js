@@ -14,6 +14,8 @@ Vue.use(VueRouter)
 const MainEntry = () => import(/* webpackChunkName: 'entry' */ '@/views')
 const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/Home')
 const groupDailys = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys')
+const groupDaily = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys/groupDaily')
+const excellentDaily = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys/excellentDaily')
 const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/myGroup')
 const manageGroup = () => import(/* webpackChunkName: 'example4' */ '@/views/manageGroup')
 const NotFound = () => import(/* webpackChunkName: 'none' */ '@/views/404')
@@ -26,24 +28,35 @@ const routes = [
         alias: '',
         children: [
             {
-                path: 'home',
-                name: 'Home',
+                path: '/home',
+                name: '/home',
                 alias: '',
                 component: Home
             },
             {
-                path: 'group-dailys',
-                name: 'GroupDailys',
-                component: groupDailys
+                path: '/group-dailys',
+                name: '/group-dailys',
+                component: groupDailys,
+                children: [
+                    {
+                        path: '/group-dailys/groupDaily',
+                        name: '/group-dailys/groupDaily',
+                        component: groupDaily
+                    }, {
+                        path: '/group-dailys/excellentDaily/:groupId',
+                        name: '/group-dailys/excellentDaily',
+                        component: excellentDaily
+                    }
+                ]
             },
             {
-                path: 'my-group',
-                name: 'MyGroup',
+                path: '/my-group',
+                name: '/my-group',
                 component: myGroup
             },
             {
-                path: 'manage-group',
-                name: 'ManageGroup',
+                path: '/manage-group',
+                name: '/manage-group',
                 component: manageGroup
             }
         ]
