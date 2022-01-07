@@ -5,16 +5,14 @@ const groupDaily = {
     namespaced: true,
     state: {
         curGroupID: null,
-        curUserID: null
+        selectUserId: null
     },
     mutations: {
-        // 日报查看 当前组Id
-        setCurGroupID (state, val) {
+        setGroupID (state, val) {
             state.curGroupID = val
         },
-        // 跳转要查询的人
         setselectUserId (state, val) {
-            state.curUserID = val
+            state.selectUserId = val
         }
     },
     actions: {}

@@ -1,8 +1,8 @@
 <template>
     <div class="tabbtn">
-        <span @click="selectBtn(1)" :class="active === 1 ? 'Active' : 'noActive'">{{content[0]}}</span>
+        <span @click="selectBtn('first')" :class="active === 'first' ? 'Active' : 'noActive'">{{content[0]}}</span>
         <span>/</span>
-        <span @click="selectBtn(2)" :class="active === 2 ? 'Active' : 'noActive'">{{content[1]}}</span>
+        <span @click="selectBtn('second')" :class="active === 'second' ? 'Active' : 'noActive'">{{content[1]}}</span>
     </div>
 </template>
 
@@ -13,8 +13,8 @@
                 type: Array
             },
             active: {
-                type: Number,
-                default: 1
+                type: String,
+                default: 'first'
             }
         },
         methods: {
@@ -33,7 +33,7 @@
 }
 
 .tabbtn span {
-    font-size: 14px;
+    font-size: 18px;
     flex-shrink: 0;
     padding-right: 10px;
 }

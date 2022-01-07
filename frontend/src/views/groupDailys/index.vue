@@ -19,8 +19,10 @@
             <!-- 小组日报 / 优秀日报 -->
             <TabBtn @changeType="changeType" :content="tabBtncontent" :active="active"></TabBtn>
         </div>
+        <!-- 分割线 -->
+        <div class="group-dailys-rule"></div>
         <keep-alive>
-            <router-view></router-view>
+            <component :is="curComponents"></component>
         </keep-alive>
     </div>
 </template>
@@ -28,48 +30,47 @@
 <script>
     import { bkSelect, bkOption } from 'bk-magic-vue'
     import TabBtn from '@/components/TabBtn/index.vue'
+    import GroupDaily from '@/components/GroupDailys/GroupDaily'
+    import ExcellentDaily from '@/components/GroupDailys/ExcellentDaily'
     import requestApi from '@/api/request.js'
     const { getallGroups } = requestApi
     export default {
         components: {
             bkSelect,
             bkOption,
-            TabBtn
+            TabBtn,
+            GroupDaily,
+            ExcellentDaily
         },
         data () {
             return {
+                // 当前选中的组
+                selectGroup: '',
+                // 当前活着的组件
+                curComponents: 'GroupDaily',
                 tabBtncontent: ['小组日报', '优秀日报'],
                 groupList: [],
-                panels: [
-                    { name: 1, label: '' },
-                    { name: 2, label: '' }
-                ],
-                active: this.$route.path.includes('/group-dailys/groupDaily') ? 1 : 2
+                active: 'first'
             }
         },
         created () {
             getallGroups().then(res => {
+                this.selectGroup = res.data[0].id
                 this.groupList = res.data
-                if (window.location.search !== '') {
-                    // 外面跳过来的
-                    this.takeGroupuser()
-                } else {
-                    this.selectGroup = res.data[0].id
-                    this.$store.commit('groupDaily/setCurGroupID', res.data[0].id)
-                }
+                this.$store.commit('groupDaily/setGroupID', res.data[0].id)
+                this.takeGroupuser()
             })
         },
         methods: {
             changeType (type) {
                 this.active = type
-                const url = type === 1 ? `/group-dailys/groupDaily` : `/group-dailys/excellentDaily/${this.selectGroup}`
-                this.$router.push(url)
+                // 控制小组日报 还是 优秀日报
+                this.curComponents = type === 'first' ? 'GroupDaily' : 'ExcellentDaily'
+                this.$store.commit('groupDaily/setGroupID', this.selectGroup)
             },
             changeGroup (val) {
                 this.selectGroup = val
-                window.localStorage.setItem('firstGroup', val)
-                // 自己的跳转
-                this.$store.commit('groupDaily/setCurGroupID', val)
+                this.$store.commit('groupDaily/setGroupID', val)
             },
             // 跳转到的 组下的人
             takeGroupuser () {
@@ -77,7 +78,7 @@
                 window.location.href.replace(/group=(.+)&username=(.+)/g, (_, $1, $2) => {
                     this.selectGroup = $1
                     // 外来链接的跳转
-                    this.$store.commit('groupDaily/setCurGroupID', 'P' + $1)
+                    this.$store.commit('groupDaily/setGroupID', $1)
                     this.$store.commit('groupDaily/setselectUserId', $2)
                 })
             }

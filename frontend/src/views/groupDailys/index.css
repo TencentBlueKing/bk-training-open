@@ -1,7 +1,5 @@
 .groupDailys {
-  max-width: 1600px;
   padding: 40px 40px 0 40px;
-  /* height: calc(100vh - 210px); */
   margin: auto;
 }
 
@@ -27,4 +25,12 @@
 
 .selectgroup .bk-select-name {
   margin-left: -10px;
+}
+
+.group-dailys-rule {
+  margin-top: 20px;
+  width: 100%;
+  height: 5px;
+  background-color: #eaebf0;
+  border-radius: 5px;
 }
