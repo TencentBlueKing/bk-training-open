@@ -641,10 +641,6 @@ background-color: white !important;
 *::-webkit-scrollbar {
   height: 6px;
   width: 6px;
-  background: var(--el-border-color-light);
 }
 
-*::-webkit-scrollbar-thumb {
-  background: var(--el-border-primary-light-3);
-}
 </style>

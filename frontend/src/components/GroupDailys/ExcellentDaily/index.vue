@@ -8,6 +8,8 @@
             <div class="excellentdaily-date-select" v-show="selectType === 'month'">
                 <bk-date-picker type="month" @change="changeDate" style="width: 250px;" :clearable="false" behavior="normal" font-size="normal" class="mr15" v-model="curDateTime"></bk-date-picker>
             </div>
+            <!-- 分割线 -->
+            <div class="halving"></div>
         </div>
         <!-- 渲染的内容 -->
         <div class="excellentdaily-renderlistbox" v-show="renderDaily && renderDaily.length">
@@ -43,6 +45,7 @@
                     </div>
                 </div>
             </bk-card>
+            <li class="renderlistbox-tiptoe" v-for="item in [1,2,3,4]" :key="item"></li>
             <!-- 分页器 -->
             <div class="renderlistbox-pagination">
                 <bk-pagination

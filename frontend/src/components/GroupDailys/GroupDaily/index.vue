@@ -27,6 +27,8 @@
             <div class="groupdaily-date-select" v-show="curType === 'date'">
                 <bk-date-picker font-size="normal" :options="customOption" @change="changeDate" style="width: 250px;" :clearable="false" class="mr15" v-model="curDateTime"></bk-date-picker>
             </div>
+            <!-- 分割线 -->
+            <div class="halving"></div>
         </div>
         <!-- 渲染的内容 -->
         <div class="renderlistbox" v-show="renderDaily && renderDaily.length">
@@ -62,6 +64,7 @@
                     </div>
                 </div>
             </bk-card>
+            <li class="renderlistbox-tiptoe" v-for="item in [1,2,3,4]" :key="item"></li>
             <!-- 分页器 -->
             <div class="renderlistbox-pagination" v-show="curType === 'member'">
                 <bk-pagination
@@ -154,8 +157,10 @@
                 this.changeDate(moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'))
             },
             checkUser (oldVal) {
-                this.curSelectUser = oldVal
-                this.selectedType('member')
+                this.filterUserId(oldVal).then(res => {
+                    this.curSelectUser = res
+                    this.selectedType('member')
+                })
             }
         },
         methods: {
@@ -225,6 +230,19 @@
                 } else {
                     return true
                 }
+            },
+            // 根据用户名过滤出用户id
+            filterUserId (username) {
+                return new Promise((resolve, reject) => {
+                    getGroupUsers(this.curGroupID).then(res => {
+                        this.groupUsers = res.data
+                        res.data.forEach(item => {
+                            if (item.username === username) {
+                                resolve(item.id)
+                            }
+                        })
+                    })
+                })
             },
             /*
                 获得渲染日报数据

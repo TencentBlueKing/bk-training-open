@@ -19,8 +19,6 @@
             <!-- 小组日报 / 优秀日报 -->
             <TabBtn @changeType="changeType" :content="tabBtncontent" :active="active"></TabBtn>
         </div>
-        <!-- 分割线 -->
-        <div class="group-dailys-rule"></div>
         <keep-alive>
             <component :is="curComponents"></component>
         </keep-alive>
@@ -75,15 +73,12 @@
             // 跳转到的 组下的人
             takeGroupuser () {
                 // 跳转过来的
-                window.location.href.replace(/group=(.+)&username=(.+)/g, (_, $1, $2) => {
-                    this.selectGroup = $1
-                    // 外来链接的跳转
-                    this.$store.commit('groupDaily/setGroupID', $1)
-                    this.$store.commit('groupDaily/setselectUserId', $2)
-                })
+                if (this.$route.query.group !== undefined) {
+                    this.$store.commit('groupDaily/setGroupID', this.$route.query.group)
+                    this.$store.commit('groupDaily/setselectUserId', this.$route.query.username)
+                }
             }
         }
-
     }
 </script>
 

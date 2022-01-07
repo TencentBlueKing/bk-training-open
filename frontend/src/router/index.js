@@ -42,8 +42,8 @@ const routes = [
                 component: myGroup
             },
             {
-                path: 'Manage-group',
-                name: 'Manage-group',
+                path: 'manage-group',
+                name: 'ManageGroup',
                 component: manageGroup
             }
         ]

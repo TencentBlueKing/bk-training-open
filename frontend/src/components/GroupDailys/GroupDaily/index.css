@@ -47,10 +47,16 @@
 
 .card {
   cursor: default;
-  width: 30%;
+  width: 24%;
   margin-bottom: 20px;
   overflow-y: auto;
-  height: 250px;
+  height: 400px;
+}
+
+.renderlistbox-tiptoe {
+  height: 0;
+  width: 24%;
+  overflow: hidden;
 }
 
 .card /deep/ .bk-card-body {
@@ -176,4 +182,22 @@
 
 .card-usename {
   font-size: 14px;
+}
+
+.halving {
+  width: 100%;
+  height: 1px;
+  background-color: #f0f1f5;
+  position: relative;
+  margin-top: 16px;
+}
+
+.groupdaily-member-select {
+  margin-right: 15px;
+}
+
+.halving {
+  width: 100%;
+  height: 1px;
+  background-color: #f0f1f5;
 }
