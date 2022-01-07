@@ -276,10 +276,15 @@
             }
         },
         created () {
-            // 初始化组id和日期
+            // 初始化组id和用户
             const groupIdInURL = this.$route.query.group
             if (groupIdInURL !== undefined) {
                 this.curGroupId = parseInt(groupIdInURL)
+            }
+            const usernameInURL = this.$route.query.username
+            if (usernameInURL !== undefined) {
+                this.curUserName = usernameInURL
+                this.isUser = true
             }
         },
         activated () {
@@ -334,6 +339,10 @@
                             res.data.map((item, index) => {
                                 if (item.username !== 'admin') {
                                     this.groupUsers.push(item)
+                                    if (item.username === this.curUserName) {
+                                        this.curUserId = item.id
+                                        this.getDailys()
+                                    }
                                 }
                             })
                         }
