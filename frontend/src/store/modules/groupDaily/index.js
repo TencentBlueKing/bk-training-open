@@ -6,7 +6,11 @@ const groupDaily = {
     state: {
         curGroupID: null,
         selectUserId: null,
-        curDate: null
+        curDate: null,
+        // 当前组的管理员
+        adminList: [],
+        // 普通用户
+        ordinary: []
     },
     mutations: {
         setGroupID (state, val) {
@@ -17,6 +21,12 @@ const groupDaily = {
         },
         setDate (state, val) {
             state.curDate = val
+        },
+        setAdminList (state, val) {
+            state.adminList = val
+        },
+        setOrdinary (state, val) {
+            state.ordinary = val
         }
     },
     actions: {}

@@ -9,7 +9,7 @@
             <div class="groupdaily-member-select" v-show="curType === 'member'">
                 <bk-select
                     :disabled="false"
-                    v-model="curSelectUser"
+                    v-model="curSelectUser "
                     style="width: 250px;"
                     behavior="normal"
                     :clearable="false"
@@ -93,7 +93,7 @@
     import moment from 'moment'
     import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
-    const { getGroupUsers, getDaily, getallGroups } = requestApi
+    const { getDaily } = requestApi
     export default {
         components: {
             bkSelect,
@@ -110,8 +110,6 @@
                 curGroupID: '',
                 // 当前选中的类比
                 curType: 'date',
-                // 当前小组的全部成员数据
-                groupUsers: [],
                 curSelectUser: null,
                 // 当前选中的日期
                 curDateTime: moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'),
@@ -136,33 +134,43 @@
                         }
                     }
                 },
-                groupAdmin: []
+                // 传进来的用户username
+                username: ''
             }
         },
         computed: {
+            groupUsers () {
+                return this.$store.state.groupDaily.ordinary
+            },
             curDate () {
                 return this.$store.state.groupDaily.curDate
             },
-            checkUser () {
-                return this.$store.state.groupDaily.selectUserId
-            },
             curGroupIDChange () {
                 return this.$store.state.groupDaily.curGroupID
+            },
+            curAdminList () {
+                return this.$store.state.groupDaily.adminList
+            },
+            checkUser () {
+                return this.$store.state.groupDaily.selectUserId
             }
         },
         watch: {
-            curGroupIDChange (oldVal) {
-                this.curGroupID = oldVal
-                // 只要Vuex的组ID变动 组成员就重新获取
-                this.getAllGroupUsers()
-                // 如果用户组发生了变化开始
-                this.curType = 'date'
-            },
-            checkUser (oldVal) {
-                this.filterUserId(oldVal).then(res => {
+            groupUsers (oldVal) {
+                this.filterUserId(this.username).then(res => {
                     this.curSelectUser = res
                     this.selectedType('member')
                 })
+            },
+            curGroupIDChange (oldVal) {
+                this.curGroupID = oldVal
+                // 如果用户组发生了变化开始
+                this.curType = 'date'
+                this.pagingDevice.curPage = 1
+                this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+            },
+            checkUser (oldVal) {
+                this.username = oldVal
             },
             curDate (oldVal) {
                 this.curDateTime = oldVal
@@ -173,16 +181,8 @@
             // 初始化调用
             activated () {
                 this.curGroupID = this.$store.state.groupDaily.curGroupID
-                this.getAllGroupUsers()
                 this.curType = 'date'
                 this.changeDate(moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'))
-            },
-            // 获得当前组的组成员 并且选中第一个人
-            getAllGroupUsers () {
-                getGroupUsers(this.curGroupID).then(res => {
-                    this.filterAdmin(res.data)
-                    this.changeDate(moment(new Date(this.curDateTime)).format('YYYY-MM-DD'))
-                })
             },
             // 日期改变
             changeDate (date) {
@@ -204,7 +204,13 @@
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
                 if (type === 'member') {
-                    this.changeUser(this.curSelectUser)
+                    if (this.groupUsers.length !== 0) {
+                        this.curSelectUser = this.groupUsers[0].id
+                        this.changeUser(this.curSelectUser)
+                    } else {
+                        // 没成员就滞空
+                        this.curSelectUser = ''
+                    }
                 } else {
                     // 找当前时间的日报
                     this.changeDate(this.curDateTime)
@@ -237,35 +243,11 @@
             // 根据用户名过滤出用户id
             filterUserId (username) {
                 return new Promise((resolve, reject) => {
-                    getGroupUsers(this.curGroupID).then(res => {
-                        this.groupUsers = res.data
-                        res.data.forEach(item => {
-                            if (item.username === username) {
-                                resolve(item.id)
-                            }
-                        })
-                    })
-                })
-            },
-            // 获得管理员并且过滤掉管理员
-            filterAdmin (allusers) {
-                getallGroups(this.curGroupID).then(res => {
-                    const temp = {}
-                    res.data.forEach(groupItem => {
-                        if (groupItem.id === this.curGroupID) {
-                            temp.admin = groupItem.admin
-                            this.groupAdmin = temp.admin
+                    this.groupUsers.forEach(item => {
+                        if (item.username === username) {
+                            resolve(item.id)
                         }
                     })
-                    this.groupUsers = allusers.filter(item => !temp.admin.includes(item.username))
-                    if (this.groupUsers.length !== 0) {
-                        // 不为空就是第一个用户
-                        this.curSelectUser = this.groupUsers[0].id
-                    } else {
-                        // 为空就 清
-                        this.curSelectUser = ''
-                        this.groupUsers = []
-                    }
                 })
             },
             /*
@@ -275,8 +257,8 @@
             getRenderDaily (curDate, curUserId, limit, curPage) {
                 return new Promise((resolve, reject) => {
                     getDaily(this.curGroupID, curDate, curUserId, limit, curPage).then(res => {
-                        const renderList = res.data.reports.filter(item => !this.groupAdmin.includes(item.create_by))
-                        this.pagingDevice.count = renderList.length
+                        const renderList = res.data.reports.filter(item => !this.curAdminList.includes(item.create_by))
+                        this.pagingDevice.count = res.data.total_report_num
                         this.my_today_report = renderList
                         resolve(renderList)
                     })

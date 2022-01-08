@@ -31,7 +31,7 @@
     import GroupDaily from '@/components/GroupDailys/GroupDaily'
     import ExcellentDaily from '@/components/GroupDailys/ExcellentDaily'
     import requestApi from '@/api/request.js'
-    const { getallGroups } = requestApi
+    const { getallGroups, getGroupUsers } = requestApi
     export default {
         components: {
             bkSelect,
@@ -49,6 +49,14 @@
                 tabBtncontent: ['小组日报', '优秀日报'],
                 groupList: [],
                 active: 'first'
+            }
+        },
+        watch: {
+            selectGroup (oldVal) {
+                this.filterAdmin().then(res => {
+                    this.$store.commit('groupDaily/setAdminList', res)
+                    this.renderUserList(res)
+                })
             }
         },
         created () {
@@ -69,6 +77,23 @@
             changeGroup (val) {
                 this.selectGroup = val
                 this.$store.commit('groupDaily/setGroupID', val)
+            },
+            // 获得管理员
+            filterAdmin () {
+                return new Promise((resolve, reject) => {
+                    this.groupList.forEach(groupItem => {
+                        if (Number(groupItem.id) === Number(this.selectGroup)) {
+                            resolve(groupItem.admin)
+                        }
+                    })
+                })
+            },
+            // 渲染的用户
+            renderUserList (adminList) {
+                getGroupUsers(this.selectGroup).then(res => {
+                    // 过滤出不是管理员的数据
+                    this.$store.commit('groupDaily/setOrdinary', res.data.filter(item => !adminList.includes(item.username)))
+                })
             },
             // 跳转到的 组下的人
             takeGroupuser () {
