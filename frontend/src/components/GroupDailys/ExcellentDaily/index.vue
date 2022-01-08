@@ -74,7 +74,7 @@
     import moment from 'moment'
     import { bkPagination, bkButton } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
-    const { getGoodDaily } = requestApi
+    const { getGoodDaily, getallGroups, getGroupUsers } = requestApi
     export default {
         components: {
             bkButton,
@@ -108,7 +108,8 @@
                             return true
                         }
                     }
-                }
+                },
+                adminListID: []
             }
         },
         computed: {
@@ -119,6 +120,7 @@
         watch: {
             curGroupIDBus (oldVal) {
                 this.curGroupID = oldVal
+                this.getcurGroupAllUsers()
                 // 组变化 初始化数据
                 this.RenderData(oldVal)
             }
@@ -130,7 +132,15 @@
             // 初始化调用
             initData () {
                 this.curGroupID = this.$store.state.groupDaily.curGroupID
-                this.RenderData(this.$store.state.groupDaily.curGroupID)
+                this.getcurGroupAllUsers()
+            },
+            // 获得当前组的全部用户
+            getcurGroupAllUsers () {
+                getGroupUsers(this.curGroupID).then(res => {
+                    this.filterAdmin().then(res => {
+                        this.RenderData(this.$store.state.groupDaily.curGroupID)
+                    })
+                })
             },
             judgeFloatString (value) {
                 if (value === '0.0' || value === '0' || !value) {
@@ -164,6 +174,19 @@
                 this.pagingDevice.limit = curlimit
                 this.RenderData(this.curGroupID)
             },
+            // 获得管理员
+            filterAdmin () {
+                return new Promise((resolve, reject) => {
+                    getallGroups(this.curGroupID).then(res => {
+                        res.data.forEach(groupItem => {
+                            if (groupItem.id === this.curGroupID) {
+                                this.adminListID = groupItem.admin
+                                resolve(groupItem.admin)
+                            }
+                        })
+                    })
+                })
+            },
             // 渲染数据的设置
             RenderData (curGroupID, year = '', month = '') {
                 const { curPage, limit } = this.pagingDevice
@@ -174,7 +197,7 @@
                 }
                 getGoodDaily(curGroupID, this.selectType, curPage, limit, year, month).then(res => {
                     this.pagingDevice.count = res.data.total_report_num
-                    this.renderDaily = res.data.daily_list
+                    this.renderDaily = res.data.daily_list.filter(item => !this.adminListID.includes(item.create_by))
                 })
             }
         }

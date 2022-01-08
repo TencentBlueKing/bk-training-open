@@ -93,7 +93,7 @@
     import moment from 'moment'
     import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
-    const { getGroupUsers, getDaily } = requestApi
+    const { getGroupUsers, getDaily, getallGroups } = requestApi
     export default {
         components: {
             bkSelect,
@@ -135,8 +135,8 @@
                             return true
                         }
                     }
-                }
-
+                },
+                groupAdmin: []
             }
         },
         computed: {
@@ -154,10 +154,9 @@
             curGroupIDChange (oldVal) {
                 this.curGroupID = oldVal
                 // 只要Vuex的组ID变动 组成员就重新获取
-                this.getAllGroupUsers(true)
+                this.getAllGroupUsers()
                 // 如果用户组发生了变化开始
                 this.curType = 'date'
-                this.changeDate(moment(new Date(this.curDateTime)).format('YYYY-MM-DD'))
             },
             checkUser (oldVal) {
                 this.filterUserId(oldVal).then(res => {
@@ -174,18 +173,15 @@
             // 初始化调用
             activated () {
                 this.curGroupID = this.$store.state.groupDaily.curGroupID
-                this.getAllGroupUsers(true)
+                this.getAllGroupUsers()
                 this.curType = 'date'
                 this.changeDate(moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'))
             },
             // 获得当前组的组成员 并且选中第一个人
-            getAllGroupUsers (flat) {
+            getAllGroupUsers () {
                 getGroupUsers(this.curGroupID).then(res => {
-                    this.groupUsers = res.data
-                    // 如果是成员默认展示第一个人
-                    if (flat) {
-                        this.curSelectUser = res.data[0].id
-                    }
+                    this.filterAdmin(res.data)
+                    this.changeDate(moment(new Date(this.curDateTime)).format('YYYY-MM-DD'))
                 })
             },
             // 日期改变
@@ -251,6 +247,27 @@
                     })
                 })
             },
+            // 获得管理员并且过滤掉管理员
+            filterAdmin (allusers) {
+                getallGroups(this.curGroupID).then(res => {
+                    const temp = {}
+                    res.data.forEach(groupItem => {
+                        if (groupItem.id === this.curGroupID) {
+                            temp.admin = groupItem.admin
+                            this.groupAdmin = temp.admin
+                        }
+                    })
+                    this.groupUsers = allusers.filter(item => !temp.admin.includes(item.username))
+                    if (this.groupUsers.length !== 0) {
+                        // 不为空就是第一个用户
+                        this.curSelectUser = this.groupUsers[0].id
+                    } else {
+                        // 为空就 清
+                        this.curSelectUser = ''
+                        this.groupUsers = []
+                    }
+                })
+            },
             /*
                 获得渲染日报数据
                 移除为 组id、当前选中的日期、当前选中的用户、分页限制、当前页
@@ -258,9 +275,10 @@
             getRenderDaily (curDate, curUserId, limit, curPage) {
                 return new Promise((resolve, reject) => {
                     getDaily(this.curGroupID, curDate, curUserId, limit, curPage).then(res => {
-                        this.pagingDevice.count = res.data.total_report_num
-                        this.my_today_report = res.data.my_today_report
-                        resolve(res.data.reports)
+                        const renderList = res.data.reports.filter(item => !this.groupAdmin.includes(item.create_by))
+                        this.pagingDevice.count = renderList.length
+                        this.my_today_report = renderList
+                        resolve(renderList)
                     })
                 })
             }
