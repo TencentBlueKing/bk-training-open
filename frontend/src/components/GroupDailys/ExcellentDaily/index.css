@@ -1,0 +1,186 @@
+.excellentdaily {
+  width: 100%;
+}
+
+.excellentdaily-btn {
+  display: flex;
+  margin-top: 20px;
+  height: 32px;
+}
+
+.excellentdaily .bk-select-name {
+  padding-left: 0px;
+}
+
+/* 卡片 */
+.excellentdaily-renderlistbox {
+  position: relative;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.excellentdaily-renderlistbox:after {
+  content: "";
+  width: 30%;
+}
+
+.renderlistbox-pagination {
+  width: 100%;
+  justify-content: flex-end;
+  display: flex;
+  z-index: 10;
+}
+
+.exception-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  cursor: default;
+  width: 24%;
+  margin-bottom: 20px;
+  overflow-y: hidden;
+  height: 400px;
+}
+
+/deep/ .bk-card-body {
+  overflow-y: auto;
+  padding-top: 10px;
+  height: 350px;
+}
+
+.renderlistbox-tiptoe {
+  height: 0;
+  width: 24%;
+  overflow: hidden;
+}
+
+.card /deep/ .bk-card-body {
+  overflow-y: auto;
+  padding-top: 10px;
+}
+.card /deep/ .bk-card-body .card-pre {
+  white-space: normal;
+  display: flex;
+  flex-wrap: nowrap;
+}
+.card /deep/ .bk-card-head .card-header {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+.card /deep/ .bk-card-body .card-pre .time-wapper {
+  width: 68px;
+}
+.card /deep/ .bk-card-body .card-pre .time-wapper .bk-tag {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 48px;
+  text-align: center;
+}
+
+.card-time {
+  font-size: 14px !important;
+}
+
+.card /deep/ .bk-card-body .sub-title {
+  font-size: 14px !important;
+  font-weight: bold;
+}
+
+.sub-title {
+  margin: 10px 0;
+}
+
+.card-pre {
+  margin: 10px 0;
+}
+
+.exception-wrap .exception-wrap-item {
+  margin: 10px;
+  height: 420px;
+  padding-top: 22px;
+}
+.exception-wrap-item.exception-part {
+  height: 260px;
+  padding-top: 48px;
+  flex: 1;
+}
+.exception-wrap-item.exception-gray {
+  background-color: #f5f6fa;
+}
+.exception-wrap .exception-wrap-item .text-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3a84ff;
+  font-size: 14px;
+  margin-top: 12px;
+}
+.exception-wrap .exception-wrap-item .text-wrap.text-part {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.exception-wrap .exception-wrap-item .text-subtitle {
+  color: #979ba5;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 14px;
+}
+.text-wrap .text-btn {
+  margin: 0 10px;
+}
+.text-wrap .text-btn:hover {
+  cursor: pointer;
+}
+
+.excellentdaily-card-time {
+  font-size: 14px;
+}
+
+.bk-button-group {
+  display: flex;
+  align-items: flex-end;
+  margin-right: 10px;
+}
+
+.bk-button-group /deep/ button {
+  height: 100%;
+}
+
+.card-usename {
+  font-size: 14px;
+}
+
+.card-time {
+  font-size: 14px !important;
+  color: #979ba5;
+}
+
+.halving {
+  width: 100%;
+  height: 1px;
+  background-color: #f0f1f5;
+  position: relative;
+  margin-top: 16px;
+}
+
+/deep/ .bk-tag {
+  color: black;
+  background-color: #f0f1f5;
+}
+
+/deep/ .bk-tag:not(.nohover):hover {
+  background-color: #f0f1f5;
+  color: black;
+}
+
+/deep/ .bk-page-count {
+  margin-right: 20px;
+}

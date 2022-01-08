@@ -9,13 +9,15 @@ import Vuex from 'vuex'
 import example from './modules/example'
 import http from '@/api'
 import { unifyObjectStyle } from '@/common/util'
+import groupDaily from './modules/groupDaily/index.js'
 
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
     // 模块
     modules: {
-        example
+        example,
+        groupDaily
     },
     // 公共 store
     state: {

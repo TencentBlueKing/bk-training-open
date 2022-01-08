@@ -23,7 +23,7 @@
                                 style="margin-right:0px;margin-left:0px;text-decoration:none;"
                             >
                                 <router-link :to="item.url" style="display:inline-block; width:90px; height:50px;line-height:50px;text-align:center;color:#979BA5;"
-                                    :class="{ 'item-active': item.routerName === activeRouter }">
+                                    :class="{ 'item-active': activeRouter === item.routerName }">
                                     {{ item.name }}
                                 </router-link>
                             </li>
@@ -177,6 +177,10 @@
 
 <style>
 /* 以下样式是为了适应例子父级的宽高而设置 */
+body{
+    height:100vh;
+}
+
 body,html{
     height:100vh;
 background-color: white !important;
@@ -200,6 +204,7 @@ background-color: white !important;
 }
 
 .container-content{
+  height: 100vh;
     padding:0px!important;
 }
 .bk-navigation .bk-navigation-wrapper {
@@ -631,6 +636,16 @@ background-color: white !important;
 }
 .tippy-popper{
     z-index: 2910 !important;
+}
+
+*::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+    background: #F5F7FA;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #DCDEE5;
 }
 
 </style>
