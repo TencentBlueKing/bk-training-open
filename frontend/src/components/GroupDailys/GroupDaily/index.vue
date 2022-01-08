@@ -9,7 +9,7 @@
             <div class="groupdaily-member-select" v-show="curType === 'member'">
                 <bk-select
                     :disabled="false"
-                    v-model="curSelectUser "
+                    v-model="curSelectUser"
                     style="width: 250px;"
                     behavior="normal"
                     :clearable="false"
