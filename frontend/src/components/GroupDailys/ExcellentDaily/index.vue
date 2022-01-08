@@ -80,11 +80,18 @@
             bkButton,
             bkPagination
         },
+        props: {
+            curgroupid: {
+                type: Number
+            },
+            adminlist: {
+                type: Object
+            }
+        },
         data () {
             return {
                 tabBtnContent: ['全部', '日期'],
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
-                curGroupID: '',
                 // 当前选中的类型  默认是all,month
                 selectType: 'all',
                 // 当前选中的日期
@@ -108,27 +115,13 @@
                             return true
                         }
                     }
-                },
-                adminListusername: []
-            }
-        },
-        computed: {
-            curAdminList () {
-                return this.$store.state.groupDaily.adminList
-            },
-            curGroupIDBus () {
-                return this.$store.state.groupDaily.curGroupID
+                }
             }
         },
         watch: {
-            curAdminList (oldVal) {
-                this.adminListusername = oldVal
-            },
-            // 变组
-            curGroupIDBus (oldVal) {
+            curgroupid () {
                 this.pagingDevice.curPage = 1
-                this.curGroupID = oldVal
-                this.RenderData(this.curGroupID)
+                this.RenderData()
             }
         },
         created () {
@@ -137,9 +130,7 @@
         methods: {
             // 初始化调用
             initData () {
-                this.curGroupID = this.$store.state.groupDaily.curGroupID
-                this.adminListusername = this.$store.state.groupDaily.adminList
-                this.RenderData(this.curGroupID)
+                this.RenderData()
             },
             judgeFloatString (value) {
                 if (value === '0.0' || value === '0' || !value) {
@@ -154,34 +145,34 @@
             changeType (type) {
                 this.pagingDevice.curPage = 1
                 this.selectType = type
-                this.RenderData(this.curGroupID)
+                this.RenderData()
             },
             // 日期改变
             changeDate (date) {
                 this.pagingDevice.curPage = 1
                 this.curDateTime = date
-                this.RenderData(this.curGroupID)
+                this.RenderData()
             },
             // 切换页码
             changePage (curPage) {
                 this.pagingDevice.curPage = curPage
-                this.RenderData(this.curGroupID)
+                this.RenderData()
             },
             // 分页尺寸的变化
             changeLimit (curlimit) {
                 this.pagingDevice.curPage = 1
                 this.pagingDevice.limit = curlimit
-                this.RenderData(this.curGroupID)
+                this.RenderData()
             },
             // 渲染数据的设置
-            RenderData (curGroupID, year = '', month = '') {
+            RenderData (year = '', month = '') {
                 const { curPage, limit } = this.pagingDevice
                 // 按什么类型搜索
                 if (this.selectType === 'month') {
                     year = moment(this.curDateTime).format('YYYY')
                     month = moment(this.curDateTime).format('MM')
                 }
-                getGoodDaily(curGroupID, this.selectType, curPage, limit, year, month).then(res => {
+                getGoodDaily(this.curgroupid, this.selectType, curPage, limit, year, month).then(res => {
                     const renderList = res.data.daily_list
                     this.pagingDevice.count = res.data.total_num
                     this.renderDaily = renderList
