@@ -17,7 +17,7 @@
                     @selected="changeUser"
                     ext-popover-cls="select-popover-custom"
                     searchable>
-                    <bk-option v-for="option in groupUsers"
+                    <bk-option v-for="option in groupusers"
                         :key="option.id"
                         :id="option.id"
                         :name="option.name || option.username">
@@ -103,11 +103,27 @@
             bkPagination,
             bkButton
         },
+        props: {
+            // 当前组id
+            curgroupid: {
+                type: Number
+            },
+            adminlist: {
+                type: Object
+            },
+            groupusers: {
+                type: Object
+            },
+            curdate: {
+                type: String
+            },
+            username: {
+                type: String
+            }
+        },
         data (s) {
             return {
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
-                // 当前组id
-                curGroupID: '',
                 // 当前选中的类比
                 curType: 'date',
                 curSelectUser: null,
@@ -133,69 +149,36 @@
                             return true
                         }
                     }
-                },
-                // 传进来的用户username
-                username: ''
-            }
-        },
-        computed: {
-            groupUsers () {
-                return this.$store.state.groupDaily.ordinary
-            },
-            curDate () {
-                return this.$store.state.groupDaily.curDate
-            },
-            curGroupIDChange () {
-                return this.$store.state.groupDaily.curGroupID
-            },
-            curAdminList () {
-                return this.$store.state.groupDaily.adminList
-            },
-            checkUser () {
-                return this.$store.state.groupDaily.selectUserId
+                }
             }
         },
         watch: {
-            groupUsers (oldVal) {
+            groupusers () {
                 this.filterUserId(this.username).then(res => {
                     this.curSelectUser = res
                     this.selectedType('member')
                 })
             },
-            curGroupIDChange (oldVal) {
-                this.curGroupID = oldVal
+            curgroupid () {
                 // 如果用户组发生了变化开始
                 this.curType = 'date'
                 this.pagingDevice.curPage = 1
-                this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+                this.changeDate(moment(this.curdate).format('YYYY-MM-DD'))
             },
-            checkUser (oldVal) {
-                this.username = oldVal
-            },
-            curDate (oldVal) {
+            curdate (oldVal) {
                 this.curDateTime = oldVal
                 this.changeDate(oldVal)
             }
         },
         methods: {
-            // 初始化调用
-            activated () {
-                this.curGroupID = this.$store.state.groupDaily.curGroupID
-                this.curType = 'date'
-                this.changeDate(moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'))
-            },
             // 日期改变
             changeDate (date) {
-                this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage).then(res => {
-                    this.renderDaily = res
-                })
+                this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 成员的改变
             changeUser (id) {
                 this.pagingDevice.curPage = 1
-                this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage).then(res => {
-                    this.renderDaily = res
-                })
+                this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 切换 日期或者人名
             selectedType (type) {
@@ -204,8 +187,8 @@
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
                 if (type === 'member') {
-                    if (this.groupUsers.length !== 0) {
-                        this.curSelectUser = this.groupUsers[0].id
+                    if (this.groupusers.length !== 0) {
+                        this.curSelectUser = this.groupusers[0].id
                         this.changeUser(this.curSelectUser)
                     } else {
                         // 没成员就滞空
@@ -213,23 +196,19 @@
                     }
                 } else {
                     // 找当前时间的日报
-                    this.changeDate(this.curDateTime)
+                    this.changeDate(this.curdate)
                 }
             },
             // 切换页码
             changePage (curPage) {
                 this.pagingDevice.curPage = curPage
-                this.getRenderDaily('', this.curSelectUser, this.pagingDevice.limit, curPage).then(res => {
-                    this.renderDaily = res
-                })
+                this.getRenderDaily('', this.curSelectUser, this.pagingDevice.limit, curPage)
             },
             // 分页尺寸的变化
             changeLimit (curlimit) {
                 this.pagingDevice.curPage = 1
                 this.pagingDevice.limit = curlimit
-                this.getRenderDaily('', this.curSelectUser, this.pagingDevice.limit, 1).then(res => {
-                    this.renderDaily = res
-                })
+                this.getRenderDaily('', this.curSelectUser, this.pagingDevice.limit, 1)
             },
             judgeFloatString (value) {
                 if (value === '0.0' || value === '0' || !value) {
@@ -243,7 +222,7 @@
             // 根据用户名过滤出用户id
             filterUserId (username) {
                 return new Promise((resolve, reject) => {
-                    this.groupUsers.forEach(item => {
+                    this.groupusers.forEach(item => {
                         if (item.username === username) {
                             resolve(item.id)
                         }
@@ -255,13 +234,11 @@
                 移除为 组id、当前选中的日期、当前选中的用户、分页限制、当前页
             */
             getRenderDaily (curDate, curUserId, limit, curPage) {
-                return new Promise((resolve, reject) => {
-                    getDaily(this.curGroupID, curDate, curUserId, limit, curPage).then(res => {
-                        const renderList = res.data.reports.filter(item => !this.curAdminList.includes(item.create_by))
-                        this.pagingDevice.count = res.data.total_report_num
-                        this.my_today_report = renderList
-                        resolve(renderList)
-                    })
+                getDaily(this.curgroupid, curDate, curUserId, limit, curPage).then(res => {
+                    const renderList = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
+                    this.pagingDevice.count = res.data.total_report_num
+                    this.my_today_report = res.data.total_report_num
+                    this.renderDaily = renderList
                 })
             }
         }

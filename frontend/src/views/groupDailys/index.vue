@@ -20,7 +20,7 @@
             <TabBtn @changeType="changeType" :content="tabBtncontent" :active="active"></TabBtn>
         </div>
         <keep-alive>
-            <component :is="curComponents"></component>
+            <component :is="curComponents" :curgroupid="selectGroup" :adminlist="AdminList" :groupusers="renderUser" :curdate="date || 1" :username="username"></component>
         </keep-alive>
     </div>
 </template>
@@ -48,13 +48,18 @@
                 curComponents: 'GroupDaily',
                 tabBtncontent: ['小组日报', '优秀日报'],
                 groupList: [],
-                active: 'first'
+                active: 'first',
+                // 用户
+                renderUser: null,
+                // 管理员
+                AdminList: null
             }
         },
         watch: {
             selectGroup (oldVal) {
                 this.filterAdmin().then(res => {
-                    this.$store.commit('groupDaily/setAdminList', res)
+                    // res就是管理员
+                    this.AdminList = res
                     this.renderUserList(res)
                 })
             }
@@ -63,7 +68,6 @@
             getallGroups().then(res => {
                 this.selectGroup = res.data[0].id
                 this.groupList = res.data
-                this.$store.commit('groupDaily/setGroupID', res.data[0].id)
                 this.takeGroupuser()
             })
         },
@@ -72,11 +76,9 @@
                 this.active = type
                 // 控制小组日报 还是 优秀日报
                 this.curComponents = type === 'first' ? 'GroupDaily' : 'ExcellentDaily'
-                this.$store.commit('groupDaily/setGroupID', this.selectGroup)
             },
             changeGroup (val) {
                 this.selectGroup = val
-                this.$store.commit('groupDaily/setGroupID', val)
             },
             // 获得管理员
             filterAdmin () {
@@ -92,7 +94,7 @@
             renderUserList (adminList) {
                 getGroupUsers(this.selectGroup).then(res => {
                     // 过滤出不是管理员的数据
-                    this.$store.commit('groupDaily/setOrdinary', res.data.filter(item => !adminList.includes(item.username)))
+                    this.renderUser = res.data.filter(item => !adminList.includes(item.username))
                 })
             },
             // 跳转到的 组下的人
@@ -100,13 +102,11 @@
                 // 跳转过来的
                 if (this.$route.query.group !== undefined && this.$route.query.username !== undefined) {
                     this.selectGroup = this.$route.query.group
-                    this.$store.commit('groupDaily/setGroupID', this.$route.query.group)
-                    this.$store.commit('groupDaily/setselectUserId', this.$route.query.username)
+                    this.username = this.$route.query.username
                 }
                 if (this.$route.query.group !== undefined && this.$route.query.date !== undefined) {
                     this.selectGroup = this.$route.query.group
-                    this.$store.commit('groupDaily/setGroupID', this.$route.query.group)
-                    this.$store.commit('groupDaily/setDate', this.$route.query.date)
+                    this.date = this.$route.query.date
                 }
             }
         }
