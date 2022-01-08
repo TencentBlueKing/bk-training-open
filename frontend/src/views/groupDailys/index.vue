@@ -73,9 +73,15 @@
             // 跳转到的 组下的人
             takeGroupuser () {
                 // 跳转过来的
-                if (this.$route.query.group !== undefined) {
+                if (this.$route.query.group !== undefined && this.$route.query.username !== undefined) {
+                    this.selectGroup = this.$route.query.group
                     this.$store.commit('groupDaily/setGroupID', this.$route.query.group)
                     this.$store.commit('groupDaily/setselectUserId', this.$route.query.username)
+                }
+                if (this.$route.query.group !== undefined && this.$route.query.date !== undefined) {
+                    this.selectGroup = this.$route.query.group
+                    this.$store.commit('groupDaily/setGroupID', this.$route.query.group)
+                    this.$store.commit('groupDaily/setDate', this.$route.query.date)
                 }
             }
         }

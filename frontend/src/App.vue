@@ -639,8 +639,13 @@ background-color: white !important;
 }
 
 *::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
+    height: 6px;
+    width: 6px;
+    background: #F5F7FA;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #DCDEE5;
 }
 
 </style>

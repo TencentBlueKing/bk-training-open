@@ -27,10 +27,9 @@
 }
 
 .renderlistbox-pagination {
-  position: absolute;
-  bottom: -30px;
-  right: 0px;
-  background-color: white;
+  width: 100%;
+  justify-content: flex-end;
+  display: flex;
   z-index: 10;
 }
 
@@ -43,8 +42,14 @@
   cursor: default;
   width: 24%;
   margin-bottom: 20px;
-  overflow-y: auto;
+  overflow-y: hidden;
   height: 400px;
+}
+
+/deep/ .bk-card-body {
+  overflow-y: auto;
+  padding-top: 10px;
+  height: 350px;
 }
 
 .renderlistbox-tiptoe {
@@ -164,4 +169,18 @@
   background-color: #f0f1f5;
   position: relative;
   margin-top: 16px;
+}
+
+/deep/ .bk-tag {
+  color: black;
+  background-color: #f0f1f5;
+}
+
+/deep/ .bk-tag:not(.nohover):hover {
+  background-color: #f0f1f5;
+  color: black;
+}
+
+/deep/ .bk-page-count {
+  margin-right: 20px;
 }

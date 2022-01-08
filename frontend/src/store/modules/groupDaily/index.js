@@ -5,7 +5,8 @@ const groupDaily = {
     namespaced: true,
     state: {
         curGroupID: null,
-        selectUserId: null
+        selectUserId: null,
+        curDate: null
     },
     mutations: {
         setGroupID (state, val) {
@@ -13,6 +14,9 @@ const groupDaily = {
         },
         setselectUserId (state, val) {
             state.selectUserId = val
+        },
+        setDate (state, val) {
+            state.curDate = val
         }
     },
     actions: {}

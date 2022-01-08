@@ -33,10 +33,9 @@
 }
 
 .renderlistbox-pagination {
-  position: absolute;
-  bottom: -30px;
-  right: 0px;
-  background-color: white;
+  width: 100%;
+  justify-content: flex-end;
+  display: flex;
   z-index: 10;
 }
 
@@ -49,7 +48,7 @@
   cursor: default;
   width: 24%;
   margin-bottom: 20px;
-  overflow-y: auto;
+  overflow-y: hidden;
   height: 400px;
 }
 
@@ -59,9 +58,10 @@
   overflow: hidden;
 }
 
-.card /deep/ .bk-card-body {
+/deep/ .bk-card-body {
   overflow-y: auto;
   padding-top: 10px;
+  height: 350px;
 }
 .card /deep/ .bk-card-body .card-pre {
   white-space: normal;
@@ -200,4 +200,17 @@
   width: 100%;
   height: 1px;
   background-color: #f0f1f5;
+}
+
+/deep/ .bk-tag {
+  color: black;
+}
+
+/deep/ .bk-tag:not(.nohover):hover {
+  background-color: #f0f1f5;
+  color: black;
+}
+
+/deep/ .bk-page-count {
+  margin-right: 20px;
 }

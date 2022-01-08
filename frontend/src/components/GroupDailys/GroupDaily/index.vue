@@ -44,19 +44,19 @@
                     <div class="sub-title">{{dailyContnet.title}}</div>
                     <div v-if="dailyContnet.type === 'table'" style="font-size: 14px">
                         <div v-for="(row, iiIndex) in dailyContnet.content" :key="iiIndex">
-                            <pre class="card-pre">
-                                            <div class="content-wapper">
-                                                <span class="time-wapper">
-                                                    <bk-tag v-show="(myMsg.username === daily.create_by || !row.isPrivate) && judgeFloatString(row.cost)" theme="info">
-                                                        {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + 'h'}}
-                                                    </bk-tag>
-                                                    <bk-tag v-show="!(myMsg.username === daily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)" theme="info">
-                                                        - -
-                                                    </bk-tag>
-                                                </span>
-                                                {{row.text}}
-                                            </div>
-                                        </pre>
+                            <div class="card-pre">
+                                <div class="content-wapper">
+                                    <span class="time-wapper">
+                                        <bk-tag v-show="(myMsg.username === daily.create_by || !row.isPrivate) && judgeFloatString(row.cost)">
+                                            {{typeof row.cost === 'string' ? row.cost : row.cost.toFixed(1) + 'h'}}
+                                        </bk-tag>
+                                        <bk-tag v-show="!(myMsg.username === daily.create_by || !row.isPrivate) || !judgeFloatString(row.cost)">
+                                            - -
+                                        </bk-tag>
+                                    </span>
+                                    {{row.text}}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div style="font-size:14px;line-height: 22px;" v-else>
@@ -140,6 +140,9 @@
             }
         },
         computed: {
+            curDate () {
+                return this.$store.state.groupDaily.curDate
+            },
             checkUser () {
                 return this.$store.state.groupDaily.selectUserId
             },
@@ -154,13 +157,17 @@
                 this.getAllGroupUsers(true)
                 // 如果用户组发生了变化开始
                 this.curType = 'date'
-                this.changeDate(moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'))
+                this.changeDate(moment(new Date(this.curDateTime)).format('YYYY-MM-DD'))
             },
             checkUser (oldVal) {
                 this.filterUserId(oldVal).then(res => {
                     this.curSelectUser = res
                     this.selectedType('member')
                 })
+            },
+            curDate (oldVal) {
+                this.curDateTime = oldVal
+                this.changeDate(oldVal)
             }
         },
         methods: {
