@@ -191,7 +191,7 @@
                         this.curSelectUser = this.groupusers[0].id
                         this.changeUser(this.curSelectUser)
                     } else {
-                        // 没成员就滞空
+                        // 没成员就空
                         this.curSelectUser = ''
                     }
                 } else {

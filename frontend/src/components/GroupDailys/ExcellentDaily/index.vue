@@ -173,9 +173,8 @@
                     month = moment(this.curDateTime).format('MM')
                 }
                 getGoodDaily(this.curgroupid, this.selectType, curPage, limit, year, month).then(res => {
-                    const renderList = res.data.daily_list
+                    this.renderDaily = res.data.daily_list
                     this.pagingDevice.count = res.data.total_num
-                    this.renderDaily = renderList
                 })
             }
         }
