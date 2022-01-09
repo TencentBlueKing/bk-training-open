@@ -186,6 +186,11 @@
   color: #699df4;
 }
 
+.group-member-func-batchdel:hover {
+  border: none;
+  color: red;
+}
+
 .group-member-func-add {
   margin-right: 5px;
   border: none;
@@ -205,4 +210,13 @@
 
 /deep/ .bk-table-pagination-wrapper .bk-select-name {
   font-size: 12px;
+}
+
+.group-dialog /deep/ .bk-dialog-wrapper .bk-dialog .bk-dialog-content {
+  width: 480px !important;
+}
+
+.group-dialog /deep/ .bk-dialog-body .bk-form-content {
+  margin-left: 120px !important;
+  width: 250px;
 }

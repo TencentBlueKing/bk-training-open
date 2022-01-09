@@ -331,7 +331,7 @@
             },
             // 管理员List
             adminIDList () {
-                return this.curGroupData.admin_list.map((item) => item.id)
+                return (this.curGroupData.admin_list !== undefined && this.curGroupData.admin_list.map((item) => item.id)) || []
             },
             // 过滤出没有在组里面的成员
             notakeUsers () {
