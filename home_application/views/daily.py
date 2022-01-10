@@ -128,6 +128,9 @@ def get_prefect_dailys(request, group_id):
     member_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     member_usernames = User.objects.filter(id__in=member_ids).values_list("username", flat=True)
     select_type = request.GET.get("select_type")
+    # 排除管理员
+    admin_list = Group.objects.get(id=group_id).admin_list
+    member_usernames = set(member_usernames) - set(admin_list)
     # 查询所有优秀日报
     daily_list = Daily.objects.filter(create_by__in=member_usernames, is_perfect=True).order_by("-date")
     if select_type == "month":
