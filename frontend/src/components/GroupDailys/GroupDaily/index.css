@@ -194,6 +194,7 @@
 
 .groupdaily-member-select {
   margin-right: 15px;
+  display: flex;
 }
 
 .halving {
@@ -213,4 +214,9 @@
 
 /deep/ .bk-page-count {
   margin-right: 20px;
+}
+
+.groupdaily-date-select {
+  display: flex;
+  height: 100%;
 }

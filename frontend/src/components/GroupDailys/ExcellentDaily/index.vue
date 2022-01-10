@@ -6,7 +6,8 @@
                 <bk-button size="small" :class="selectType === 'month' ? 'is-selected' : ''" @click="changeType('month')">日期</bk-button>
             </div>
             <div class="excellentdaily-date-select" v-show="selectType === 'month'">
-                <bk-date-picker type="month" @change="changeDate" style="width: 250px;" :clearable="false" behavior="normal" font-size="normal" class="mr15" v-model="curDateTime"></bk-date-picker>
+                <bk-date-picker :options="customOption" type="month" @change="changeDate" style="width: 250px;" :clearable="false" behavior="normal" font-size="normal" v-model="curDateTime"></bk-date-picker>
+                <FastBtn :time="time" @topItem="topItem" @bottomItem="bottomItem" />
             </div>
             <!-- 分割线 -->
             <div class="halving"></div>
@@ -73,12 +74,14 @@
 <script>
     import moment from 'moment'
     import { bkPagination, bkButton } from 'bk-magic-vue'
+    import FastBtn from '@/components/GroupDailys/FastBtn'
     import requestApi from '@/api/request.js'
     const { getGoodDaily } = requestApi
     export default {
         components: {
             bkButton,
-            bkPagination
+            bkPagination,
+            FastBtn
         },
         props: {
             curgroupid: {
@@ -115,7 +118,9 @@
                             return true
                         }
                     }
-                }
+                },
+                // 快捷组件按钮的禁用情况
+                time: true
             }
         },
         watch: {
@@ -128,6 +133,24 @@
             this.initData()
         },
         methods: {
+            // 快捷切换(上)
+            topItem () {
+                if (this.selectType === 'month') {
+                    this.curDateTime = moment(this.curDateTime).subtract(1, 'month').format('YYYY-MM')
+                    this.changeDate(this.curDateTime)
+                    this.time = false
+                }
+            },
+            // 快捷切换(下)
+            bottomItem () {
+                if (this.selectType === 'month' && moment(this.curDateTime).add(1, 'month').format('YYYY-MM') <= moment(new Date()).format('YYYY-MM')) {
+                    this.curDateTime = moment(this.curDateTime).add(1, 'month').format('YYYY-MM')
+                    this.changeDate(this.curDateTime)
+                }
+                if (this.selectType === 'month' && moment(this.curDateTime).format('YYYY-MM') === moment(new Date()).format('YYYY-MM')) {
+                    this.time = true
+                }
+            },
             // 初始化调用
             initData () {
                 this.RenderData()
@@ -149,8 +172,9 @@
             },
             // 日期改变
             changeDate (date) {
+                this.time = false
                 this.pagingDevice.curPage = 1
-                this.curDateTime = date
+                this.curDateTime = moment(date).format('YYYY-MM')
                 this.RenderData()
             },
             // 切换页码
