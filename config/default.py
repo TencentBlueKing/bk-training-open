@@ -127,7 +127,9 @@ IS_AJAX_PLAIN_MODE = True
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)  # noqa
 
 # 网站url
-BKAPP_FULL_SITE_URL = os.getenv("BKAPP_FULL_SITE_URL")  # noqa
+BKAPP_FULL_SITE_URL = os.getenv("BKAPP_FULL_SITE_URL")
+# 权限中心拉取资源的token
+BKAPP_IAM_AUTH_TOKEN = os.getenv("BKAPP_IAM_AUTH_TOKEN")
 
 USE_TZ = False
 TIME_ZONE = "Asia/Shanghai"
