@@ -158,7 +158,7 @@
                 // 一天的毫秒数
                 dayMsec: 24 * 60 * 60 * 1000,
                 // 快捷组件按钮的禁用情况 time(时间上限) / all / top / bottom / true
-                top: false,
+                top: true,
                 bottom: false,
                 time: false,
                 // 当前快捷用户的下标位置
@@ -173,7 +173,7 @@
                 }
                 this.filterUserId(this.username).then(res => {
                     this.curSelectUser = res
-                    this.selectedType('member')
+                    this.selectedType('member', true)
                 })
             },
             curgroupid () {
@@ -185,6 +185,9 @@
             curdate (oldVal) {
                 this.curDateTime = oldVal
                 this.changeDate(oldVal)
+            },
+            curSelectUser (oldVal) {
+                this.selectUserIndex()
             }
         },
         methods: {
@@ -233,34 +236,40 @@
                 }
             },
             // 日期改变
-            changeDate (date) {
-                this.time = false
+            changeDate (date, flat = true) {
+                if (flat) {
+                    this.time = false
+                }
                 this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 成员的改变
             changeUser (id) {
-                this.top = false
-                this.bottom = false
                 this.pagingDevice.curPage = 1
                 this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 切换 日期或者人名
-            selectedType (type) {
+            selectedType (type, flat = false) {
                 this.pagingDevice.curPage = 1
                 // 跟换焦点
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
                 if (type === 'member') {
                     if (this.groupusers.length !== 0) {
-                        this.curSelectUser = this.groupusers[0].id
-                        this.changeUser(this.curSelectUser)
+                        if (flat) {
+                            // 链接跳进来
+                            this.changeUser(this.curSelectUser)
+                        } else {
+                            // 不是链接跳进来
+                            this.curSelectUser = this.groupusers[0].id
+                            this.changeUser(this.curSelectUser)
+                        }
                     } else {
                         // 没成员就空
                         this.curSelectUser = ''
                     }
                 } else {
                     // 找当前时间的日报
-                    this.changeDate(this.curdate)
+                    this.changeDate(this.curdate, false)
                 }
             },
             // 切换页码
@@ -290,9 +299,15 @@
                         this.forbUserIndex = index
                         if (index === 0) {
                             this.top = true
+                            this.bottom = false
                         }
                         if (index === this.groupusers.length - 1) {
+                            this.top = false
                             this.bottom = true
+                        }
+                        if (index !== 0 && index !== this.groupusers.length - 1) {
+                            this.top = false
+                            this.bottom = false
                         }
                     }
                 })
