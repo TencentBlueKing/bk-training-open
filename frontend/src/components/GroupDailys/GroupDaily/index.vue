@@ -5,7 +5,7 @@
                 <bk-button :class="curType === 'date' ? 'is-selected' : ''" size="small" @click="selectedType('date')">日期</bk-button>
                 <bk-button :class="curType === 'member' ? 'is-selected' : ''" size="small" @click="selectedType('member')">成员</bk-button>
             </div>
-            <!-- 成员选择器或者日期选择器 -->
+            <!-- 成员选择器 -->
             <div class="groupdaily-member-select" v-show="curType === 'member'">
                 <bk-select
                     :disabled="false"
@@ -23,9 +23,12 @@
                         :name="option.name || option.username">
                     </bk-option>
                 </bk-select>
+                <FastBtn :top="top" :bottom="bottom" @topItem="topItem" @bottomItem="bottomItem" />
             </div>
+            <!-- 日期选择器 -->
             <div class="groupdaily-date-select" v-show="curType === 'date'">
-                <bk-date-picker font-size="normal" :options="customOption" @change="changeDate" style="width: 250px;" :clearable="false" class="mr15" v-model="curDateTime"></bk-date-picker>
+                <bk-date-picker font-size="normal" :options="customOption" @change="changeDate" style="width: 250px;" :clearable="false" v-model="curDateTime"></bk-date-picker>
+                <FastBtn :time="time" @topItem="topItem" @bottomItem="bottomItem" />
             </div>
             <!-- 分割线 -->
             <div class="halving"></div>
@@ -91,6 +94,7 @@
 
 <script>
     import moment from 'moment'
+    import FastBtn from '@/components/GroupDailys/FastBtn'
     import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
     const { getDaily } = requestApi
@@ -101,7 +105,8 @@
             bkDatePicker,
             bkException,
             bkPagination,
-            bkButton
+            bkButton,
+            FastBtn
         },
         props: {
             // 当前组id
@@ -149,11 +154,23 @@
                             return true
                         }
                     }
-                }
+                },
+                // 一天的毫秒数
+                dayMsec: 24 * 60 * 60 * 1000,
+                // 快捷组件按钮的禁用情况 time(时间上限) / all / top / bottom / true
+                top: false,
+                bottom: false,
+                time: false,
+                // 当前快捷用户的下标位置
+                forbUserIndex: 0
             }
         },
         watch: {
-            groupusers () {
+            groupusers (oldVal) {
+                if (oldVal.length === 0 || oldVal.length === 1) {
+                    this.top = true
+                    this.bottom = true
+                }
                 this.filterUserId(this.username).then(res => {
                     this.curSelectUser = res
                     this.selectedType('member')
@@ -171,12 +188,59 @@
             }
         },
         methods: {
+            // 快捷切换(上)
+            topItem () {
+                if (this.curType === 'date') {
+                    this.curDateTime = moment(this.curDateTime).subtract(1, 'days').format('YYYY-MM-DD')
+                    this.changeDate(this.curDateTime)
+                    this.time = false
+                }
+                // member
+                if (this.curType === 'member') {
+                    this.selectUserIndex()
+                    if (this.forbUserIndex === 0) {
+                        // 灰色
+                        this.top = true
+                    } else {
+                        this.curSelectUser = this.groupusers[this.forbUserIndex - 1].id
+                        this.changeUser(this.groupusers[this.forbUserIndex - 1].id)
+                        this.top = false
+                    }
+                    this.bottom = false
+                }
+            },
+            // 快捷切换(下)
+            bottomItem () {
+                if (this.curType === 'date' && moment(this.curDateTime).add(1, 'days').format('YYYY-MM-DD') <= moment(new Date()).format('YYYY-MM-DD')) {
+                    this.curDateTime = moment(this.curDateTime).add(1, 'days').format('YYYY-MM-DD')
+                    this.changeDate(this.curDateTime)
+                }
+                if (this.curType === 'date' && moment(this.curDateTime).format('YYYY-MM-DD') === moment(new Date()).format('YYYY-MM-DD')) {
+                    this.time = true
+                }
+                // member
+                if (this.curType === 'member') {
+                    this.selectUserIndex()
+                    if (this.forbUserIndex === this.groupusers.length - 1) {
+                        // 灰色
+                        this.bottom = true
+                    } else {
+                        this.curSelectUser = this.groupusers[this.forbUserIndex + 1].id
+                        this.changeUser(this.groupusers[this.forbUserIndex + 1].id)
+                        this.bottom = false
+                    }
+                    this.top = false
+                }
+            },
             // 日期改变
             changeDate (date) {
+                this.time = false
                 this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 成员的改变
             changeUser (id) {
+                this.top = false
+                this.bottom = false
                 this.pagingDevice.curPage = 1
                 this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage)
             },
@@ -219,6 +283,20 @@
                     return true
                 }
             },
+            // 当前用户在数组的哪个地方
+            selectUserIndex () {
+                this.groupusers.forEach((item, index) => {
+                    if (item.id === this.curSelectUser) {
+                        this.forbUserIndex = index
+                        if (index === 0) {
+                            this.top = true
+                        }
+                        if (index === this.groupusers.length - 1) {
+                            this.bottom = true
+                        }
+                    }
+                })
+            },
             // 根据用户名过滤出用户id
             filterUserId (username) {
                 return new Promise((resolve, reject) => {
@@ -235,10 +313,9 @@
             */
             getRenderDaily (curDate, curUserId, limit, curPage) {
                 getDaily(this.curgroupid, curDate, curUserId, limit, curPage).then(res => {
-                    const renderList = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
+                    this.renderDaily = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
                     this.pagingDevice.count = res.data.total_report_num
                     this.my_today_report = res.data.total_report_num
-                    this.renderDaily = renderList
                 })
             }
         }

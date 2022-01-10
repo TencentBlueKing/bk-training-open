@@ -184,3 +184,8 @@
 /deep/ .bk-page-count {
   margin-right: 20px;
 }
+
+.excellentdaily-date-select {
+  display: flex;
+  margin-right: 0;
+}
