@@ -3,30 +3,26 @@
 # @Time     : 2022/1/10 12:49
 # @Remarks  : 权限中心的相关操作
 import json
-import logging
 
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from blueapps.account.decorators import login_exempt
 from blueapps.conf import settings
 from home_application.models import Group
 
-logger = logging.getLogger("component")
 
-
+@login_exempt
+@csrf_exempt
 @require_POST
 def group(request):
     """拉取组信息"""
     req = json.loads(request.body)
-    # 打日志
-    logger.level = logging.INFO
-    logger.info("请求头为: %s\r\n请求体为: %s", request.headers, req)
     # 鉴权
-    token_b64 = request.headers.get("Authorization")
+    token_b64 = request.META.get("HTTP_AUTHORIZATION")
     if token_b64 is None or token_b64 != settings.BKAPP_IAM_AUTH_TOKEN:
-        response = JsonResponse({"code": 401, "message": "权限认证失败", "data": {}})
-        response["X-Request-Id"] = request.headers.get("X-Request-Id")
-        return response
+        return JsonResponse({"code": 401, "message": "权限认证失败", "data": {}})
 
     allowed_method = ["list_instance", "search_instance"]  # 允许的拉取方式
     allowed_type = ["group"]  # 允许拉取的资源
@@ -37,9 +33,7 @@ def group(request):
 
     # 判断资源、拉取方式是否合法
     if not (method in allowed_method and resource_type in allowed_type):
-        response = JsonResponse({"code": 404, "message": "不存在的资源信息查询方式，请核对", "data": {}})
-        response["X-Request-Id"] = request.headers.get("X-Request-Id")
-        return response
+        return JsonResponse({"code": 404, "message": "不存在的资源信息查询方式，请核对", "data": {}})
 
     # 查询组信息
     if method == "search_instance":
@@ -57,8 +51,4 @@ def group(request):
     ]
 
     # 返回数据
-    response = JsonResponse(
-        {"code": 0, "message": "拉取组信息成功", "data": {"count": groups.count(), "results": group_infos}}
-    )
-    response["X-Request-Id"] = request.headers.get("X-Request-Id")
-    return response
+    return JsonResponse({"code": 0, "message": "success", "data": {"count": groups.count(), "results": group_infos}})

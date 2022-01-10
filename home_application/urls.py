@@ -15,7 +15,7 @@ from django.conf.urls import url
 from django.urls import path
 
 from home_application import views
-from home_application.views import authority_center
+from home_application.views import iam_view
 
 urlpatterns = (
     path("", views.home),
@@ -57,5 +57,5 @@ urlpatterns = (
     path("check_user_in_group/<int:group_id>/", views.check_user_in_group),
     path("check_user_admin/", views.check_user_admin),
     # 权限中心的资源反拉
-    path("resources/group/", authority_center.group),
+    path("resources/group/", iam_view.group),
 )
