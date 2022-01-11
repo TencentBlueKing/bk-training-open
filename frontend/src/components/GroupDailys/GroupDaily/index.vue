@@ -180,7 +180,7 @@
                 // 如果用户组发生了变化开始
                 this.curType = 'date'
                 this.pagingDevice.curPage = 1
-                this.changeDate(moment(this.curdate).format('YYYY-MM-DD'))
+                this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
             },
             curdate (oldVal) {
                 this.curDateTime = oldVal
@@ -269,7 +269,7 @@
                     }
                 } else {
                     // 找当前时间的日报
-                    this.changeDate(this.curdate, false)
+                    this.changeDate(this.curDateTime, false)
                 }
             },
             // 切换页码
