@@ -126,11 +126,6 @@ IS_AJAX_PLAIN_MODE = True
 # 国际化配置
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)  # noqa
 
-# 网站url
-BKAPP_FULL_SITE_URL = os.getenv("BKAPP_FULL_SITE_URL")
-# 权限中心拉取资源的token
-BKAPP_IAM_AUTH_TOKEN = os.getenv("BKAPP_IAM_AUTH_TOKEN")
-
 USE_TZ = False
 TIME_ZONE = "Asia/Shanghai"
 LANGUAGE_CODE = "zh-hans"
