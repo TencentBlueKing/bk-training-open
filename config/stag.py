@@ -56,3 +56,6 @@ DATABASES.update(
         },
     }
 )
+
+# 权限中心拉取资源目标系统的system id
+BKAPP_IAM_SYSTEM_ID = "bk-daily-stag"

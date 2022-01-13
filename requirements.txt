@@ -22,10 +22,4 @@ whitenoise==3.3.0
 six==1.11.0
 django_mysql==3.12.0
 
-# iam-python-sdk
-cachetools==3.1.1
-certifi==2020.4.5.1
-chardet==3.0.4
-curlify==2.2.1
-idna==2.9
-urllib3==1.25.9
+bk-iam==1.1.20

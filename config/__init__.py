@@ -39,18 +39,6 @@ def get_env_or_raise(key):
 APP_CODE = get_env_or_raise("BKAPP_APP_CODE")
 # 应用用于调用云 API 的 Secret
 SECRET_KEY = get_env_or_raise("BKAPP_APP_SECRET")
-# 调用API的用户名
-API_INVOKE_USER = get_env_or_raise("BKAPP_API_INVOKE_USER")
-# 日报网站url
-BKAPP_FULL_SITE_URL = get_env_or_raise("BKAPP_FULL_SITE_URL")
-# 权限中心拉取资源的token
-BKAPP_IAM_AUTH_TOKEN = get_env_or_raise("BKAPP_IAM_AUTH_TOKEN")
-# 权限中心拉取资源目标系统的system id
-BKAPP_IAM_SYSTEM_ID = get_env_or_raise("BKAPP_IAM_SYSTEM_ID")
-# 权限中心的网址
-BKAPP_IAM_HOST = get_env_or_raise("BKAPP_IAM_HOST")
-# 蓝鲸paas的网址
-BKAPP_PAAS_HOST = get_env_or_raise("BKAPP_PAAS_HOST")
 
 # SaaS运行版本，如非必要请勿修改
 RUN_VER = "open"

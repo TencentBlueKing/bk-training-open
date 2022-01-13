@@ -6,20 +6,19 @@ import json
 import logging
 
 import requests
+from iam import IAM, Action, Request, Resource, Subject
 
 from blueapps.conf import settings
 from home_application.models import Group
-from iam import IAM, Action, Request, Resource, Subject
 
-logger = logging.getLogger("iam")
+logger = logging.getLogger("component")
 
 
 class Permission(object):
     def __init__(self):
-        self.__iam = IAM(settings.APP_CODE, settings.SECRET_KEY, settings.BKAPP_IAM_HOST, settings.BKAPP_PAAS_HOST)
+        self.__iam = IAM(settings.APP_CODE, settings.SECRET_KEY, settings.BKAPP_IAM_HOST, settings.BK_URL)
 
-    @staticmethod
-    def __make_request_with_resources(username, action_id, resources):
+    def __make_request_with_resources(self, username, action_id, resources):
         """
         判断用户是否具有指定资源(resources, 具体到示例，如日报系统的组)的指定权限(action_id)
         :param username: 目标用户名
@@ -36,8 +35,7 @@ class Permission(object):
         )
         return request
 
-    @staticmethod
-    def __make_request_without_resources(username, action_id):
+    def __make_request_without_resources(self, username, action_id):
         request = Request(
             settings.BKAPP_IAM_SYSTEM_ID,
             Subject("user", username),
@@ -47,8 +45,7 @@ class Permission(object):
         )
         return request
 
-    @staticmethod
-    def __grant_or_revoke_authority(username, group_id, group_name, bk_token, auth_type):
+    def __grant_or_revoke_authority(self, username, group_id, group_name, bk_token, auth_type):
         """
         授权或者回收组管理权限
         :param username: 操作对象
@@ -79,7 +76,7 @@ class Permission(object):
                 ],
             }
         )
-        url = "https://paas-edu.bktencent.com/api/c/compapi/v2/iam/authorization/path/"
+        url = "%s/api/c/compapi/v2/iam/authorization/path/" % settings.BK_URL
         response = requests.request("POST", url, data=request_date)
 
         if response.status_code != 200 or json.loads(response.text).get("code") != 0:
@@ -89,7 +86,7 @@ class Permission(object):
                 auth_type_str = "回收权限失败"
             else:
                 auth_type_str = "未知的操作：%s" % auth_type
-            logger.error(auth_type_str, "\r\n请求路由：", url, "\r\n请求参数：", request_date, "\r\n响应结果：", response)
+            logger.error(f"{auth_type_str}\r\n请求路由：{url}\r\n请求参数：{request_date}\r\n响应结果：{response.text}")
             return False
         else:
             return True

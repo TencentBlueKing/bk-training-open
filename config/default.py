@@ -14,6 +14,7 @@ import os
 
 from blueapps.conf.default_settings import *  # noqa
 from blueapps.conf.log import get_logging_config_dict
+from config import get_env_or_raise
 
 # 这里是默认的 INSTALLED_APPS，大部分情况下，不需要改动
 # 如果你已经了解每个默认 APP 的作用，确实需要去掉某些 APP，请去掉下面的注释，然后修改
@@ -125,6 +126,15 @@ IS_AJAX_PLAIN_MODE = True
 
 # 国际化配置
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)  # noqa
+
+# 调用API的用户名
+API_INVOKE_USER = get_env_or_raise("BKAPP_API_INVOKE_USER")
+# 日报网站url
+BKAPP_FULL_SITE_URL = get_env_or_raise("BKAPP_FULL_SITE_URL")
+# 权限中心会给注册的系统生成token https://bk.tencent.com/docs/document/6.0/160/8438?r=1
+BKAPP_IAM_AUTH_TOKEN = get_env_or_raise("BKAPP_IAM_AUTH_TOKEN")
+# 权限中心的网址
+BKAPP_IAM_HOST = "http://iam-edu.bktencent.com"
 
 USE_TZ = False
 TIME_ZONE = "Asia/Shanghai"
