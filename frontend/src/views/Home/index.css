@@ -464,7 +464,8 @@
   padding: 6px;
   box-sizing: border-box;
   width: 100%;
-  background: #f5f7fa;
+  background: #f0f1f5;
+
   margin-bottom: 10px;
 }
 
@@ -489,7 +490,7 @@
   align-items: center;
   justify-content: center;
   width: 20px;
-  background: #f0f1f5;
+  background: #f5f7fa;
   height: 32px;
 }
 
