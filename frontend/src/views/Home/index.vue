@@ -71,71 +71,56 @@
             <!-- 抽屉 -->
             <bk-sideslider
                 width="600"
-                :is-show.sync="leaveSetting.visible"
+                :is-show.sync=" leaveSetting.visible"
                 :quick-close="true"
                 @hidden="hiddenSlider"
                 direction="right"
                 ext-cls="leave-slide">
-                <div slot="header" class="slide-header">
-                    <div :class="{
-                        'header-tabs': true,
-                        'tabs-active': title === activeTabTitle
-                    }" v-for="(title,tindex) in slideTitleList" :key="tindex" @click="changeTab(title)">
-                        {{title}}
-                    </div>
-                </div>
                 <!-- 下部分主题内容 -->
                 <div slot="content">
+                    <bk-date-picker
+                        v-show="activeTabTitle === '请假申请'"
+                        v-model="leaveFormData.dateTimeRange"
+                        class="slide-header-picker"
+                        :clearable="false"
+                        placeholder="选择日期范围"
+                        type="daterange"
+                        :options="customLeaveOption"
+                        @clear="clearDate"
+                    ></bk-date-picker>
+                    <!-- 组选择器 -->
+                    <bk-select v-show="activeTabTitle === '请假信息'" :disabled="false" v-model="selectedGroup" style="width: 200px;"
+                        class="slide-header-select"
+                        ext-popover-cls="select-popover-custom"
+                        @selected="handleSelectGroup"
+                        searchable>
+                        <bk-option v-for="goption in groupList"
+                            :key="goption.id"
+                            :id="goption.id"
+                            :name="goption.name">
+                        </bk-option>
+                    </bk-select>
+                    <div class="bk-button-group">
+                        <bk-button @click="changeTab('请假申请')" :class="activeTabTitle === '请假申请' ? 'is-selected' : ''">请假申请</bk-button>
+                        <bk-button @click="changeTab('请假信息')" :class="activeTabTitle === '请假信息' ? 'is-selected' : ''">请假信息</bk-button>
+                    </div>
                     <!-- 请假申请 -->
-                    <div class="leave-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabTitle === slideTitleList[0]">
-                        <div class="leave-apply">
-                            <bk-form :label-width="80" form-type="horizontal">
-                                <bk-form-item label="请假日期" :required="true">
-                                    <bk-date-picker
-                                        v-model="leaveFormData.dateTimeRange"
-                                        class="mr15"
-                                        :clearable="false"
-                                        placeholder="选择日期范围"
-                                        type="daterange"
-                                        :options="customLeaveOption"
-                                        @clear="clearDate"
-                                    ></bk-date-picker>
-                                </bk-form-item>
-                                <bk-form-item label="请假原因">
-                                    <bk-input
-                                        placeholder=""
-                                        type="textarea"
-                                        :rows="3"
-                                        :maxlength="255"
-                                        v-model="leaveFormData.reason">
-                                    </bk-input>
-                                </bk-form-item>
-                                <bk-form-item class="mt20">
-                                    <bk-button
-                                        style="margin-right: 3px;"
-                                        theme="primary" title="提交"
-                                        @click.stop.prevent="submitLeave">提交</bk-button>
-                                </bk-form-item>
-                            </bk-form>
+                    <div class="leave-body" v-show="activeTabTitle === slideTitleList[0]">
+                        <div class="temp-top">
+                            <h3 class="top-h3">
+                                请假原因
+                            </h3>
                         </div>
+                        <div class="single-card-box temtextarea leave-body-textarea">
+                            <bk-input placeholder="请填写内容" :type="'textarea'" :rows="3" :maxlength="50" v-model="leaveFormData.reason"></bk-input>
+                        </div>
+                        <bk-button class="leave-body-submit" :hover-theme="'primary'" @click="submitLeave">
+                            提交
+                        </bk-button>
                     </div>
                     <!-- 请假信息 -->
                     <div class="leave-body" style="padding: 30px 10px 0;" v-show="activeTabTitle === slideTitleList[1]">
                         <div class="leave-manage">
-                            <div class="select-bar">
-                                <div class="ptitle">选择组</div>
-                                <bk-select :disabled="false" v-model="selectedGroup" style="width: 200px;"
-                                    ext-cls="select-custom"
-                                    ext-popover-cls="select-popover-custom"
-                                    @selected="handleSelectGroup"
-                                    searchable>
-                                    <bk-option v-for="goption in groupList"
-                                        :key="goption.id"
-                                        :id="goption.id"
-                                        :name="goption.name">
-                                    </bk-option>
-                                </bk-select>
-                            </div>
                             <div class="leave-load" v-show="isleaveTableLoad" v-bkloading="{ isLoading: isleaveTableLoad, theme: 'primary', zIndex: 10 }"></div>
                             <bk-table
                                 v-show="!isleaveTableLoad"
@@ -150,9 +135,19 @@
                                 <div slot="empty-text">
                                     空数据
                                 </div>
-                                <bk-table-column label="人员信息" prop="info" min-width="150" show-overflow-tooltip="true"></bk-table-column>
-                                <bk-table-column label="请假时间" prop="leaveDate" min-width="180" show-overflow-tooltip="true"></bk-table-column>
-                                <bk-table-column label="请假理由" prop="reason" min-width="100" show-overflow-tooltip="true"></bk-table-column>
+                                <bk-table-column label="人员信息" min-width="30">
+                                    <template slot-scope="props">
+                                        <div>{{props.row.username}}</div>
+                                        <div>{{props.row.name}}</div>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column label="请假时间" min-width="10">
+                                    <template slot-scope="props">
+                                        <div>{{props.row.start_date}}</div>
+                                        <div>{{props.row.end_date}}</div>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column label="请假理由" prop="reason" min-width="200" show-overflow-tooltip="true"></bk-table-column>
                                 <bk-table-column label="操作" width="66">
                                     <template slot-scope="props">
                                         <bk-button :disabled="props.row.username !== myMsg.username && !isAdmin" class="mr10" theme="primary" text @click="removeLeave(props.row)">删除</bk-button>
@@ -172,8 +167,6 @@
     import {
         bkButton,
         bkDatePicker,
-        bkForm,
-        bkFormItem,
         bkInput,
         bkSideslider,
         bkTable,
@@ -191,8 +184,6 @@
             bkTableColumn,
             bkButton,
             bkSideslider,
-            bkForm,
-            bkFormItem,
             Onoff
         },
         data () {
@@ -257,7 +248,7 @@
                 },
                 isleaveTableLoad: true,
                 leaveTableData: {
-                    size: 'small',
+                    size: 'medium',
                     data: [],
                     isAdmin: false
                 },
@@ -385,7 +376,6 @@
                             dailyDataContent: [],
                             newTemplateContent: []
                         }
-                       
                         for (const singleContent of res.data.content) {
                             // 根源
                             if (singleContent.type === 'table') {
@@ -555,13 +545,15 @@
             // 用户渲染请假的信息
             leaveRender (data) {
                 // 渲染请假人信息
-                data.map((item, index) => {
+                this.timeSort(data).map((item, index) => {
                     this.leaveTableData.data.push({
                         'offdayId': item.off_info.id,
-                        'leaveDate': item.off_info.start_date + '  ~  ' + item.off_info.end_date,
+                        'start_date': item.off_info.start_date,
+                        'end_date': item.off_info.end_date,
                         'reason': item.off_info.reason,
-                        'info': item.username + '(' + item.name + ')',
-                        'username': item.username
+                        'info': item.username + item.name,
+                        'username': item.username,
+                        'name': item.name
                     })
                 })
             },
@@ -641,6 +633,17 @@
                         }
                     })
                 }
+            },
+            // 请假时间排序
+            timeSort (rankDate) {
+                return rankDate.sort((a, b) => {
+                    if (b.off_info.start_date > a.off_info.start_date) {
+                        return -1
+                    }
+                    if (b.off_info.start_date < a.off_info.start_date) {
+                        return 1
+                    }
+                })
             },
             // 弹窗
             showBkMessage (msg, theme = 'warning', delay = 2000) {
