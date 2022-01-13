@@ -1,16 +1,12 @@
 <template>
     <div class="body">
         <div class="container">
-            <div v-if="!yesterdayDaliy">
-                <bk-alert type="warning" title="昨天的日报还没写！记得补上哦！" closable></bk-alert>
-            </div>
             <div class="top-container">
                 <div class="top-container-left">
                     <!-- 日期选择器 -->
                     <div class="top-container-left-picker">
                         <bk-date-picker
                             v-model="formatDate"
-                            font-size="large"
                             :clearable="false"
                             placeholder="选择日期"
                             :options="customOption"
@@ -30,7 +26,7 @@
                     <div>
                         <Onoff class="allOnoff" :scope="true" @changeState="setAllPrivate"></Onoff>
                     </div>
-                    <bk-button class="top-container-right-btn savedaily" style="display: inline-block" @click="saveDaily">
+                    <bk-button :hover-theme="'primary'" class="top-container-right-btn savedaily" style="display: inline-block" @click="saveDaily">
                         {{ hasWrittenToday ? '修改' : '保存' }}
                     </bk-button>
                 </div>
@@ -38,33 +34,35 @@
             <div class="bottom_container">
                 <template v-for="(singleContent, index) in renderList.dailyDataContent">
                     <!-- 今日任务 & 日报填写 -->
-                    <div style="margin-bottom: 40px" :key="singleContent">
-                        <h3 :ref="'title' + index">{{singleContent.title}}</h3>
-                        <div class="single-card-box" v-for="(item) in singleContent.content" :key="item.$index">
+                    <div style="margin-bottom: 20px" :key="singleContent">
+                        <h3 class="top-h3" :ref="'title' + index">{{singleContent.title}}</h3>
+                        <div class="single-card-box" v-for="(item,i) in singleContent.content" :key="item.$index">
                             <div class="single-card-header">
-                                <bk-input style="margin-top: 10px; width: 50px;" type="number" v-model="item.cost" placeholder="时间" :show-controls="false"></bk-input>
+                                <bk-input style="margin-top: 10px; width: 50px;" :ref="`numberDom${index}${i}`" type="number" @blur="changeNumber(item,index,i,$event)" v-model="item.cost" placeholder="时间" :show-controls="false"></bk-input>
                                 <div class="input-append">h</div>
                                 <!-- 隐私框 -->
                                 <Onoff class="Onoff" :state="item.isPrivate" @changeState="(val) => {
                                     item.isPrivate = val
                                 }"></Onoff>
-                                <bk-icon @click="textChange(item,index)" style="position:absolute;right:20px;cursor: pointer;fontSize:25px" type="close" />
+                                <bk-icon @click="textChange(item,index)" style="position:absolute;top:-8px; right:-8px;cursor: pointer;fontSize:25px" type="close" />
                             </div>
                             <bk-input placeholder="请填写内容" class="content-textarea" :type="'textarea'" :rows="3" :maxlength="255" v-model="item.text"></bk-input>
                         </div>
                         <div class="renderli">
-                            <bk-button @click="dealAdd(index)" theme="default">+ 添加一条</bk-button>
+                            <div class="renderli-add-btn" @click="dealAdd(index)">
+                                + 添加一条
+                            </div>
                         </div>
                     </div>
                 </template>
                 <template style="margin-bottom: 40px" v-for="(tem,index) in renderList.newTemplateContent">
-                    <div :key="index" style="margin-top: 40px">
+                    <div :key="index" style="margin-top: 20px">
                         <div class="temp-top">
-                            <h3>
+                            <h3 class="top-h3">
                                 {{tem.title}}
                             </h3>
                         </div>
-                        <div class="single-card-box">
+                        <div class="single-card-box temtextarea">
                             <bk-input placeholder="请填写内容" class="content-textarea" :type="'textarea'" :rows="3" :maxlength="255" v-model="tem.text"></bk-input>
                         </div>
                     </div>
@@ -172,7 +170,6 @@
 <script>
     import moment from 'moment'
     import {
-        bkAlert,
         bkButton,
         bkDatePicker,
         bkForm,
@@ -196,7 +193,6 @@
             bkSideslider,
             bkForm,
             bkFormItem,
-            bkAlert,
             Onoff
         },
         data () {
@@ -213,8 +209,6 @@
                         }
                     }
                 ],
-                // 昨天日报写了没
-                yesterdayDaliy: true,
                 // 日期选择器的日期
                 formatDate: moment(new Date()).format(moment.HTML5_FMT.DATE),
                 // 模板弹出框的配置项
@@ -344,7 +338,9 @@
             // 昨天日报填了没
             checkYesterdayDaliy () {
                 getYesterday().then(res => {
-                    this.yesterdayDaliy = res.result
+                    if (!res.result) {
+                        this.showBkMessage('昨天的日报还没写！记得补上哦！', 'warning', 8000)
+                    }
                 })
             },
             // 界面初始化
@@ -442,7 +438,6 @@
                         itemContent.$index--
                     }
                 }
-                this.showBkMessage('移除成功', 'success')
             },
             // 保存日报
             saveDaily () {
@@ -660,7 +655,15 @@
             // 监听文本框内容的变化
             textChange (item, index, i) {
                 this.deleteContent(item, index)
-                this.showBkMessage('移除成功', 'success')
+            },
+            changeNumber (item, index, i, el) {
+                if (el < 0) {
+                    item.cost = 0
+                }
+                if (el > 24) {
+                    item.cost = 24
+                    el = 24
+                }
             }
         }
     }

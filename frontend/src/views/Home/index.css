@@ -346,18 +346,6 @@
   border: 1px solid #699df4;
 }
 
-.savedaily:hover {
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  justify-content: center;
-  background: white;
-  color: #699df4;
-  border: 1px solid #699df4;
-}
-
 /deep/ .bk-form-textarea,
 /deep/ .textarea-maxlength {
   background-color: white;
@@ -473,17 +461,22 @@
 }
 
 .single-card-box {
-  padding: 10px;
+  padding: 6px;
   box-sizing: border-box;
   width: 100%;
-  background: #f0f1f5;
-  margin-bottom: 20px;
+  background: #f5f7fa;
+  margin-bottom: 10px;
+}
+
+/deep/ .bk-textarea-wrapper {
+  margin-top: 6px !important;
 }
 
 .single-card-header {
   display: flex;
   height: 32px;
   align-items: center;
+  position: relative;
 }
 
 >>> .bk-form-control {
@@ -496,7 +489,7 @@
   align-items: center;
   justify-content: center;
   width: 20px;
-  background: #f5f7fa;
+  background: #f0f1f5;
   height: 32px;
 }
 
@@ -568,4 +561,26 @@
 .temp-top h3 {
   display: flex;
   align-items: center;
+}
+
+.renderli-add-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #63656e;
+  width: 90px;
+  font-size: 14px;
+}
+
+.renderli-add-btn:hover {
+  color: #3a84ff;
+}
+
+.temtextarea {
+  padding-top: 1px;
+}
+
+.top-h3 {
+  margin: 0;
+  margin-bottom: 20px;
 }

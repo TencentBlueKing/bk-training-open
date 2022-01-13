@@ -1,12 +1,16 @@
 <template>
-    <div @click="changeState" :class="state === true ? 'privacy' : 'open'">
-        <bk-icon style="marginRight:3px" :type="state === true ? 'eye-slash' : 'eye' " />
-        <div>{{scope === true ? '全部' : ''}}{{state === true ? '私密' : '公开'}}</div>
-    </div>
+    <bk-button :hover-theme="scope ? 'primary' : ''" @click="changeState">
+        <bk-icon style="marginRight:3px;" :type="state === true ? 'eye-slash' : 'eye' " />
+        {{scope === true ? '全部' : ''}}{{state === true ? '私密' : '公开'}}
+    </bk-button>
 </template>
 
 <script>
+    import { bkButton } from 'bk-magic-vue'
     export default {
+        components: {
+            bkButton
+        },
         props: {
             state: {
                 type: Boolean,
@@ -27,28 +31,8 @@
 </script>
 
 <style scoped>
-.open {
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding:0 10px;
-    justify-content: center;
-    background: white;
+ .bk-button, .bk-default.active,   .bk-button.bk-default:active{
+    border-color: none;
     color: #63656e;
-    border: 1px solid #c4c6cc;
 }
-
-.privacy {
-    border: 1px solid #c4c6cc;
-    color: #63656e;
-     font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding:0 10px;
-    justify-content: center;
-    background: white;
-}
-
 </style>
