@@ -32,3 +32,66 @@ export function setGoodDaily (curGroupId, dailyId) {
         })
     })
 }
+
+// 获得用户日报的填写情况(日期 哪些日期写了哪些日期没写)
+export function getReportsDates () {
+    return new Promise((resolve, reject) => {
+        http.get(`/get_reports_dates/`).then(res => {
+            resolve(res)
+        })
+    })
+}
+
+// 用户昨天日报的填写情况
+export function getYesterday () {
+    return new Promise((resolve, reject) => {
+        http.get(`/check_yesterday_daliy/`).then(res => {
+            resolve(res)
+        })
+    })
+}
+
+// 获得自己指定日期的日报
+export function getAppointDaily (formatDate) {
+    return new Promise((resolve, reject) => {
+        http.get(`/daily_report/?date=${formatDate}`).then(res => {
+            resolve(res)
+        })
+    })
+}
+
+// 添加或修改日报
+export function setUpdateDaily (newPostDaily) {
+    return new Promise((resolve, reject) => {
+        http.post(`/daily_report/`, newPostDaily).then(res => {
+            resolve(res)
+        })
+    })
+}
+
+// 查询未请假成员和请假成员信息
+export function selectPerMsg (groupId, todayDate, sign) {
+    return new Promise((resolve, reject) => {
+        http.get(`/display_personnel_information/${groupId}/?date=${todayDate}&sign=${sign}`).then(res => {
+            resolve(res)
+        })
+    })
+}
+
+// 组员申请请假
+export function applyRest (params) {
+    return new Promise((resolve, reject) => {
+        http.post(`/add_off_info/`, params).then(res => {
+            resolve(res)
+        })
+    })
+}
+
+// 撤回请假申请
+export function removeOff (groupId, offdayId) {
+    return new Promise((resolve, reject) => {
+        http.delete('/remove_off/' + groupId + '/' + offdayId + '/').then(res => {
+            resolve(res)
+        })
+    })
+}
