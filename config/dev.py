@@ -71,6 +71,3 @@ try:
     from local_settings import *  # noqa
 except ImportError:
     pass
-
-# 权限中心拉取资源目标系统的system id，因为涉及到权限中心要向日报系统拉取资源，所以本地拉取资源时从测试版环境拉取
-BKAPP_IAM_SYSTEM_ID = "bk-daily-stag"

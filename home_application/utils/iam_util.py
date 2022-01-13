@@ -14,7 +14,7 @@ from home_application.models import Group
 logger = logging.getLogger("component")
 
 
-class Permission(object):
+class IAMClient(object):
     def __init__(self):
         self.__iam = IAM(settings.APP_CODE, settings.SECRET_KEY, settings.BKAPP_IAM_HOST, settings.BK_URL)
 
