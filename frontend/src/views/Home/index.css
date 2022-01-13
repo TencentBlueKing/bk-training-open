@@ -577,10 +577,6 @@
   color: #3a84ff;
 }
 
-.temtextarea {
-  padding-top: 1px;
-}
-
 .top-h3 {
   margin: 0;
   margin-bottom: 20px;
@@ -642,4 +638,8 @@
 
 /deep/ .bk-sideslider-title {
   display: none;
+}
+
+.temtextarea {
+  padding-top: 2px !important;
 }

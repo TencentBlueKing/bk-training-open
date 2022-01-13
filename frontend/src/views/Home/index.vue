@@ -248,7 +248,7 @@
                 },
                 isleaveTableLoad: true,
                 leaveTableData: {
-                    size: 'small',
+                    size: 'medium',
                     data: [],
                     isAdmin: false
                 },
