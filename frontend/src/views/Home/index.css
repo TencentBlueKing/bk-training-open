@@ -50,6 +50,7 @@
   display: flex;
   flex-wrap: nowrap;
 }
+
 .leave-slide .slide-header .title {
   height: 60px;
   line-height: 60px;
@@ -588,7 +589,7 @@
 .bk-button-group {
   position: absolute;
   right: 20px;
-  top: 6px;
+  top: 20px;
 }
 
 /deep/ .bk-sideslider-closer {
@@ -620,6 +621,7 @@
 
 /deep/ .bk-sideslider-title {
   border-bottom: none;
+  display: flex;
 }
 
 .bk-table /deep/ .cell {
@@ -636,4 +638,8 @@
 
 .leave-body .single-card-box {
   border: 1px solid #c4c6cc;
+}
+
+/deep/ .bk-sideslider-title {
+  display: none;
 }

@@ -76,8 +76,8 @@
                 @hidden="hiddenSlider"
                 direction="right"
                 ext-cls="leave-slide">
-                <div slot="header" class="slide-header">
-                    <!-- 时间选择器 -->
+                <!-- 下部分主题内容 -->
+                <div slot="content">
                     <bk-date-picker
                         v-show="activeTabTitle === '请假申请'"
                         v-model="leaveFormData.dateTimeRange"
@@ -104,9 +104,6 @@
                         <bk-button @click="changeTab('请假申请')" :class="activeTabTitle === '请假申请' ? 'is-selected' : ''">请假申请</bk-button>
                         <bk-button @click="changeTab('请假信息')" :class="activeTabTitle === '请假信息' ? 'is-selected' : ''">请假信息</bk-button>
                     </div>
-                </div>
-                <!-- 下部分主题内容 -->
-                <div slot="content">
                     <!-- 请假申请 -->
                     <div class="leave-body" v-show="activeTabTitle === slideTitleList[0]">
                         <div class="temp-top">
@@ -138,7 +135,7 @@
                                 <div slot="empty-text">
                                     空数据
                                 </div>
-                                <bk-table-column label="人员信息" prop="info" min-width="25" show-overflow-tooltip="true"></bk-table-column>
+                                <bk-table-column label="人员信息" prop="info" min-width="30" show-overflow-tooltip="true"></bk-table-column>
                                 <bk-table-column label="请假时间" prop="leaveDate" min-width="10" show-overflow-tooltip="true"></bk-table-column>
                                 <bk-table-column label="请假理由" prop="reason" min-width="200" show-overflow-tooltip="true"></bk-table-column>
                                 <bk-table-column label="操作" width="66">
