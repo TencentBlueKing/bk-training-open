@@ -4,7 +4,6 @@
  */
 
 import webpack from 'webpack'
-import CopyWebpackPlugin from 'copy-webpack-plugin'
 import { VueLoaderPlugin } from 'vue-loader'
 import friendlyFormatter from 'eslint-friendly-formatter'
 
@@ -110,13 +109,6 @@ export default {
     plugins: [
         new VueLoaderPlugin(),
         // moment 优化，只提取本地包
-        new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
-        new CopyWebpackPlugin([
-            {
-                from: resolve('static/images'),
-                to: resolve('dist/static/images'),
-                toType: 'dir'
-            }
-        ])
+        new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/)
     ]
 }

@@ -20,7 +20,7 @@
                     <bk-option v-for="option in groupusers"
                         :key="option.id"
                         :id="option.id"
-                        :name="option.name || option.username">
+                        :name="option.username + '(' + option.name + ')'">
                     </bk-option>
                 </bk-select>
                 <FastBtn :top="top" :bottom="bottom" @topItem="topItem" @bottomItem="bottomItem" />
