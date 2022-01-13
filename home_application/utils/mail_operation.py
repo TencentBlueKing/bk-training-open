@@ -4,7 +4,6 @@
 # @Remarks  : 邮件相关操作的封装
 import datetime
 import logging
-import os
 import time
 
 from celery.task import task
@@ -34,7 +33,7 @@ def send_mail(receiver__username, title, content, body_format="Text", attachment
     # 从环境变量获取用户名(需添加白名单)
     if attachments is None:
         attachments = []
-    user = os.getenv("BKAPP_API_INVOKE_USER")
+    user = settings.API_INVOKE_USER
     bk_client = get_client_by_user(user=user)
     # API请求参数
     kwargs = {
