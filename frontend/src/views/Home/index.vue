@@ -135,8 +135,18 @@
                                 <div slot="empty-text">
                                     空数据
                                 </div>
-                                <bk-table-column label="人员信息" prop="info" min-width="30" show-overflow-tooltip="true"></bk-table-column>
-                                <bk-table-column label="请假时间" prop="leaveDate" min-width="10" show-overflow-tooltip="true"></bk-table-column>
+                                <bk-table-column label="人员信息" min-width="30">
+                                    <template slot-scope="props">
+                                        <div>{{props.row.username}}</div>
+                                        <div>{{props.row.name}}</div>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column label="请假时间" min-width="10">
+                                    <template slot-scope="props">
+                                        <div>{{props.row.start_date}}</div>
+                                        <div>{{props.row.end_date}}</div>
+                                    </template>
+                                </bk-table-column>
                                 <bk-table-column label="请假理由" prop="reason" min-width="200" show-overflow-tooltip="true"></bk-table-column>
                                 <bk-table-column label="操作" width="66">
                                     <template slot-scope="props">
@@ -366,7 +376,6 @@
                             dailyDataContent: [],
                             newTemplateContent: []
                         }
-                       
                         for (const singleContent of res.data.content) {
                             // 根源
                             if (singleContent.type === 'table') {
@@ -536,13 +545,15 @@
             // 用户渲染请假的信息
             leaveRender (data) {
                 // 渲染请假人信息
-                data.map((item, index) => {
+                this.timeSort(data).map((item, index) => {
                     this.leaveTableData.data.push({
                         'offdayId': item.off_info.id,
-                        'leaveDate': item.off_info.start_date + item.off_info.end_date,
+                        'start_date': item.off_info.start_date,
+                        'end_date': item.off_info.end_date,
                         'reason': item.off_info.reason,
                         'info': item.username + item.name,
-                        'username': item.username
+                        'username': item.username,
+                        'name': item.name
                     })
                 })
             },
@@ -622,6 +633,17 @@
                         }
                     })
                 }
+            },
+            // 请假时间排序
+            timeSort (rankDate) {
+                return rankDate.sort((a, b) => {
+                    if (b.off_info.start_date > a.off_info.start_date) {
+                        return -1
+                    }
+                    if (b.off_info.start_date < a.off_info.start_date) {
+                        return 1
+                    }
+                })
             },
             // 弹窗
             showBkMessage (msg, theme = 'warning', delay = 2000) {
