@@ -120,13 +120,6 @@
                             url: 'my-group',
                             show: true,
                             routerName: 'MyGroup'
-                        },
-                        {
-                            name: '管理组',
-                            id: 4,
-                            url: 'manage-group',
-                            show: false,
-                            routerName: 'ManageGroup'
                         }
                     ],
                     bizId: 1
@@ -142,7 +135,6 @@
             }
         },
         created () {
-            this.checkUserIsAdmin()
             getUser().then(res => {
                 window.localStorage.setItem('userMsg', JSON.stringify(res.data))
             })
@@ -156,20 +148,6 @@
             },
             beforeNavChange (newId, oldId) {
                 return true
-            },
-            checkUserIsAdmin () {
-                this.$http.get('/check_user_admin/').then(res => {
-                    if (res.result !== null) {
-                        this.header.list[3].show = res.result
-                    } else {
-                        this.$bkMessage({
-                            'offsetY': 80,
-                            'delay': 2000,
-                            'theme': 'error',
-                            'message': res.message
-                        })
-                    }
-                })
             }
         }
     }
