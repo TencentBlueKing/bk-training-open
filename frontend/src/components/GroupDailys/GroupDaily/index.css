@@ -45,11 +45,12 @@
 }
 
 .card {
+  position: relative;
   cursor: default;
   width: 24%;
   margin-bottom: 20px;
-  overflow-y: hidden;
   height: 400px;
+  overflow: hidden;
 }
 
 .renderlistbox-tiptoe {
@@ -59,6 +60,7 @@
 }
 
 /deep/ .bk-card-body {
+  position: relative;
   overflow-y: auto;
   padding-top: 10px;
   height: 350px;
@@ -68,14 +70,15 @@
   display: flex;
   flex-wrap: nowrap;
 }
-.card /deep/ .bk-card-head .card-header {
+.card /deep/ .bk-card-head {
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
   font-size: 16px;
   display: flex;
   justify-content: space-between;
+  padding-right: 20px;
 }
+
 .card /deep/ .bk-card-body .card-pre .time-wapper {
   width: 68px;
 }
@@ -152,11 +155,6 @@
   color: #3a84ff;
 }
 
-.card-time {
-  font-size: 14px !important;
-  color: #979ba5;
-}
-
 .card /deep/ .bk-card-body .sub-title {
   font-size: 14px !important;
   font-weight: bold;
@@ -178,10 +176,6 @@
 
 .bk-button-group /deep/ button {
   height: 100%;
-}
-
-.card-usename {
-  font-size: 14px;
 }
 
 .halving {
@@ -219,4 +213,45 @@
 .groupdaily-date-select {
   display: flex;
   height: 100%;
+}
+
+.card-header {
+  display: flex;
+  width: 100%;
+}
+
+.card-header-basic {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card-header-basic-noadmin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.card-usename {
+  font-size: 14px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.card-time {
+  font-size: 14px !important;
+  color: #979ba5;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.setgood-box {
+  position: absolute;
+  right: 20px;
+  font-size: 12px;
+  color: #3a84ff;
+  cursor: pointer;
 }

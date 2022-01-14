@@ -19,8 +19,15 @@
                 :key="index"
                 :title="daily.create_by + '(' + (daily.create_name) + ')'">
                 <div class="card-header" slot="header" :title="daily.create_by + '(' + (daily.create_name) + ')'">
-                    <span class="card-usename">{{daily.create_by + '(' + (daily.create_name) + ')'}}</span>
-                    <span class="card-time">{{daily.date}}</span>
+                    <div :class="isadmin ? 'card-header-basic' : 'card-header-basic-noadmin'">
+                        <div class="card-usename">{{daily.create_by + '(' + (daily.create_name) + ')'}}</div>
+                        <div class="card-time">
+                            <div>{{daily.date}}</div>
+                        </div>
+                    </div>
+                    <div class="setgood-box" v-show="isadmin" @click="setgoodDaily(daily)">
+                        {{daily.is_perfect ? '取消优秀' : '设为优秀'}}
+                    </div>
                 </div>
                 <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
                     <div class="sub-title">{{dailyContnet.title}}</div>
@@ -74,9 +81,10 @@
 <script>
     import moment from 'moment'
     import { bkPagination, bkButton } from 'bk-magic-vue'
+    import { isAdmin } from '@/utils/index.js'
     import FastBtn from '@/components/GroupDailys/FastBtn'
     import requestApi from '@/api/request.js'
-    const { getGoodDaily } = requestApi
+    const { getGoodDaily, setGoodDaily } = requestApi
     export default {
         components: {
             bkButton,
@@ -93,6 +101,7 @@
         },
         data () {
             return {
+                isadmin: false,
                 tabBtnContent: ['全部', '日期'],
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
                 // 当前选中的类型  默认是all,month
@@ -127,10 +136,14 @@
             curgroupid () {
                 this.pagingDevice.curPage = 1
                 this.RenderData()
+            },
+            adminlist (oldVal) {
+                this.isadmin = isAdmin(this.myMsg.username, oldVal)
             }
         },
-        created () {
+        activated () {
             this.initData()
+            this.isadmin = isAdmin(this.myMsg.username, this.adminlist)
         },
         methods: {
             // 快捷切换(上)
@@ -187,6 +200,25 @@
                 this.pagingDevice.curPage = 1
                 this.pagingDevice.limit = curlimit
                 this.RenderData()
+            },
+            // 设为优秀日报(设置优秀和取消优秀)
+            setgoodDaily (item) {
+                setGoodDaily(this.curgroupid, item.id).then(res => {
+                    if (res.code !== -1) {
+                        this.handleSuccess('取消优秀')
+                        this.RenderData()
+                    } else {
+                        this.handleSuccess('没有管理员权限', 'error')
+                    }
+                })
+            },
+            handleSuccess (msg, type = 'success') {
+                const config = {
+                    message: msg,
+                    offsetY: 80,
+                    theme: type
+                }
+                this.$bkMessage(config)
             },
             // 渲染数据的设置
             RenderData (year = '', month = '') {
