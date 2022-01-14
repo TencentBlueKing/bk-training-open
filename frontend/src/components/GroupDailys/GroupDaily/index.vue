@@ -40,9 +40,11 @@
                 :key="index"
                 :title="daily.create_by + '(' + (daily.create_name) + ')'">
                 <div class="card-header" slot="header" :title="daily.create_by + '(' + (daily.create_name) + ')'">
-                    <div class="card-usename">{{daily.create_by + '(' + (daily.create_name) + ')'}}</div>
-                    <div class="card-time">
-                        <div>{{daily.date}}</div>
+                    <div :class="isadmin ? 'card-header-basic' : 'card-header-basic-noadmin'">
+                        <div class="card-usename">{{daily.create_by + '(' + (daily.create_name) + ')'}}</div>
+                        <div class="card-time">
+                            <div>{{daily.date}}</div>
+                        </div>
                     </div>
                     <div class="setgood-box" v-show="isadmin" @click="setgoodDaily(daily)">
                         {{daily.is_perfect ? '取消优秀' : '设为优秀'}}

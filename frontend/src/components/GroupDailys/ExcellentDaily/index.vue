@@ -19,8 +19,8 @@
                 :key="index"
                 :title="daily.create_by + '(' + (daily.create_name) + ')'">
                 <div class="card-header" slot="header" :title="daily.create_by + '(' + (daily.create_name) + ')'">
-                    <div class="card-usename">{{daily.create_by + '(' + (daily.create_name) + ')'}}</div>
-                    <div class="card-time">
+                    <div :class="isadmin ? 'card-header-basic' : 'card-header-basic-noadmin'">
+                        <div class="card-usename">{{daily.create_by + '(' + (daily.create_name) + ')'}}</div>
                         <div class="card-time">
                             <div>{{daily.date}}</div>
                         </div>

@@ -50,6 +50,7 @@
   width: 24%;
   margin-bottom: 20px;
   height: 400px;
+  overflow: hidden;
 }
 
 .renderlistbox-tiptoe {
@@ -75,6 +76,7 @@
   font-size: 16px;
   display: flex;
   justify-content: space-between;
+  padding-right: 20px;
 }
 
 .card /deep/ .bk-card-body .card-pre .time-wapper {
@@ -215,8 +217,19 @@
 
 .card-header {
   display: flex;
+  width: 100%;
+}
+
+.card-header-basic {
+  display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.card-header-basic-noadmin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
 }
 
@@ -239,6 +252,6 @@
   position: absolute;
   right: 20px;
   font-size: 12px;
-  color: #a3c5fd;
+  color: #3a84ff;
   cursor: pointer;
 }
