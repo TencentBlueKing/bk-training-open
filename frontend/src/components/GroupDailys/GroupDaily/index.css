@@ -255,3 +255,8 @@
   color: #3a84ff;
   cursor: pointer;
 }
+
+.content-wapper {
+  white-space: normal;
+  word-break: break-all;
+}
