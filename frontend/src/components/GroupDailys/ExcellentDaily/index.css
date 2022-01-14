@@ -231,3 +231,7 @@
   align-items: center;
   width: 100%;
 }
+.content-wapper {
+  white-space: normal;
+  word-break: break-all;
+}
