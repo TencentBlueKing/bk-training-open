@@ -78,14 +78,21 @@ git pull blueking-train
 4. 配置环境变量
 
    ```
-   # 项目 APP_CODE & APP_SECRET (找项目负责人获取)
-   BKAPP_APP_CODE=xxxxxxxxxxxxx
-   BKAPP_APP_SECRET=xxxxxxxxxxxxx
-   
    # 自己的用户名（蓝鲸开发者账号）
    BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
    # 网站完整网址
    BKAPP_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
+   
+   # 以下环境变量需找负责人获取
+   # 项目 APP_CODE & APP_SECRET
+   BKAPP_APP_CODE=xxxxxxxxxxxxx
+   BKAPP_APP_SECRET=xxxxxxxxxxxxx
+   # 权限中心的token
+   BKAPP_IAM_AUTH_TOKEN=xxxxxxxxxxxxx
+   # 权限中心的网址
+   BKAPP_IAM_HOST=xxxxxxxxxxxxx	# 该域名需要同时配置本地hosts解析
+   # 权限中心拉取资源的系统id
+   BKAPP_IAM_SYSTEM_ID=xxxxxxxxxxxxx
    ```
 
    + 在PyCharm中配置环境变量以及主机名

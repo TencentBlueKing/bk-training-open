@@ -147,3 +147,48 @@ class IAMClient(object):
         # 直接用django queryset查
         groups = Group.objects.filter(filters).all()
         return [group.to_json() for group in groups]
+
+    def get_all_group_admin_info(self):
+        """获取所有组的管理员信息"""
+        # API文档：https://bk.tencent.com/docs/document/6.0/131/8454
+        url = "{}/api/v1/systems/{}/policies?action_id=admin".format(
+            settings.BKAPP_IAM_HOST, settings.BKAPP_IAM_SYSTEM_ID
+        )
+
+        headers = {"X-Bk-App-Code": settings.APP_CODE, "X-Bk-App-Secret": settings.SECRET_KEY}
+
+        response = requests.request("GET", url, headers=headers)
+
+        if response.status_code == 200:
+            res_json = json.loads(response.text)
+            # 返回数据的详细格式请参照上边的API文档
+            if res_json["code"] == 0:
+                group_admins = {}
+                for admin_info in res_json["data"]["results"]:
+                    admin_username = admin_info["subject"]["id"]
+                    # 这里返回的组id是字符串形式的，转为int与本地数据库保持同步
+                    # 如果只管理一个组则该用户的对应的资源列表为↓↓↓，其中op为eq，value类型为str
+                    # "expression": {
+                    #     "field": "group.id",
+                    # 	  "op": "eq",
+                    # 	  "value": "11"
+                    # }
+                    # 如果只管理多个则为↓↓↓，其中op为eq，value类型为str
+                    # "expression": {
+                    #     "field": "group.id",
+                    #     "op": "in",
+                    #     "value": ["11", "10"]
+                    # }
+                    group_ids = admin_info["expression"]["value"]
+                    if type(group_ids) == list:
+                        group_ids = map(int, group_ids)
+                    else:
+                        group_ids = [int(group_ids)]
+                    for group_id in group_ids:
+                        if group_id in group_admins.keys():
+                            group_admins[group_id].append(admin_username)
+                        else:
+                            group_admins[group_id] = [admin_username]
+                return group_admins
+        logger.error(f"获取所有组管理员失败\r\nurl: {url}\r\nheaders: {headers}\r\n权限中心返回结果: {response.text}")
+        return {}

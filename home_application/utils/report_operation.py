@@ -7,31 +7,15 @@ import datetime
 from home_application.models import Daily, Group, GroupUser, OffDay, User
 
 
-def content_format_as_json(daily_reports):
-    """
-    将查询到的日报内容格式化
-    注意，这里针对日报QuerySet操作，单个日报可以直接调用to_json()方法
-    :param daily_reports:   从数据库中查询到的QuerySet
-    :return:                完全json格式化的日报内容
-    """
-
-    # 存放json格式化后的日报内容
-    report_list = []
-    for report in daily_reports:
-        report_list.append(report.to_json())
-    return report_list
-
-
-def get_report_info_by_group_and_date(group_id: int, report_date: datetime.date):
+def get_report_info_by_group_and_date(group_id: int, group_admin: list, report_date: datetime.date):
     """
     获取指定日期指定组的日报信息
     :param group_id:    组id
+    :param group_admin: 组管理员list，需要从权限中心获取
     :param report_date: 日期
     """
     # 组
     group = Group.objects.get(id=group_id)
-    # 组内管理员
-    group_admin = group.admin_list
     # 所有成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids)

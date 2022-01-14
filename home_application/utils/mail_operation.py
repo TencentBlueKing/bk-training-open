@@ -12,6 +12,7 @@ from django.template.loader import get_template
 from blueapps.conf import settings
 from blueking.component.shortcuts import get_client_by_user
 from home_application.models import Daily, Group
+from home_application.utils.iam_util import IAMClient
 from home_application.utils.report_operation import (
     get_none_reported_user_of_group,
     get_report_info_by_group_and_date,
@@ -86,15 +87,16 @@ def notify_none_reported_user():
     remind_to_write_daily.apply_async(kwargs={"username_list": list(all_user_none_reported)})
 
 
-def notify_admin_group_info(group_id: int, date: datetime.date):
+def notify_admin_group_info(group_id: int, admin_list: list, date: datetime.date):
     """
     告知管理员组内日报信息
     :param group_id:        组id
+    :param admin_list:      组管理员list
     :param date:            日报日期
     :return:                发送邮件的返回值，即蓝鲸API调用结果
     """
     date_str = date.strftime("%Y-%m-%d")
-    group_info = get_report_info_by_group_and_date(group_id, date)
+    group_info = get_report_info_by_group_and_date(group_id, admin_list, date)
     logger.info("定时任务：告知%s %s %s的日报信息", group_info["admin_list"], date, group_info["name"])
     # 发送邮件
     mail_content = get_template("daily_email.html").render(
@@ -123,10 +125,14 @@ def notify_report_info(report_date: datetime.date):
     发送指定日期的日报概览给管理员
     :param report_date: 日报信息对应的日期
     """
-    # 查询所有组id 组名 组管理员
-    group_ids = Group.objects.values_list("id", flat=True)
-    for gid in group_ids:
-        notify_admin_group_info(gid, report_date)
+    # 从权限中心查询所有组的管理员
+    group_admins = IAMClient().get_all_group_admin_info()
+    # 如果从权限中心获取到的管理员为空且本地组数量不为0，则标明权限中心请求失败
+    if not group_admins and Group.objects.values("id").count() > 0:
+        logger.error(f"从权限中心拉取管理员列表失败，{report_date}的管理员邮件未发送")
+        return
+    for gid, admin_list in group_admins.items():
+        notify_admin_group_info(gid, admin_list, report_date)
     # 更新日报状态
     Daily.objects.filter(date=report_date).update(send_status=True, update_time=datetime.datetime.now())
     logger.info("%s的日报信息已发送给管理员" % report_date)
