@@ -102,7 +102,8 @@ def delete_group(request, group_id):
         return JsonResponse({"result": False, "code": -1, "message": "组不存在", "data": []})
 
     # 回收管理员权限，未能全部删除时与权限中心保持一致
-    new_admins = update_group_admins(group.admin_list, [], group_id, group.name)
+    bk_token = request.COOKIES.get("bk_token")
+    new_admins = update_group_admins(group.admin_list, [], group_id, group.name, bk_token)
 
     if len(new_admins) == 0:  # 成功回收所有管理员权限则直接返回
         group.delete()
