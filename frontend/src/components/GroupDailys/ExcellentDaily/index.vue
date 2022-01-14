@@ -25,7 +25,7 @@
                             <div>{{daily.date}}</div>
                         </div>
                     </div>
-                    <div class="setgood-box" @click="setgoodDaily(daily)">
+                    <div class="setgood-box" v-show="isadmin" @click="setgoodDaily(daily)">
                         {{daily.is_perfect ? '取消优秀' : '设为优秀'}}
                     </div>
                 </div>
@@ -81,6 +81,7 @@
 <script>
     import moment from 'moment'
     import { bkPagination, bkButton } from 'bk-magic-vue'
+    import { isAdmin } from '@/utils/index.js'
     import FastBtn from '@/components/GroupDailys/FastBtn'
     import requestApi from '@/api/request.js'
     const { getGoodDaily, setGoodDaily } = requestApi
@@ -100,6 +101,7 @@
         },
         data () {
             return {
+                isadmin: false,
                 tabBtnContent: ['全部', '日期'],
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
                 // 当前选中的类型  默认是all,month
@@ -134,10 +136,14 @@
             curgroupid () {
                 this.pagingDevice.curPage = 1
                 this.RenderData()
+            },
+            adminlist (oldVal) {
+                this.isadmin = isAdmin(this.myMsg.username, oldVal)
             }
         },
         activated () {
             this.initData()
+            this.isadmin = isAdmin(this.myMsg.username, this.adminlist)
         },
         methods: {
             // 快捷切换(上)

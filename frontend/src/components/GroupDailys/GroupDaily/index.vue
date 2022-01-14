@@ -44,7 +44,7 @@
                     <div class="card-time">
                         <div>{{daily.date}}</div>
                     </div>
-                    <div class="setgood-box" @click="setgoodDaily(daily)">
+                    <div class="setgood-box" v-show="isadmin" @click="setgoodDaily(daily)">
                         {{daily.is_perfect ? '取消优秀' : '设为优秀'}}
                     </div>
                 </div>
