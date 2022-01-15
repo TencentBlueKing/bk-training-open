@@ -43,6 +43,8 @@ SECRET_KEY = get_env_or_raise("BKAPP_APP_SECRET")
 # SaaS运行版本，如非必要请勿修改
 RUN_VER = "open"
 # 蓝鲸SaaS平台URL，例如 http://paas.bking.com
+# 不要直接拿来用，测试环境和正式环境会在后边拼接'/console/'    见blueapps/patch/settings_open_saas.py 79行
+# 如需蓝鲸SaaS平台URL，可以使用settings.BKAPP_PAAS_URL     见config.default.py 140行
 BK_URL = "https://paas-edu.bktencent.com:443"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

@@ -82,6 +82,8 @@ git pull blueking-train
    BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
    # 网站完整网址
    BKAPP_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
+   # 蓝鲸SaaS平台url
+   BKAPP_PAAS_URL=https://paas-edu.bktencent.com
    
    # 以下环境变量需找负责人获取
    # 项目 APP_CODE & APP_SECRET

@@ -137,6 +137,8 @@ BKAPP_IAM_AUTH_TOKEN = get_env_or_raise("BKAPP_IAM_AUTH_TOKEN")
 BKAPP_IAM_HOST = get_env_or_raise("BKAPP_IAM_HOST")
 # 权限中心拉取资源时目标系统的system id
 BKAPP_IAM_SYSTEM_ID = get_env_or_raise("BKAPP_IAM_SYSTEM_ID")
+# 蓝鲸SaaS平台url
+BKAPP_PAAS_URL = get_env_or_raise("BKAPP_PAAS_URL")
 
 USE_TZ = False
 TIME_ZONE = "Asia/Shanghai"
