@@ -16,7 +16,7 @@ logger = logging.getLogger("component")
 
 class IAMClient(object):
     def __init__(self):
-        self.__iam = IAM(settings.APP_CODE, settings.SECRET_KEY, settings.BKAPP_IAM_HOST, settings.BK_URL)
+        self.__iam = IAM(settings.APP_CODE, settings.SECRET_KEY, settings.BKAPP_IAM_HOST, settings.BKAPP_PAAS_URL)
 
     def __make_request_with_resources(self, username, action_id, resources):
         """
@@ -76,7 +76,7 @@ class IAMClient(object):
                 ],
             }
         )
-        url = "%s/api/c/compapi/v2/iam/authorization/path/" % settings.BK_URL
+        url = "%s/api/c/compapi/v2/iam/authorization/path/" % settings.BKAPP_PAAS_URL
         response = requests.request("POST", url, data=request_date)
 
         if response.status_code != 200 or json.loads(response.text).get("code") != 0:
