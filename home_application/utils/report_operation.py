@@ -7,15 +7,16 @@ import datetime
 from home_application.models import Daily, Group, GroupUser, OffDay, User
 
 
-def get_report_info_by_group_and_date(group_id: int, group_admin: list, report_date: datetime.date):
+def get_report_info_by_group_and_date(group_id: int, report_date: datetime.date):
     """
     获取指定日期指定组的日报信息
     :param group_id:    组id
-    :param group_admin: 组管理员list，需要从权限中心获取
     :param report_date: 日期
     """
     # 组
     group = Group.objects.get(id=group_id)
+    # 组内管理员
+    group_admin = group.admin_list
     # 所有成员
     group_user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     group_users = User.objects.filter(id__in=group_user_ids)
