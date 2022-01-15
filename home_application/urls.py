@@ -52,10 +52,11 @@ urlpatterns = (
     path("update_daily_perfect_status/<int:group_id>/<int:daily_id>/", views.update_daily_perfect_status),
     path("get_prefect_dailys/<int:group_id>/", views.get_prefect_dailys),
     path("free_time/", views.free_time_get_post),
-    path("free_time/<int:free_time_id>", views.free_time_patch_delete),
-    path("group_free_time/<int:group_id>", views.group_free_time),
+    path("free_time/<int:free_time_id>/", views.free_time_patch_delete),
+    path("group_free_time/<int:group_id>/", views.group_free_time),
     path("check_user_in_group/<int:group_id>/", views.check_user_in_group),
     path("check_user_admin/", views.check_user_admin),
+    path("name_free_time/<int:user_id>/", views.name_free_time),
     # 权限中心的资源反拉
     path("resources/group/", iam_view.group),
 )

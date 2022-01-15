@@ -120,6 +120,13 @@
                             url: 'my-group',
                             show: true,
                             routerName: 'MyGroup'
+                        },
+                        {
+                            name: '时间安排',
+                            id: 4,
+                            url: 'time-schedule',
+                            show: true,
+                            routerName: 'TimeSchedule'
                         }
                     ],
                     bizId: 1
@@ -158,7 +165,9 @@
 body{
     height:100vh;
 }
-
+.monitor-navigation-content {
+    height: calc(100vh - 136px)
+}
 body,html{
     height:100vh;
 background-color: white !important;
