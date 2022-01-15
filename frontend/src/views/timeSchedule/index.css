@@ -143,3 +143,13 @@
 .top-container-right-btn {
   margin-right: 5px;
 }
+.bk-sideslider.time-slide /deep/ .bk-sideslider-wrapper .right{
+    width: 400px;
+    right: 0;
+}
+.time-body .bk-label{
+  margin-left:0px !important;
+}
+.time-body .bk-date-picker-editor{
+    width: 120%;
+}

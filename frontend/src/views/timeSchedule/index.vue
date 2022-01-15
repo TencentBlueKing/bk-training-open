@@ -21,7 +21,7 @@
             </bk-button>
         </div>
         <bk-sideslider
-            width="600"
+            width="500"
             :is-show.sync="timeSetting.visible"
             :quick-close="true"
             @hidden="hiddenSlider"
@@ -49,7 +49,7 @@
                                 <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="addTimeDialog.data.endTime" placeholder="结束日期" />
                             </bk-form-item>
                         </bk-form>
-                        <bk-button theme="primary" @click="doAddTime" style="margin-left: 220px;margin-top: 20px;">增加</bk-button>
+                        <bk-button :hover-theme="'primary'" @click="doAddTime" style="margin-left: 252px;margin-top: 20px;">增加</bk-button>
                     </div>
                 </div>
                 <div class="time-body" style="padding: 30px 10px 0;" v-show="activeTabTitle === slideTitleList[1]">
@@ -64,7 +64,7 @@
                         </bk-form>
                         <bk-table
                             v-show="true"
-                            style="margin-top:30px;height: 500px"
+                            style="margin-top:30px;height: 500px;"
                             :virtual-render="false"
                             :data="timeData"
                             :size="timeTableData.size"
@@ -76,9 +76,9 @@
                             <div slot="empty-text">
                                 空数据
                             </div>
-                            <bk-table-column label="日期" prop="date" min-width="150" margin-top="55px" show-overflow-tooltip="true"></bk-table-column>
-                            <bk-table-column label="起始时间" prop="start_time" min-width="180" show-overflow-tooltip="true"></bk-table-column>
-                            <bk-table-column label="结束时间" prop="end_time" min-width="100" show-overflow-tooltip="true"></bk-table-column>
+                            <bk-table-column label="日期" prop="date" min-width="50" margin-top="55px" show-overflow-tooltip="true"></bk-table-column>
+                            <bk-table-column label="起始时间" prop="start_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
+                            <bk-table-column label="结束时间" prop="end_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
                             <bk-table-column label="操作" width="100">
                                 <template slot-scope="props">
                                     <bk-button theme="warning" text @click="showChangeTime(props.row)">修改</bk-button>
@@ -209,7 +209,6 @@
                 this.activeTabTitle = title
             },
             changeGroup (val) {
-                console.log('v', val)
                 this.selectGroup = val
             },
             // 获取组所有用户

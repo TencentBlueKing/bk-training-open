@@ -36,30 +36,25 @@
         </div>
         <div class="group-time-box" style="float: right">
             <div class="time-box" style="height: 10px ">
-                <div class="blue-background">
+                <div class="blue-background-time">
                     <div class="time-single ">
                     </div>
                 </div>
                 <div style="margin-left: 10px;font-size: 14px">空闲时间</div>
-                <div class="gray-background" style="margin-left: 10px;">
+                <div class="gray-background-time" style="margin-left: 10px;">
                     <div class="time-single ">
                     </div>
                 </div>
                 <div style="margin-left: 10px;font-size: 14px">忙碌时间</div>
             </div>
         </div>
-        <!--        <div class="bk-table-1-column-2   is-last" style="width: 850px">-->
-        <!--            <div v-for="i in timeShaft" :key="i" class="sign-position">-->
-        <!--                {{i + 7}}-->
-        <!--            </div>-->
-        <!--        </div>-->
         <div class="user-time-content-box" v-bkloading="{ isLoading: loading, zIndex: 10 }">
             <div class="user-time-content-box-first" v-show="curType === 'date'">
                 <bk-table
                     :data="timeData"
                     :size="size"
                 >
-                    <bk-table-column label="成员" prop="username" width="650%"></bk-table-column>
+                    <bk-table-column label="成员" prop="username" width="450%"></bk-table-column>
                     <bk-table-column :render-header="() => {
                         return [1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(item => {
                             return $createElement('div',{ style },item + 7)
@@ -72,8 +67,7 @@
                                         :class="checkFreeTimeGroup(props.row.free_time, item)">
                                     </div>
                                 </div>
-                            </div>
-                        </template>
+                            </div></template>
                     </bk-table-column>
                 </bk-table>
             </div>
@@ -82,8 +76,8 @@
                     :data="timeData"
                     :size="size"
                 >
-                    <bk-table-column label="日期" prop="date" width="325%"></bk-table-column>
-                    <bk-table-column label="星期" prop="weekend" width="325%"></bk-table-column>
+                    <bk-table-column label="日期" prop="date" width="225%"></bk-table-column>
+                    <bk-table-column label="星期" prop="weekend" width="225%"></bk-table-column>
                     <bk-table-column :render-header="() => {
                         return [1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(item => {
                             return $createElement('div',{ style },item + 7)
@@ -187,9 +181,10 @@
                     this.changeDate(this.curDateTime)
                 }
                 // member
+                console.log('this.forbUserIndexss', this.forbUserIndex)
                 if (this.curType === 'member') {
                     this.selectUserIndex()
-                    if (this.forbUserIndex === 0) {
+                    if (this.forbUserIndex === 0 || this.groupusers.length === 1) {
                         // 灰色
                         this.top = true
                     } else {
@@ -209,6 +204,7 @@
                 // member
                 if (this.curType === 'member') {
                     this.selectUserIndex()
+                    console.log('this.forbUserIndexx', this.forbUserIndex)
                     if (this.forbUserIndex === this.groupusers.length - 1) {
                         // 灰色
                         this.bottom = true
@@ -231,9 +227,8 @@
             // 切换 日期或者人名
             selectedType (type, flat = false) {
                 // 跟换焦点
-
                 this.curType = type
-                // 切换到了用户 找第一个默认用户的空闲时间(七天  )
+                // 切换到了用户 找第一个默认用户的空闲时间(七天)
                 if (type === 'member') {
                     if (this.groupusers.length !== 0) {
                         if (flat) {
@@ -241,8 +236,8 @@
                             this.changeUser(this.curSelectUser)
                         } else {
                             // 不是链接跳进来
-                            console.log('11')
                             this.curSelectUser = this.groupusers[0].id
+                            console.log('userid', this.groupusers[0].id)
                             this.changeUser(this.curSelectUser)
                         }
                     } else {
@@ -259,11 +254,11 @@
                 this.groupusers.forEach((item, index) => {
                     if (item.id === this.curSelectUser) {
                         this.forbUserIndex = index
-                        if (index === 0) {
+                        if (index === 0 && index !== this.groupusers.length - 1) {
                             this.top = true
                             this.bottom = false
                         }
-                        if (index === this.groupusers.length - 1) {
+                        if (index !== 0 && index === this.groupusers.length - 1) {
                             this.top = false
                             this.bottom = true
                         }
@@ -309,7 +304,6 @@
                 ).then(res => {
                     if (res.result) {
                         this.timeData = res.data
-                        console.log('11', this.timeData)
                     } else {
                         this.$bkMessage({
                             theme: 'warning',
@@ -334,8 +328,6 @@
                 ).then(res => {
                     if (res.result) {
                         this.timeData = res.data
-                        console.log('ress', res.data)
-                        console.log('dd', this.curgroupid)
                     } else {
                         this.$bkMessage({
                             theme: 'warning',
@@ -365,8 +357,6 @@
             },
             checkFreeTimeGroup (freeTime, timeDelta) {
                 for (const i in freeTime) {
-                    console.log('free', freeTime)
-                    console.log('time', timeDelta)
                     const startTime = new Date(freeTime[i].start_time)
                     const endTime = new Date(freeTime[i].end_time)
                     if ((moment(timeDelta.startTime).format('HH-mm-ss') >= moment(startTime).format('HH-mm-ss'))
@@ -384,9 +374,6 @@
                     return 'blue-background'
                 }
                 return 'gray-background'
-            },
-            l (res) {
-                console.log('res', res)
             }
         }
     }
