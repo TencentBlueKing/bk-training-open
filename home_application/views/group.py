@@ -15,6 +15,8 @@ from home_application.celery_task import (
 )
 from home_application.models import ApplyForGroup, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
+from home_application.utils.group_util import update_group_admins
+from home_application.utils.iam_util import IAMClient
 from home_application.utils.tools import (
     apply_info_to_json,
     apply_is_available_to_json,
@@ -47,42 +49,73 @@ def add_group(request):
     check_result, message = check_param(params, req)
     if not check_result:
         return JsonResponse({"result": False, "code": 1, "message": message})
+
     name = req.get("name")
     admins = req.get("admin")
-    admin_names = []  # 管理员username连接字符串
-    has_create_user = False
-    for admin in admins:
-        admin_names.append(admin.get("username"))
-        if admin.get("username") == request.user.username:
-            has_create_user = True
-            create_name = admin.get("display_name")
-    if has_create_user is False:
-        return JsonResponse({"result": False, "code": 1, "message": "创建人未在管理员中"})
+    create_by = request.user.username
+    create_name = request.user.nickname
+
+    # 要授权的管理员list
+    admin_names = [admin.get("username") for admin in admins]
+    if create_by not in admin_names:
+        admin_names.insert(0, create_by)
+
     try:
         group = Group.objects.create(
             name=name, admin=",".join(admin_names), create_by=request.user.username, create_name=create_name
         )
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
+
+    bk_token = request.COOKIES.get("bk_token")
+    # 已授权管理员list
+    added_admins = update_group_admins([], admin_names, group.id, group.name, bk_token)
+
+    if len(added_admins) == 0:  # 没有管理员授权成功就直接删除组
+        group.delete()
+        return JsonResponse({"result": False, "code": 1, "message": "创建失败，访问权限中心时出现问题，请稍后再试"})
+    elif len(added_admins) != len(added_admins):  # 部分授权成功则将本地数据库的管理员与权限中心的管理员同步
+        group.admin = ",".join(added_admins)
+        group.save()
+
+    # 添加未注册的用户信息
+    auto_sign_users(admin_names, admins)
+
+    # 添加组-用户信息
+    group_user_list = []
+    for admin in admins:
+        group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
+    GroupUser.objects.bulk_create(group_user_list)
+    # 判断是否所有管理员均添加成功
+    if len(added_admins) != len(admin_names):
+        msg = "创建组成功"
     else:
-        # 添加未注册的用户信息
-        auto_sign_users(admin_names, admins)
-        # 添加组-用户信息
-        group_user_list = []
-        for admin in admins:
-            group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
-        GroupUser.objects.bulk_create(group_user_list)
-        return JsonResponse({"result": True, "code": 0, "message": "添加成功", "data": {"group_id": group.id}})
+        msg = "创建组成功，但是部分管理员添加失败，请稍后在'编辑小组'中手动添加"
+    return JsonResponse({"result": True, "code": 0, "message": msg, "data": {"group_id": group.id}})
 
 
 @is_group_member(admin_needed=["POST"])
 def delete_group(request, group_id):
     try:
-        GroupUser.objects.filter(group_id=group_id).delete()
-        Group.objects.get(id=group_id).delete()
-        return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})
+        group = Group.objects.get(id=group_id)
     except Group.DoesNotExist:
-        return JsonResponse({"result": True, "code": 0, "message": "组不存在", "data": []})
+        return JsonResponse({"result": False, "code": -1, "message": "组不存在", "data": []})
+
+    # 回收管理员权限，未能全部删除时与权限中心保持一致
+    bk_token = request.COOKIES.get("bk_token")
+    new_admins = update_group_admins(group.admin_list, [], group_id, group.name, bk_token)
+
+    if len(new_admins) == 0:  # 成功回收所有管理员权限则直接返回
+        group.delete()
+        GroupUser.objects.filter(group_id=group_id).delete()
+        return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})
+
+    if len(new_admins) != len(group.admin_list):
+        group.admin = ",".join(new_admins)
+        msg = "在回收管理员权限时出错，请稍后再试"
+    else:
+        msg = "回收管理员权限失败，请稍后再试"
+    return JsonResponse({"result": False, "code": 1, "message": msg, "data": []})
 
 
 @is_group_member(admin_needed=["POST", "PUT", "DELETE"])
@@ -95,24 +128,42 @@ def update_group(request, group_id):
         return JsonResponse({"result": False, "code": 1, "message": message})
     name = req.get("name")
     admins = req.get("admin")
+
     admin_names = []
     admin_ids = []
     for admin in admins:
         admin_ids.append(admin.get("id"))
         admin_names.append(admin.get("username"))
+
+    if request.user.username not in admin_names:
+        return JsonResponse({"result": False, "code": 1, "message": "不允许移除自己", "data": []})
+
+    # 更新管理员，并保持数据库与权限中心一致
+    group = Group.objects.get(id=group_id)
+    bk_token = request.COOKIES.get("bk_token")
+    new_admins = update_group_admins(group.admin_list, admin_names, group_id, group.name, bk_token)
+    if set(new_admins) != set(admin_names):
+        return JsonResponse({"result": False, "code": 1, "message": "在权限中心更新管理员权限时出错，请稍后再试", "data": []})
+    group.admin = ",".join(admin_names)
+    group.name = name
+
     # 添加未注册的用户信息
     auto_sign_users(admin_names, admins)
+
     # 批量添加用户-组信息
-    exist_user_ids = GroupUser.objects.filter(group_id=group_id, user_id__in=admin_ids).values("user_id")
+    exist_user_ids = GroupUser.objects.filter(group_id=group_id, user_id__in=admin_ids).values_list(
+        "user_id", flat=True
+    )
     group_user_list = []
     for admin_id in admin_ids:
-        if not {"user_id": admin_id} in exist_user_ids:
+        if admin_id not in exist_user_ids:
             group_user_list.append(GroupUser(group_id=group_id, user_id=admin_id))
     GroupUser.objects.bulk_create(group_user_list)
+
     try:
-        Group.objects.filter(id=group_id).update(name=name, admin=",".join(admin_names), update_time=datetime.now())
+        group.save()
     except IntegrityError:
-        return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复"})
+        return JsonResponse({"result": False, "code": 1, "message": "更新失败，组名重复", "data": []})
     else:
         return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
 
@@ -316,13 +367,9 @@ def list_admin_group(request):
     """
     获取有权限管理的所有组
     """
-    username = request.user.username
-    groups = Group.objects.all()
-    admin_group = []
-    for group in groups:
-        if username in group.admin_list:
-            admin_group.append(group.to_json())
-    return JsonResponse({"result": True, "code": 0, "manage": "", "data": admin_group})
+    # 从权限中心查询所有管理的组
+    admin_groups = IAMClient().get_manage_group_list(request.user.username)
+    return JsonResponse({"result": True, "code": 0, "manage": "", "data": admin_groups})
 
 
 @is_group_member(admin_needed=["POST"])
