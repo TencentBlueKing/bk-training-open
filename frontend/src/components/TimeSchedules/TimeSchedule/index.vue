@@ -366,6 +366,7 @@
                     }
                 }
             },
+
             checkFreeTime (freeTime, timeDelta) {
                 for (const i in freeTime) {
                     const startTime = new Date(freeTime[i].start_time)

@@ -4,7 +4,8 @@
 # @Remarks  : 包含home_application用到的所有装饰器
 from django.http import JsonResponse
 
-from home_application.models import Group, GroupUser
+from home_application.models import GroupUser
+from home_application.utils.iam_util import IAMClient
 
 
 def is_group_member(admin_needed: list = None):
@@ -23,14 +24,10 @@ def is_group_member(admin_needed: list = None):
             username = request.user.username
             if request.method in admin_needed:
                 # 判断是否具有管理员权限
-                try:
-                    group = Group.objects.get(id=group_id)
-                    if username in group.admin_list:
-                        return func(request, *args, **kwargs)
-                    else:
-                        return JsonResponse({"result": False, "code": -1, "message": "没有相应组的管理权限", "data": []})
-                except Group.DoesNotExist:
-                    return JsonResponse({"result": False, "code": -1, "message": "找不到对应的组，请核对组id", "data": []})
+                if IAMClient().allowed_manage_group(username, group_id):
+                    return func(request, *args, **kwargs)
+                else:
+                    return JsonResponse({"result": False, "code": -1, "message": "您没有权限管理该组，请联系组管理员", "data": []})
             else:
                 # 判断是否为当前组的组员
                 try:

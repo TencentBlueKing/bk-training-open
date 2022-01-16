@@ -106,7 +106,6 @@
         </keep-alive>
     </div>
 </template>
-
 <script>
     import { bkSelect, bkOption } from 'bk-magic-vue'
     import TabBtn from '@/components/TabBtn/index.vue'
@@ -177,9 +176,11 @@
                     disabledDate: (date) => {
                         return date < moment(new Date()).subtract('1', 'days')
                     }
+
                 },
                 // 新增和删除成功刷新当前页面
                 RefreshPage: false
+                }
             }
         },
         watch: {

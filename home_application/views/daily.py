@@ -10,7 +10,6 @@ from home_application.models import Daily, Group, GroupUser, OffDay, User
 from home_application.utils.calendar_util import CalendarHandler
 from home_application.utils.decorator import is_group_member
 from home_application.utils.mail_operation import remind_to_write_daily
-from home_application.utils.report_operation import content_format_as_json
 from home_application.utils.tools import check_user_is_admin, get_paginator
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
@@ -149,7 +148,7 @@ def get_prefect_dailys(request, group_id):
     # 返回日报数据
     res_data = {
         "total_num": total_num,
-        "daily_list": content_format_as_json(daily_list),
+        "daily_list": [daily.to_json() for daily in daily_list],
     }
     return JsonResponse({"result": True, "code": 0, "message": "获取优秀日报成功", "data": res_data})
 
@@ -341,7 +340,7 @@ def report_filter(request, group_id):
         if member_report is None:
             return JsonResponse({"result": False, "code": 404, "message": "分页参数异常", "data": []})
         # 查询完毕返回数据
-        res_data = {"total_report_num": total_report_num, "reports": content_format_as_json(member_report)}
+        res_data = {"total_report_num": total_report_num, "reports": [report.to_json() for report in member_report]}
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
 
     # 根据日期获取组内所有成员的日报------------------------------------------------------------------------------
@@ -373,7 +372,7 @@ def report_filter(request, group_id):
     # 查询完毕返回数据
     res_data = {
         "total_report_num": total_report_num,
-        "reports": content_format_as_json(member_report),
+        "reports": [report.to_json() for report in member_report],
         "my_today_report": get_my_report,
     }
     return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": res_data})
