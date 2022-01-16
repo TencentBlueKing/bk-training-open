@@ -11,7 +11,7 @@
             <div class="groupdaily-member-select" v-show="curType === 'member'">
                 <bk-select
                     :disabled="false"
-                    v-model="curSelectUser"
+                    v-model="curSelectUsername"
                     style="width: 250px;"
                     behavior="normal"
                     :clearable="false"
@@ -21,7 +21,7 @@
                     searchable>
                     <bk-option v-for="option in groupusers"
                         :key="option.id"
-                        :id="option.id"
+                        :id="option.username"
                         :name="option.username + '(' + option.name + ')'">
                     </bk-option>
                 </bk-select>
@@ -128,6 +128,7 @@
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
                 curType: 'date',
                 curSelectUser: null,
+                curSelectUsername: null,
                 // 当前选中的日期
                 curDateTime: moment(new Date((new Date().getTime()))).format('YYYY-MM-DD'),
                 // 快捷组件按钮的禁用情况 time(时间上限) / all / top / bottom / true
@@ -181,13 +182,13 @@
                     this.changeDate(this.curDateTime)
                 }
                 // member
-                console.log('this.forbUserIndexss', this.forbUserIndex)
                 if (this.curType === 'member') {
                     this.selectUserIndex()
                     if (this.forbUserIndex === 0 || this.groupusers.length === 1) {
                         // 灰色
                         this.top = true
                     } else {
+                        this.curSelectUsername = this.groupusers[this.forbUserIndex - 1].username
                         this.curSelectUser = this.groupusers[this.forbUserIndex - 1].id
                         this.changeUser(this.groupusers[this.forbUserIndex - 1].id)
                         this.top = false
@@ -204,11 +205,11 @@
                 // member
                 if (this.curType === 'member') {
                     this.selectUserIndex()
-                    console.log('this.forbUserIndexx', this.forbUserIndex)
                     if (this.forbUserIndex === this.groupusers.length - 1) {
                         // 灰色
                         this.bottom = true
                     } else {
+                        this.curSelectUsername = this.groupusers[this.forbUserIndex + 1].username
                         this.curSelectUser = this.groupusers[this.forbUserIndex + 1].id
                         this.changeUser(this.groupusers[this.forbUserIndex + 1].id)
                         this.bottom = false
@@ -237,7 +238,7 @@
                         } else {
                             // 不是链接跳进来
                             this.curSelectUser = this.groupusers[0].id
-                            console.log('userid', this.groupusers[0].id)
+                            this.curSelectUsername = this.groupusers[0].username
                             this.changeUser(this.curSelectUser)
                         }
                     } else {
@@ -300,7 +301,7 @@
                 }
                 this.loading = true
                 this.$http.get(
-                    '/name_free_time/' + this.curSelectUser + '/'
+                    '/user_free_time/?username=' + this.curSelectUsername
                 ).then(res => {
                     if (res.result) {
                         this.timeData = res.data

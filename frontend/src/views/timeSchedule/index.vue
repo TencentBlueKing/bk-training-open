@@ -21,7 +21,7 @@
             </bk-button>
         </div>
         <bk-sideslider
-            width="500"
+            width="400"
             :is-show.sync="timeSetting.visible"
             :quick-close="true"
             @hidden="hiddenSlider"
@@ -49,7 +49,7 @@
                                 <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="addTimeDialog.data.endTime" placeholder="结束时间" />
                             </bk-form-item>
                         </bk-form>
-                        <bk-button :hover-theme="'primary'" @click="doAddTime" style="margin-left: 390px;margin-top: 20px;">增加</bk-button>
+                        <bk-button :hover-theme="'primary'" @click="doAddTime" style="margin-left: 290px;margin-top: 20px;">增加</bk-button>
                     </div>
                 </div>
                 <div class="time-body" style="padding: 30px 10px 0;" v-show="activeTabTitle === slideTitleList[1]">
@@ -77,8 +77,7 @@
                                 空数据
                             </div>
                             <bk-table-column label="日期" prop="date" min-width="50" margin-top="55px" show-overflow-tooltip="true"></bk-table-column>
-                            <bk-table-column label="起始时间" prop="start_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
-                            <bk-table-column label="结束时间" prop="end_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
+                            <bk-table-column label="空闲时间" prop="free_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
                             <bk-table-column label="操作" width="100">
                                 <template slot-scope="props">
                                     <bk-button theme="warning" text @click="showChangeTime(props.row)">修改</bk-button>
@@ -92,10 +91,10 @@
                                 <bk-date-picker class="mr15" :options="options" v-model="changeTimeDialog.data.date" placeholder="起始日期" />
                             </bk-form-item>
                             <bk-form-item label="起始时间">
-                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="changeTimeDialog.data.startTime" placeholder="结束日期" />
+                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="changeTimeDialog.data.startTime" placeholder="起始时间" />
                             </bk-form-item>
                             <bk-form-item label="结束时间">
-                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="changeTimeDialog.data.endTime" placeholder="结束日期" />
+                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="changeTimeDialog.data.endTime" placeholder="结束时间" />
                             </bk-form-item>
                         </bk-form>
                     </bk-dialog>
@@ -155,7 +154,7 @@
                 curUsertimeList: [],
                 loading: true,
                 startTime: new Date(),
-                endTime: new Date(),
+                endTime: moment(new Date()).add(6, 'days').format('YYYY-MM-DD'),
                 changeMemberId: '',
                 timeData: [],
                 addTimeDialog: {
@@ -241,10 +240,8 @@
                 ).then(res => {
                     if (res.result) {
                         this.timeData = res.data
-
                         for (const timeData of this.timeData) {
-                            timeData.start_time = new Date(timeData.start_time).toLocaleTimeString()
-                            timeData.end_time = new Date(timeData.end_time).toLocaleTimeString()
+                            timeData.free_time = moment(timeData.start_time).format('HH:mm') + '-' + moment(timeData.end_time).format('HH:mm')
                         }
                     } else {
                         this.$bkMessage({

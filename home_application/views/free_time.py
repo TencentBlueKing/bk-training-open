@@ -101,9 +101,9 @@ def group_free_time(request, group_id):
 
 
 @require_GET
-def name_free_time(request, user_id):
+def user_free_time(request):
     # 查找用户所有空闲时间
-    username = User.objects.get(id=user_id).username
+    username = request.GET.get("username")
     res_data = []
     res_data_list = FreeTime.objects.get_free_time(
         [username], datetime.date.today(), datetime.date.today() + datetime.timedelta(days=6)

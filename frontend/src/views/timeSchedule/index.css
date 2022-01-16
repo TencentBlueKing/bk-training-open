@@ -135,7 +135,7 @@
     width: 94% !important;
 }
 .time-slide .time-body .time-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
-    width: 290px;
+    width: 250px;
 }
 .time-body /deep/ .bk-table {
     margin-top: 20px ;
@@ -151,7 +151,7 @@
   margin-left:0px !important;
 }
 .time-body .bk-date-picker-editor{
-    width: 349px;
+    width: 249px;
 }
 .time-body .time-apply .bk-form .bk-form-item .bk-form-content {
     margin-left: 110px !important;
@@ -161,6 +161,9 @@
 }
 .bk-sideslider-content .bk-table-small{
     margin-left: 20px;
-    width: 438px;
+    width: 338px;
 
+}
+.bk-date-picker-rel{
+    width: 250px;
 }

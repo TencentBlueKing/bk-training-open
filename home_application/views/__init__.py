@@ -17,7 +17,7 @@ from home_application.views.free_time import (  # noqa
     free_time_get_post,
     free_time_patch_delete,
     group_free_time,
-    name_free_time,
+    user_free_time,
 )
 from home_application.views.group import (  # noqa
     add_group,

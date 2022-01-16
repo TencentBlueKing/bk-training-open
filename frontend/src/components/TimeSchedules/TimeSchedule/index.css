@@ -291,18 +291,18 @@
   height: 10px;
 }
 .blue-background {
-  background: #699DF4;
+  background: #99CCFF;
 }
 
 .gray-background {
-  background: #F0F1F5;
+  background: #EAEBF0;
 }
 .blue-background-time {
-  background: #699DF4;
+  background: #99CCFF;
 }
 
 .gray-background-time {
-  background: #F0F1F5;
+  background: #EAEBF0;
 }
 /deep/ .user-time-content-box,/deep/ .group-time-box{
   padding: 0px;
