@@ -135,13 +135,13 @@
     width: 94% !important;
 }
 .time-slide .time-body .time-apply .bk-form .bk-form-item .bk-form-content .bk-date-picker{
-    width: 200px;
+    width: 290px;
 }
 .time-body /deep/ .bk-table {
     margin-top: 20px ;
 }
 .top-container-right-btn {
-  margin-right: 5px;
+  margin-right: 0px;
 }
 .bk-sideslider.time-slide /deep/ .bk-sideslider-wrapper .right{
     width: 400px;
@@ -151,5 +151,16 @@
   margin-left:0px !important;
 }
 .time-body .bk-date-picker-editor{
-    width: 120%;
+    width: 349px;
+}
+.time-body .time-apply .bk-form .bk-form-item .bk-form-content {
+    margin-left: 110px !important;
+}
+.time-body .time-manage .bk-form .bk-form-item .bk-form-content{
+    margin-left: 110px !important;
+}
+.bk-sideslider-content .bk-table-small{
+    margin-left: 20px;
+    width: 438px;
+
 }

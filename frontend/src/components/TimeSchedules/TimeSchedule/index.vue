@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="group-time-box" style="float: right">
-            <div class="time-box" style="height: 10px ">
+            <div class="time-box" style="height: 0px ">
                 <div class="blue-background-time">
                     <div class="time-single ">
                     </div>
@@ -54,7 +54,7 @@
                     :data="timeData"
                     :size="size"
                 >
-                    <bk-table-column label="成员" prop="username" width="450%"></bk-table-column>
+                    <bk-table-column label="成员" prop="username" width="240px"></bk-table-column>
                     <bk-table-column :render-header="() => {
                         return [1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(item => {
                             return $createElement('div',{ style },item + 7)
@@ -76,8 +76,8 @@
                     :data="timeData"
                     :size="size"
                 >
-                    <bk-table-column label="日期" prop="date" width="225%"></bk-table-column>
-                    <bk-table-column label="星期" prop="weekend" width="225%"></bk-table-column>
+                    <bk-table-column label="日期" prop="date" width="100px"></bk-table-column>
+                    <bk-table-column label="星期" prop="weekend" width="100px"></bk-table-column>
                     <bk-table-column :render-header="() => {
                         return [1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(item => {
                             return $createElement('div',{ style },item + 7)

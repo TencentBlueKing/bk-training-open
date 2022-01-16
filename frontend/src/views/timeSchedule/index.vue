@@ -38,23 +38,23 @@
             <div slot="content">
                 <div class="time-body" style="height: 530px;padding: 30px 0 0 10px;" v-show="activeTabTitle === slideTitleList[0]">
                     <div class="time-apply">
-                        <bk-form label-width="80">
-                            <bk-form-item label="日期">
+                        <bk-form label-width="100">
+                            <bk-form-item label="日期" label-width="70">
                                 <bk-date-picker class="mr15" :options="options" v-model="addTimeDialog.data.date" placeholder="起始日期" />
                             </bk-form-item>
                             <bk-form-item label="起始时间">
-                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="addTimeDialog.data.startTime" placeholder="结束日期" />
+                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="addTimeDialog.data.startTime" placeholder="起始时间" />
                             </bk-form-item>
                             <bk-form-item label="结束时间">
-                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="addTimeDialog.data.endTime" placeholder="结束日期" />
+                                <bk-time-picker class="mr15" format="HH:mm" :editable="false" :enter-mode="false" v-model="addTimeDialog.data.endTime" placeholder="结束时间" />
                             </bk-form-item>
                         </bk-form>
-                        <bk-button :hover-theme="'primary'" @click="doAddTime" style="margin-left: 252px;margin-top: 20px;">增加</bk-button>
+                        <bk-button :hover-theme="'primary'" @click="doAddTime" style="margin-left: 390px;margin-top: 20px;">增加</bk-button>
                     </div>
                 </div>
                 <div class="time-body" style="padding: 30px 10px 0;" v-show="activeTabTitle === slideTitleList[1]">
                     <div class="time-manage">
-                        <bk-form label-width="80">
+                        <bk-form label-width="100">
                             <bk-form-item label="起始日期">
                                 <bk-date-picker class="mr15" v-model="startTime" placeholder="起始日期" @change="loadUserTime" />
                             </bk-form-item>
@@ -207,6 +207,9 @@
             // 切换请假页签事件
             changeTab (title) {
                 this.activeTabTitle = title
+                if (title === '查看空闲时间') {
+                    this.loadUserTime()
+                }
             },
             changeGroup (val) {
                 this.selectGroup = val

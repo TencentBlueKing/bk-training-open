@@ -269,20 +269,20 @@
    border-bottom-left-radius: 15px;
 }
 /deep/ .blue-background:first-child {
-    border-radius:20px 0px 0px 20px;
+    border-radius:4px 0px 0px 4px;
 }
 /deep/ .gray-background:first-child {
-    border-radius:20px 0px 0px 20px;
+    border-radius:4px 0px 0px 4px;
 }
 /deep/ .blue-background:last-child {
-    border-radius: 0px 20px 20px 0px;
+    border-radius: 0px 4px 4px 0px;
 }
 /deep/ .gray-background:last-child {
-    border-radius: 0px 20px 20px 0px;
+    border-radius: 0px 4px 4px 0px;
 }
 .group-time-box .time-box .time-single-box{
   width: 50px;
-  height: 20px;
+  height: 16px;
   margin-left: 0px;
 }
 
@@ -291,18 +291,18 @@
   height: 10px;
 }
 .blue-background {
-  background: #b0d3ff;
+  background: #699DF4;
 }
 
 .gray-background {
-  background: #DCDEE5;
+  background: #F0F1F5;
 }
 .blue-background-time {
-  background: #b0d3ff;
+  background: #699DF4;
 }
 
 .gray-background-time {
-  background: #DCDEE5;
+  background: #F0F1F5;
 }
 /deep/ .user-time-content-box,/deep/ .group-time-box{
   padding: 0px;
@@ -333,4 +333,17 @@
   width: 95%;
   margin-left: -10px;
 }
+/deep/ .bk-table-header-label {
+  margin-left: 0px;
+}
+/deep/.bk-table-2-column-4   .cell{
+  margin-left: 9px;
+}
+.group-time-box{
+  padding: 0px 0px 10px 0px;
+  z-index: 1000;
+}
 
+.user-time-content-box {
+    margin-top: 20px;
+}

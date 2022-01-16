@@ -109,12 +109,13 @@ def name_free_time(request, user_id):
         [username], datetime.date.today(), datetime.date.today() + datetime.timedelta(days=6)
     )[0]["free_time"]
     res_data_list_index = 0
+    weekStr = "一二三四五六日"
     for index in range(0, 7):
         res_data.append(
             {
                 "id": index,
                 "date": datetime.date.today() + datetime.timedelta(days=index),
-                "weekend": (datetime.datetime.now().weekday() + index) % 7 + 1,
+                "weekend": "星期" + weekStr[((datetime.datetime.now().weekday() + index) % 7)],
                 "start_time": "",
                 "end_time": "",
             }
