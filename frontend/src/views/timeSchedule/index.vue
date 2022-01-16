@@ -102,7 +102,7 @@
             </div>
         </bk-sideslider>
         <keep-alive>
-            <component :is="curComponents" :curgroupid="selectGroup" :groupusers="renderUser" :username="username"></component>
+            <component :is="curComponents" :curgroupid="selectGroup" :groupusers="renderUser" :username="username" :refreshpage="RefreshPage"></component>
         </keep-alive>
     </div>
 </template>
@@ -177,7 +177,9 @@
                     disabledDate: (date) => {
                         return date < moment(new Date()).subtract('1', 'days')
                     }
-                }
+                },
+                // 新增和删除成功刷新当前页面
+                RefreshPage: false
             }
         },
         watch: {
@@ -298,6 +300,7 @@
                 ).finally(() => {
                     this.loadUserTime()
                 })
+                this.RefreshPage = !this.RefreshPage
             },
             showAddTime () {
                 this.addTimeDialog.data = {
@@ -337,6 +340,7 @@
                         this.loading = false
                     }
                 })
+                this.RefreshPage = !this.RefreshPage
             }
         }
     }

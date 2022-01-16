@@ -64,7 +64,7 @@
                             <div class="group-time-box" style="padding: 0px">
                                 <div class="time-box" style="margin-left: -10px">
                                     <div v-for="item in timeSplits" :key="item" class="time-single-box"
-                                        :class="checkFreeTimeGroup(props.row.free_time, item)">
+                                        :class="checkFreeTime(props.row.free_time, item)">
                                     </div>
                                 </div>
                             </div></template>
@@ -87,7 +87,7 @@
                             <div class="group-time-box" style="padding: 0px">
                                 <div class="time-box" style="margin-left: -10px">
                                     <div v-for="item in timeSplits" :key="item" class="time-single-box"
-                                        :class="checkFreeTimeMember(props.row, item)">
+                                        :class="checkFreeTime(props.row.free_time, item)">
                                     </div>
                                 </div>
                             </div>
@@ -119,6 +119,9 @@
             },
             username: {
                 type: String
+            },
+            refreshpage: {
+                type: Boolean
             }
         },
         data () {
@@ -168,6 +171,13 @@
             },
             curSelectUser () {
                 this.selectUserIndex()
+            },
+            refreshpage () {
+                if (this.curType === 'date') {
+                    this.changeDate()
+                } else {
+                    this.changeUser()
+                }
             }
         },
         created () {
@@ -356,7 +366,7 @@
                     }
                 }
             },
-            checkFreeTimeGroup (freeTime, timeDelta) {
+            checkFreeTime (freeTime, timeDelta) {
                 for (const i in freeTime) {
                     const startTime = new Date(freeTime[i].start_time)
                     const endTime = new Date(freeTime[i].end_time)
@@ -364,15 +374,6 @@
                         && (moment(timeDelta.endTime).format('HH-mm-ss') <= moment(endTime).format('HH-mm-ss'))) {
                         return 'blue-background'
                     }
-                }
-                return 'gray-background'
-            },
-            checkFreeTimeMember (freeTime, timeDelta) {
-                const startTime = new Date(freeTime.start_time)
-                const endTime = new Date(freeTime.end_time)
-                if ((moment(timeDelta.startTime).format('HH-mm-ss') >= moment(startTime).format('HH-mm-ss'))
-                    && (moment(timeDelta.endTime).format('HH-mm-ss') <= moment(endTime).format('HH-mm-ss'))) {
-                    return 'blue-background'
                 }
                 return 'gray-background'
             }
