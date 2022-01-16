@@ -108,22 +108,20 @@ def user_free_time(request):
     res_data_list = FreeTime.objects.get_free_time(
         [username], datetime.date.today(), datetime.date.today() + datetime.timedelta(days=6)
     )[0]["free_time"]
-    res_data_list_index = 0
     weekStr = "一二三四五六日"
     for index in range(0, 7):
         res_data.append(
             {
-                "id": index,
                 "date": datetime.date.today() + datetime.timedelta(days=index),
                 "weekend": "星期" + weekStr[((datetime.datetime.now().weekday() + index) % 7)],
-                "start_time": "",
-                "end_time": "",
+                "free_time": [
+                    {
+                        "start_time": f_time["start_time"],
+                        "end_time": f_time["end_time"],
+                    }
+                    for f_time in res_data_list
+                    if f_time["date"] == (datetime.date.today() + datetime.timedelta(days=index))
+                ],
             }
         )
-        if len(res_data_list) > res_data_list_index and res_data_list[res_data_list_index][
-            "date"
-        ] == datetime.date.today() + datetime.timedelta(days=index):
-            res_data_list[res_data_list_index]["weekend"] = res_data[index]["weekend"]
-            res_data[index] = res_data_list[res_data_list_index]
-            res_data_list_index = res_data_list_index + 1
     return JsonResponse({"result": True, "code": 0, "message": "", "data": res_data})
