@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 
-from home_application.models import TimeBasic
+from home_application.models import TimeBasic, User
 
 EARLIEST_TIME = datetime.time(8, 0)  # 允许空闲时间的最早时间：08:00
 LATEST_TIME = datetime.time(22, 0)  # 允许空闲时间的最晚时间：22:00
@@ -129,10 +129,11 @@ class FreeTimeManage(models.Manager):
             username__in=username_list, start_time__range=(start_date, end_date)
         ).order_by("start_time")
         res = []
-        for username in username_list:
+        name = User.objects.filter(username__in=username_list).values_list("name", flat=True)
+        for i in range(0, len(username_list)):
             res.append(
                 {
-                    "username": username,
+                    "username": username_list[i] + "(" + name[i] + ")",
                     "free_time": [
                         {
                             "id": f_time.id,
@@ -140,7 +141,7 @@ class FreeTimeManage(models.Manager):
                             "start_time": f_time.start_time.strftime("%Y-%m-%d %H:%M"),
                             "end_time": f_time.end_time.strftime("%Y-%m-%d %H:%M"),
                         }
-                        for f_time in free_times.filter(username=username)
+                        for f_time in free_times.filter(username=username_list[i])
                     ],
                 }
             )

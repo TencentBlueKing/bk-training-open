@@ -317,11 +317,11 @@
                 this.groupusers.forEach((item, index) => {
                     if (item.id === this.curSelectUser) {
                         this.forbUserIndex = index
-                        if (index === 0) {
+                        if (index === 0 && index !== this.groupusers.length - 1) {
                             this.top = true
                             this.bottom = false
                         }
-                        if (index === this.groupusers.length - 1) {
+                        if (index !== 0 && index === this.groupusers.length - 1) {
                             this.top = false
                             this.bottom = true
                         }

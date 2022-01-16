@@ -26,3 +26,31 @@
 .selectgroup .bk-select-name {
   margin-left: -10px;
 }
+.groupDailys {
+  padding: 40px 40px 0 40px;
+  margin: auto;
+}
+
+.groupDailys-btn {
+  position: relative;
+  box-sizing: content-box;
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.selectType {
+  position: absolute;
+  top: -20px;
+  right: 0;
+}
+
+.selectgroup {
+  font-size: 20px;
+  color: black;
+  font-weight: bold;
+}
+
+.selectgroup .bk-select-name {
+  margin-left: -10px;
+}

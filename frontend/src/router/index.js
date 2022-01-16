@@ -15,6 +15,7 @@ const MainEntry = () => import(/* webpackChunkName: 'entry' */ '@/views')
 const Home = () => import(/* webpackChunkName: 'example1' */ '@/views/Home')
 const groupDailys = () => import(/* webpackChunkName: 'example2' */ '@/views/groupDailys')
 const myGroup = () => import(/* webpackChunkName: 'example3' */ '@/views/myGroup')
+const timeSchedule = () => import(/* webpackChunkName: 'example4' */ '@/views/timeSchedule')
 const NotFound = () => import(/* webpackChunkName: 'none' */ '@/views/404')
 
 const routes = [
@@ -39,6 +40,11 @@ const routes = [
                 path: 'my-group',
                 name: 'MyGroup',
                 component: myGroup
+            },
+            {
+                path: 'time-schedule',
+                name: 'TimeSchedule',
+                component: timeSchedule
             }
         ]
     },
