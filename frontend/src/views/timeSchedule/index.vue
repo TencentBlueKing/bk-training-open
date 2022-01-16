@@ -64,7 +64,7 @@
                         </bk-form>
                         <bk-table
                             v-show="true"
-                            style="margin-top:30px;height: 500px;"
+                            style="margin-top:30px;"
                             :virtual-render="false"
                             :data="timeData"
                             :size="timeTableData.size"
@@ -175,7 +175,7 @@
                 },
                 options: {
                     disabledDate: (date) => {
-                        return date < new Date()
+                        return date < moment(new Date()).subtract('1', 'days')
                     }
                 }
             }
