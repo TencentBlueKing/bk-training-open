@@ -1,4 +1,4 @@
-from home_application.views.common import get_all_bk_users, home  # noqa
+from home_application.views.common_view import get_all_bk_users, home  # noqa
 from home_application.views.daily import (  # noqa
     check_yesterday_daily,
     daily_report,
