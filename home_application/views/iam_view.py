@@ -16,7 +16,7 @@ from home_application.models import Group
 @login_exempt
 @csrf_exempt
 @require_POST
-def group(request):
+def get_instance_info(request):
     """拉取组信息"""
     req = json.loads(request.body)
     # 鉴权

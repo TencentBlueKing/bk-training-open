@@ -80,7 +80,7 @@ def get_holidays(request):
         return JsonResponse({"result": False, "code": 1, "message": "日期格式错误", "data": []})
 
     if start_date > end_date:
-        return JsonResponse({"result": False, "code": 1, "message": "起始时间不得晚于结束时间", "data": []})
+        return JsonResponse({"result": False, "code": 1, "message": "起始日期不得晚于结束日期", "data": []})
 
     return JsonResponse(
         {"result": True, "code": 0, "message": "success", "data": get_holidays_in_range(start_date, end_date)}

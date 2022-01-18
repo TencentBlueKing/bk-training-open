@@ -1,4 +1,9 @@
-from home_application.views.common_view import get_all_bk_users, home  # noqa
+from home_application.views.common_view import (  # noqa
+    get_all_bk_users,
+    get_holidays,
+    get_workday_info,
+    home,
+)
 from home_application.views.daily import (  # noqa
     check_yesterday_daily,
     daily_report,
@@ -36,6 +41,7 @@ from home_application.views.group import (  # noqa
     list_group_admin,
     update_group,
 )
+from home_application.views.iam_view import get_instance_info  # noqa
 from home_application.views.off_day import (  # noqa
     add_off_info,
     display_personnel_information,
