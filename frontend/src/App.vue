@@ -8,6 +8,10 @@
             :need-menu="curNav.needMenu"
             @toggle="handleToggle"
         >
+            <!-- icon插槽 -->
+            <template slot="side-icon">
+                <bk-icon style="fontSize:25px" type="calendar-shape" />
+            </template>
             <template slot="header">
                 <div class="monitor-navigation-header">
                     <ol class="header-nav" v-if="curNav.nav === 'top-bottom'">
@@ -74,7 +78,7 @@
         bkPopover
     } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
-    const { getUser } = requestApi
+    const { getUser, getAllUsers } = requestApi
     export default {
         name: 'monitor-navigation',
         components: {
@@ -144,6 +148,10 @@
         created () {
             getUser().then(res => {
                 window.localStorage.setItem('userMsg', JSON.stringify(res.data))
+            })
+            // 获得蓝鲸用户的数据(所有用户)
+            getAllUsers().then((res) => {
+                window.localStorage.setItem('AllUsers', JSON.stringify(res))
             })
         },
         methods: {
@@ -435,6 +443,7 @@ background-color: white !important;
   background: #ffffff;
   border-radius: 2px;
   min-height: calc(100vh - 136px);
+  overflow: auto;
 }
 .monitor-navigation-footer {
   height: 52px;

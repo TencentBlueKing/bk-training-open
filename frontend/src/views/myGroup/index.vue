@@ -216,7 +216,7 @@
 </template>
 
 <script>
-    import { isAdmin } from '@/utils/index.js'
+    import { isAdmin, setCurGroup, getCurGroup } from '@/utils/index.js'
     import {
         bkSelect,
         bkOption,
@@ -361,15 +361,23 @@
                 return flat
             }
         },
-        created () {
+        activated () {
+            // 缓解切换时组名抖动问题
+            if (this.curGroupId !== getCurGroup()) {
+                this.curGroupId = null
+            }
             // 获得本人信息
             getUser().then((res) => {
                 this.myMsg = res.data
             })
-            // 获得蓝鲸用户的数据(所有用户)
-            getAllUsers().then((res) => {
-                this.AllUsers = res
-            })
+            // 获得蓝鲸用户的数据(所有用户) 缓存 & 重新获取
+            if (JSON.parse(localStorage.getItem('AllUsers')) !== null) {
+                this.AllUsers = JSON.parse(localStorage.getItem('AllUsers'))
+            } else {
+                getAllUsers().then((res) => {
+                    this.AllUsers = res
+                })
+            }
             // 初始化第一组
             this.initGroup()
             // 获得未加入的组
@@ -384,15 +392,22 @@
                     if (res.data.length !== 0) {
                         // 有权限管理的所欲组
                         this.AllgGroupsist = res.data
-                        // 首屏是第一组数据
-                        this.curGroupId = res.data[0].id
-                        this.curGroupname = res.data[0].name
-                        this.getGroupInfoData(res.data[0].id)
+                        // 本地有就用本地
+                        if (getCurGroup() !== null) {
+                            this.curGroupId = getCurGroup()
+                            this.getGroupInfoData(getCurGroup())
+                        } else {
+                            // 没有就是第一组 并且存储本地
+                            this.curGroupId = res.data[0].id
+                            setCurGroup(res.data[0].id)
+                            this.getGroupInfoData(res.data[0].id)
+                        }
                         this.selectCompileadminID = this.adminIDList
                     } else {
                         // 如果没有第一组
                         this.curGroupData = []
                         this.curGroupId = ''
+                        setCurGroup(null)
                         this.groupUsers = []
                         this.AllgGroupsist = []
                     }
@@ -401,6 +416,7 @@
             //  跟换组
             changeGroup (curGroupId) {
                 this.curGroupId = curGroupId
+                setCurGroup(curGroupId)
                 this.getGroupInfoData(curGroupId)
             },
             // 获得组的基本数据 & 调用更新成员列表

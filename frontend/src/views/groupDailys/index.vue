@@ -31,6 +31,7 @@
     import GroupDaily from '@/components/GroupDailys/GroupDaily'
     import ExcellentDaily from '@/components/GroupDailys/ExcellentDaily'
     import requestApi from '@/api/request.js'
+    import { setCurGroup, getCurGroup } from '@/utils/index.js'
     const { getallGroups, getGroupUsers } = requestApi
     export default {
         components: {
@@ -43,7 +44,7 @@
         data () {
             return {
                 // 当前选中的组
-                selectGroup: '',
+                selectGroup: null,
                 // 当前活着的组件
                 curComponents: 'GroupDaily',
                 tabBtncontent: ['小组日报', '优秀日报'],
@@ -56,7 +57,7 @@
             }
         },
         watch: {
-            selectGroup (oldVal) {
+            selectGroup (oldval) {
                 this.filterAdmin().then(res => {
                     // res就是管理员
                     this.AdminList = res
@@ -64,9 +65,15 @@
                 })
             }
         },
-        created () {
+        activated () {
+            this.setCurGroup = 0
             getallGroups().then(res => {
-                this.selectGroup = res.data[0].id
+                if (getCurGroup() !== null) {
+                    this.selectGroup = getCurGroup()
+                } else {
+                    this.selectGroup = res.data[0].id
+                    setCurGroup(res.data[0].id)
+                }
                 this.groupList = res.data
                 this.takeGroupuser()
             })
@@ -79,6 +86,7 @@
             },
             changeGroup (val) {
                 this.selectGroup = val
+                setCurGroup(val)
             },
             // 获得管理员
             filterAdmin () {
@@ -102,10 +110,12 @@
                 // 跳转过来的
                 if (this.$route.query.group !== undefined && this.$route.query.username !== undefined) {
                     this.selectGroup = this.$route.query.group
+                    setCurGroup(this.$route.query.group)
                     this.username = this.$route.query.username
                 }
                 if (this.$route.query.group !== undefined && this.$route.query.date !== undefined) {
                     this.selectGroup = this.$route.query.group
+                    setCurGroup(this.$route.query.group)
                     this.date = this.$route.query.date
                 }
             }

@@ -73,6 +73,28 @@
                         {{dailyContnet.text}}
                     </div>
                 </div>
+                <!-- 管理员评价 -->
+                <!-- tudo -->
+                <div>
+                    <div class="evaluation" v-if="!(!isadmin && daily.evaluate.length === 0)">
+                        <div class="sub-title">管理员评价</div>
+                        <div class="evaluation-title" v-if="isadmin" @click="chooseEvaluate(daily)">评价日报</div>
+                    </div>
+                    <!-- 评价的内容和管理员 -->
+                    <div style="font-size: 14px" class="comment">
+                        <div v-for="(row, iiIndex) in daily.evaluate" :key="iiIndex">
+                            <div class="card-pre" v-if="row.evaluate !== ''">
+                                <div class="content-wapper">
+                                    <bk-tag>
+                                        {{row.name}}
+                                    </bk-tag>
+                                    <span>{{row.evaluate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="noEvaluation" v-show="isadmin && daily.evaluate.length === 0">暂无管理员评论</div>
+                    </div>
+                </div>
             </bk-card>
             <li class="renderlistbox-tiptoe" v-for="item in [1,2,3,4]" :key="item"></li>
             <!-- 分页器 -->
@@ -96,16 +118,36 @@
                 <bk-exception ext-cls="notrender-box" class="exception-wrap-item exception-part" type="empty" scene="part" :class="{ 'exception-gray': isGray }"> 暂时还没有日报 </bk-exception>
             </div>
         </div>
+        <!-- 弹出 -->
+        <bk-dialog
+            :value="isshowDlog"
+            theme="primary"
+            :mask-close="false"
+            :header-position="left"
+            :auto-close="false"
+            @confirm="dialogConfirm()"
+            @cancel="dialogCancel()"
+            :title="isdiscussdaily ? '评论修改' : '新增评论'"
+            class="group-dialog"
+        >
+            <bk-input
+                placeholder="清空默认为删除该条评论"
+                :type="'textarea'"
+                :rows="3"
+                :maxlength="200"
+                v-model="discussContent">
+            </bk-input>
+        </bk-dialog>
     </div>
 </template>
 
 <script>
     import moment from 'moment'
     import FastBtn from '@/components/GroupDailys/FastBtn'
-    import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton } from 'bk-magic-vue'
+    import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton, bkInput } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
     import { isAdmin } from '@/utils/index.js'
-    const { getDaily, setGoodDaily } = requestApi
+    const { getDaily, setGoodDaily, evaluateDaily, deleteDaily, updateEvaluateDaily } = requestApi
     export default {
         components: {
             bkSelect,
@@ -114,7 +156,8 @@
             bkException,
             bkPagination,
             bkButton,
-            FastBtn
+            FastBtn,
+            bkInput
         },
         props: {
             // 当前组id
@@ -172,7 +215,13 @@
                 bottom: false,
                 time: false,
                 // 当前快捷用户的下标位置
-                forbUserIndex: 0
+                forbUserIndex: 0,
+                // 日报评价 弹出框
+                isshowDlog: false,
+                // 日报评价的内容
+                discussContent: '',
+                // 之前是否评价过改日报
+                isdiscussdaily: false
             }
         },
         watch: {
@@ -263,13 +312,15 @@
                 this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 成员的改变
-            changeUser (id) {
-                this.pagingDevice.curPage = 1
+            changeUser (id, keepPage) {
+                this.pagingDevice.curPage = keepPage ? this.pagingDevice.curPage : 1
                 this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 切换 日期或者人名
-            selectedType (type, flat = false) {
-                this.pagingDevice.curPage = 1
+            selectedType (type, flat = false, keepPage = false) {
+                if (!keepPage) {
+                    this.pagingDevice.curPage = 1
+                }
                 // 跟换焦点
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
@@ -281,7 +332,7 @@
                         } else {
                             // 不是链接跳进来
                             this.curSelectUser = this.groupusers[0].id
-                            this.changeUser(this.curSelectUser)
+                            this.changeUser(this.curSelectUser, keepPage)
                         }
                     } else {
                         // 没成员就空
@@ -364,6 +415,72 @@
                     theme: type
                 }
                 this.$bkMessage(config)
+            },
+            // 点击评价日报信息
+            chooseEvaluate (data) {
+                // 当前选中的日报
+                this.curSelectDaily = data.id
+                // 之前是否评论过这个日报
+                this.isdiscussdaily = this.isDiscussDaily(data)
+                this.isshowDlog = true
+            },
+            // 确定评论按钮
+            dialogConfirm () {
+                // 之前评论过 日报 就是修改
+                if (this.isdiscussdaily && this.discussContent.length !== 0) {
+                    updateEvaluateDaily(this.curgroupid, this.curSelectDaily, { evaluate_content: this.discussContent }).then(res => {
+                        if (res.result) {
+                            // 保持原来的页
+                            this.selectedType(this.curType, false, true)
+                            this.dialogCancel()
+                            this.handleSuccess('评论成功')
+                        } else {
+                            this.handleSuccess('评论失败', 'error')
+                        }
+                    })
+                } else {
+                    // 为空之前还评论过 就是删除
+                    if (this.discussContent.length === 0 && this.isdiscussdaily) {
+                        deleteDaily(this.curgroupid, this.curSelectDaily).then(res => {
+                            if (res.result) {
+                                this.selectedType(this.curType, false, true)
+                                this.dialogCancel()
+                                this.handleSuccess('删除成功')
+                            } else {
+                                this.handleSuccess('删除失败', 'error')
+                            }
+                        })
+                    }
+                    // 为空 之前还没评论过 提示内容为空
+                    if (this.discussContent.length === 0 && !this.isdiscussdaily) {
+                        this.handleSuccess('评论内容为空', 'warning')
+                    }
+                    // 内容不为空之前还没修改过
+                    if (this.discussContent.length !== 0 && !this.isdiscussdaily) {
+                        evaluateDaily({ daily_id: this.curSelectDaily, evaluate: this.discussContent })
+                        this.selectedType(this.curType, false, true)
+                        this.dialogCancel()
+                        this.handleSuccess('评论成功')
+                    }
+                }
+            },
+            // 关闭评价日报窗口
+            dialogCancel () {
+                this.isshowDlog = false
+                this.discussContent = ''
+            },
+            // 判断我之前评论过日报吗
+            isDiscussDaily (data) {
+                let flat
+                for (let i = 0; i < data.evaluate.length; i++) {
+                    if (data.evaluate[i].name === this.myMsg.username) {
+                        flat = true
+                        this.discussContent = data.evaluate[i].evaluate
+                    } else {
+                        flat = false
+                    }
+                }
+                return flat
             },
             /*
                 获得渲染日报数据
