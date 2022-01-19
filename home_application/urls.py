@@ -26,7 +26,6 @@ urlpatterns = (
     path("add_user/<int:group_id>/", views.add_user),
     path("daily_report/", views.daily_report),
     path("report_filter/<int:group_id>/", views.report_filter),
-    url(r"^update_user/$", views.update_user),
     url(r"^get_user/$", views.get_user),
     url(r"^get_user_groups/$", views.get_user_groups),
     path("get_group_users/<int:group_id>/", views.get_group_users),

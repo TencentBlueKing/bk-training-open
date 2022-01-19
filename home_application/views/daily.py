@@ -90,7 +90,7 @@ def get_reports_dates(request):
     member_dates = Daily.objects.filter(create_by=request.user.username, send_status=True).values_list(
         "date", flat=True
     )
-    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": list(member_dates)})
+    return JsonResponse({"result": True, "code": 0, "message": "success", "data": list(member_dates)})
 
 
 @require_GET
