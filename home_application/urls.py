@@ -15,7 +15,6 @@ from django.conf.urls import url
 from django.urls import path
 
 from home_application import views
-from home_application.views import common_view, iam_view
 
 urlpatterns = (
     path("", views.home),
@@ -58,8 +57,8 @@ urlpatterns = (
     path("check_user_admin/", views.check_user_admin),
     path("user_free_time/", views.user_free_time),
     # 权限中心的资源反拉
-    path("resources/group/", iam_view.group),
+    path("resources/group/", views.get_instance_info),
     # 节假日信息接口
-    path("workday_info/", common_view.get_workday_info),
-    path("get_holidays/", common_view.get_holidays),
+    path("workday_info/", views.get_workday_info),
+    path("get_holidays/", views.get_holidays),
 )
