@@ -643,3 +643,9 @@
 .temtextarea {
   padding-top: 2px !important;
 }
+
+/* 日期选择器 */
+.top-container-left-picker /deep/ .bk-date-picker-dropdown {
+  width: 260px;
+  overflow: hidden;
+}
