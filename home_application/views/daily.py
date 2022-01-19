@@ -154,7 +154,8 @@ def get_prefect_dailys(request, group_id):
 
 
 @require_http_methods(["POST"])
-def evaluate_daily(request):
+@is_group_member(admin_needed=["POST"])
+def evaluate_daily(request, group_id):
     """
     评价组员日报
     """

@@ -286,7 +286,7 @@
                             this.dialogCancel()
                             this.handleSuccess('评论成功')
                         } else {
-                            this.handleSuccess('评论失败', 'error')
+                            this.handleSuccess(res.message, 'error')
                         }
                     })
                 } else {
@@ -298,7 +298,7 @@
                                 this.dialogCancel()
                                 this.handleSuccess('删除成功')
                             } else {
-                                this.handleSuccess('删除失败', 'error')
+                                this.handleSuccess(res.message, 'error')
                             }
                         })
                     }
@@ -308,11 +308,15 @@
                     }
                     // 内容不为空之前还没修改过
                     if (this.discussContent.length !== 0 && !this.isdiscussdaily) {
-                        evaluateDaily({ daily_id: this.curSelectDaily, evaluate: this.discussContent })
-                        evaluateDaily({ daily_id: this.curSelectDaily, evaluate: this.discussContent })
-                        this.RenderData()
-                        this.dialogCancel()
-                        this.handleSuccess('评论成功')
+                        evaluateDaily(this.curgroupid, { daily_id: this.curSelectDaily, evaluate: this.discussContent }).then((res) => {
+                            if (res.result) {
+                                this.RenderData()
+                                this.dialogCancel()
+                                this.handleSuccess('评论成功')
+                            } else {
+                                this.handleSuccess(res.message, 'error')
+                            }
+                        })
                     }
                 }
             },

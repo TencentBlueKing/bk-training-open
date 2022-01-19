@@ -97,9 +97,9 @@ export function removeOff (groupId, offdayId) {
 }
 
 // 评价组员日报
-export function evaluateDaily (params) {
+export function evaluateDaily (groupid, params) {
     return new Promise((resolve, reject) => {
-        http.post('/evaluate_daily/', params).then(res => {
+        http.post(`/evaluate_daily/${groupid}/`, params).then(res => {
             resolve(res)
         })
     })
