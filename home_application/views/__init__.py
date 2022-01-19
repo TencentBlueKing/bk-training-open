@@ -47,4 +47,4 @@ from home_application.views.off_day import (  # noqa
     display_personnel_information,
     remove_off,
 )
-from home_application.views.user import check_user_admin, get_user, update_user  # noqa
+from home_application.views.user import check_user_admin, get_user  # noqa
