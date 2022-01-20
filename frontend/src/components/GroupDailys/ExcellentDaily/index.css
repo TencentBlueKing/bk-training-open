@@ -193,9 +193,8 @@
 
 .card-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   width: 100%;
+  justify-content: space-between;
 }
 
 .card-usename {
@@ -289,4 +288,46 @@
   margin-top: 10px;
   font-size: 14px;
   color: #979ba5;
+}
+
+/* 下拉列表 */
+.dropdown-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 68px;
+  border-radius: 2px;
+  padding: 0 15px;
+  color: #63656e;
+}
+.dropdown-trigger-btn.bk-icon {
+  font-size: 18px;
+  color: #979ba5;
+}
+.dropdown-trigger-btn .bk-icon {
+  font-size: 22px;
+}
+.dropdown-trigger-btn:hover {
+  cursor: pointer;
+  border-color: #979ba5;
+}
+
+/deep/ .bk-dropdown-menu {
+  display: flex;
+  align-items: center;
+  position: relative;
+  right: -10px;
+  visibility: inherit;
+}
+
+/deep/ .bk-dropdown-content {
+  position: relative;
+  top: 4px !important;
+  left: 5px !important;
+}
+
+/deep/ .bk-dropdown-list {
+  display: flex;
+  flex-direction: column;
 }

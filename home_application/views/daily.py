@@ -163,14 +163,15 @@ def evaluate_daily(request, group_id):
     daily_id = req.get("daily_id")
     evaluate_content = req.get("evaluate")
     try:
-        evaluate = Daily.objects.get(id=daily_id).evaluate
+        daily = Daily.objects.get(id=daily_id)
     except Daily.DoesNotExist:
         return JsonResponse({"result": False, "code": 1, "message": "日报不存在"})
-    evaluate.append({"name": request.user.username, "evaluate": evaluate_content})
-    Daily.objects.filter(id=daily_id).update(evaluate=evaluate)
+    username = request.user.username
+    nickname = request.user.nickname
+    daily.add_evaluate(username, nickname, evaluate_content)
+    daily.save()
     # 获取发邮件人的姓名
-    evaluate_user = User.objects.get(username=request.user.username)
-    evaluate_name = evaluate_user.username + "(" + evaluate_user.name + ")"
+    evaluate_name = f"{username}({nickname})"
     send_evaluate_daily.apply_async(
         kwargs={"evaluate_name": evaluate_name, "daily_id": daily_id, "evaluate_content": evaluate_content}
     )

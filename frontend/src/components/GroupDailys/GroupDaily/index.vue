@@ -46,9 +46,15 @@
                             <div>{{daily.date}}</div>
                         </div>
                     </div>
-                    <div class="setgood-box" v-show="isadmin" @click="setgoodDaily(daily)">
-                        {{daily.is_perfect ? '取消优秀' : '设为优秀'}}
-                    </div>
+                    <bk-dropdown-menu :align="'right'" v-show="isadmin">
+                        <template slot="dropdown-trigger">
+                            <span class="dropdown-trigger-btn bk-icon icon-cog-shape"><span>
+                            </span></span></template>
+                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <li @click="setgoodDaily(daily)"><a href="javascript:;">{{daily.is_perfect ? '取消优秀' : '设为优秀'}}</a></li>
+                            <li @click="chooseEvaluate(daily)"><a href="javascript:;">评价日报</a></li>
+                        </ul>
+                    </bk-dropdown-menu>
                 </div>
                 <div v-for="(dailyContnet, innerIndex) in daily.content" :key="innerIndex">
                     <div class="sub-title">{{dailyContnet.title}}</div>
@@ -74,11 +80,9 @@
                     </div>
                 </div>
                 <!-- 管理员评价 -->
-                <!-- tudo -->
-                <div>
-                    <div class="evaluation" v-if="!(!isadmin && daily.evaluate.length === 0)">
+                <div v-if=" daily.evaluate.length !== 0">
+                    <div class="evaluation">
                         <div class="sub-title">管理员评价</div>
-                        <div class="evaluation-title" v-if="isadmin" @click="chooseEvaluate(daily)">评价日报</div>
                     </div>
                     <!-- 评价的内容和管理员 -->
                     <div style="font-size: 14px" class="comment">
@@ -92,7 +96,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="noEvaluation" v-show="isadmin && daily.evaluate.length === 0">暂无管理员评论</div>
                     </div>
                 </div>
             </bk-card>
@@ -144,7 +147,7 @@
 <script>
     import moment from 'moment'
     import FastBtn from '@/components/GroupDailys/FastBtn'
-    import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton, bkInput } from 'bk-magic-vue'
+    import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton, bkInput, bkDropdownMenu } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
     import { isAdmin } from '@/utils/index.js'
     const { getDaily, setGoodDaily, evaluateDaily, deleteDaily, updateEvaluateDaily } = requestApi
@@ -157,7 +160,8 @@
             bkPagination,
             bkButton,
             FastBtn,
-            bkInput
+            bkInput,
+            bkDropdownMenu
         },
         props: {
             // 当前组id
@@ -399,7 +403,7 @@
                     if (res.code !== -1) {
                         item.is_perfect = !item.is_perfect
                         if (item.is_perfect === true) {
-                            this.handleSuccess('置为优秀')
+                            this.handleSuccess('设为优秀')
                         } else {
                             this.handleSuccess('取消优秀')
                         }
@@ -478,7 +482,7 @@
             isDiscussDaily (data) {
                 let flat
                 for (let i = 0; i < data.evaluate.length; i++) {
-                    if (data.evaluate[i].name === this.myMsg.username) {
+                    if (data.evaluate[i].username === this.myMsg.username) {
                         flat = true
                         this.discussContent = data.evaluate[i].evaluate
                     } else {
