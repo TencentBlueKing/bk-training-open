@@ -20,7 +20,7 @@
             <TabBtn @changeType="changeType" :content="tabBtncontent" :active="active"></TabBtn>
         </div>
         <keep-alive>
-            <component :is="curComponents" :curgroupid="selectGroup" :adminlist="AdminList" :groupusers="renderUser" :curdate="date || 1" :username="username"></component>
+            <component :is="curComponents" :curgroupid="selectGroup" :adminlist="AdminList" :groupusers="renderUser" :curdate="date" :username="username"></component>
         </keep-alive>
     </div>
 </template>
@@ -86,6 +86,11 @@
                         setCurGroup(res.data[0].id)
                     }
                     this.groupList = res.data
+                    this.filterAdmin().then(res => {
+                        // res就是管理员
+                        this.AdminList = res
+                        this.renderUserList(res)
+                    })
                     this.takeGroupuser()
                 })
             },

@@ -95,30 +95,3 @@ export function removeOff (groupId, offdayId) {
         })
     })
 }
-
-// 评价组员日报
-export function evaluateDaily (groupid, params) {
-    return new Promise((resolve, reject) => {
-        http.post(`/evaluate_daily/${groupid}/`, params).then(res => {
-            resolve(res)
-        })
-    })
-}
-
-// 删除评论
-export function deleteDaily (groupid, dailyid) {
-    return new Promise((resolve, reject) => {
-        http.delete(`/delete_evaluate_daily/${groupid}/${dailyid}/`).then(res => {
-            resolve(res)
-        })
-    })
-}
-
-// 修改评价
-export function updateEvaluateDaily (groupid, dailyid, params) {
-    return new Promise((resolve, reject) => {
-        http.post(`/update_evaluate_daily/${groupid}/${dailyid}/`, params).then(res => {
-            resolve(res)
-        })
-    })
-}
