@@ -4,7 +4,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods
 
-from home_application.models import FreeTime, GroupUser, User
+from home_application.models import FreeTime, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
@@ -96,6 +96,8 @@ def group_free_time(request, group_id):
         return JsonResponse({"result": False, "code": 1, "message": "日期格式错误", "data": []})
     user_ids = GroupUser.objects.filter(group_id=group_id).values_list("user_id", flat=True)
     usernames = User.objects.filter(id__in=user_ids).values_list("username", flat=True)
+    admin_list = Group.objects.get(id=group_id).admin_list
+    usernames = list(set(usernames) - set(admin_list))
     free_times = FreeTime.objects.get_free_time(usernames, start_date, end_date)
     return JsonResponse({"result": True, "code": 0, "message": "", "data": free_times})
 
@@ -105,22 +107,36 @@ def user_free_time(request):
     # 查找用户所有空闲时间
     username = request.GET.get("username")
     res_data = []
+    weekday = datetime.datetime.now().weekday()
+    # 周六周天展示下周时间
+    if weekday >= 5:
+        if weekday == 5:
+            weekday = -2
+        else:
+            weekday = -1
     res_data_list = FreeTime.objects.get_free_time(
-        [username], datetime.date.today(), datetime.date.today() + datetime.timedelta(days=6)
+        [username],
+        datetime.date.today() + datetime.timedelta(days=-weekday),
+        datetime.date.today() + datetime.timedelta(days=-weekday + 4),
     )[0]["free_time"]
-    weekStr = "一二三四五六日"
-    for index in range(0, 7):
+    weekStr = ["一", "二", "三", "四", "五"]
+    for index in range(0, 5):
+        date = datetime.date.today() + datetime.timedelta(days=-weekday + index)
+        is_day = False
+        if weekday == index:
+            is_day = True
         res_data.append(
             {
-                "date": datetime.date.today() + datetime.timedelta(days=index),
-                "weekend": "星期" + weekStr[((datetime.datetime.now().weekday() + index) % 7)],
+                "date": date,
+                "weekend": "星期" + weekStr[index],
+                "is_day": is_day,
                 "free_time": [
                     {
                         "start_time": f_time["start_time"],
                         "end_time": f_time["end_time"],
                     }
                     for f_time in res_data_list
-                    if f_time["date"] == (datetime.date.today() + datetime.timedelta(days=index))
+                    if f_time["date"] == date
                 ],
             }
         )
