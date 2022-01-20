@@ -378,3 +378,6 @@
   background: #1E90FF;
 }
 
+/deep/ .groupdaily-member-select{
+  margin-right: 0px;
+}
