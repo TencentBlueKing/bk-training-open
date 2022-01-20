@@ -20,7 +20,7 @@
             <TabBtn @changeType="changeType" :content="tabBtncontent" :active="active"></TabBtn>
         </div>
         <keep-alive>
-            <component :is="curComponents" :curgroupid="selectGroup" :adminlist="AdminList" :groupusers="renderUser" :curdate="date || 1" :username="username"></component>
+            <component :is="curComponents" :curgroupid="selectGroup" :adminlist="AdminList" :groupusers="renderUser" :curdate="date" :username="username"></component>
         </keep-alive>
     </div>
 </template>
@@ -31,7 +31,8 @@
     import GroupDaily from '@/components/GroupDailys/GroupDaily'
     import ExcellentDaily from '@/components/GroupDailys/ExcellentDaily'
     import requestApi from '@/api/request.js'
-    const { getallGroups, getGroupUsers } = requestApi
+    import { setCurGroup, getCurGroup } from '@/utils/index.js'
+    const { getallGroups, getGroupUsers, getGroupInfo } = requestApi
     export default {
         components: {
             bkSelect,
@@ -43,7 +44,7 @@
         data () {
             return {
                 // 当前选中的组
-                selectGroup: '',
+                selectGroup: null,
                 // 当前活着的组件
                 curComponents: 'GroupDaily',
                 tabBtncontent: ['小组日报', '优秀日报'],
@@ -56,7 +57,7 @@
             }
         },
         watch: {
-            selectGroup (oldVal) {
+            selectGroup (oldval) {
                 this.filterAdmin().then(res => {
                     // res就是管理员
                     this.AdminList = res
@@ -64,14 +65,35 @@
                 })
             }
         },
-        created () {
-            getallGroups().then(res => {
-                this.selectGroup = res.data[0].id
-                this.groupList = res.data
-                this.takeGroupuser()
-            })
+        activated () {
+            this.setCurGroup = 0
+            this.initRender()
         },
         methods: {
+            initRender () {
+                getallGroups().then(res => {
+                    if (getCurGroup() !== null) {
+                        this.selectGroup = getCurGroup()
+                        getGroupInfo(this.selectGroup).then(res1 => {
+                            // 本地有但是被管理员删了 变为第一组
+                            if (!res1.result) {
+                                this.selectGroup = res.data[0].id
+                                setCurGroup(res.data[0].id)
+                            }
+                        })
+                    } else {
+                        this.selectGroup = res.data[0].id
+                        setCurGroup(res.data[0].id)
+                    }
+                    this.groupList = res.data
+                    this.filterAdmin().then(res => {
+                        // res就是管理员
+                        this.AdminList = res
+                        this.renderUserList(res)
+                    })
+                    this.takeGroupuser()
+                })
+            },
             changeType (type) {
                 this.active = type
                 // 控制小组日报 还是 优秀日报
@@ -79,6 +101,7 @@
             },
             changeGroup (val) {
                 this.selectGroup = val
+                setCurGroup(val)
             },
             // 获得管理员
             filterAdmin () {
@@ -102,10 +125,12 @@
                 // 跳转过来的
                 if (this.$route.query.group !== undefined && this.$route.query.username !== undefined) {
                     this.selectGroup = this.$route.query.group
+                    setCurGroup(this.$route.query.group)
                     this.username = this.$route.query.username
                 }
                 if (this.$route.query.group !== undefined && this.$route.query.date !== undefined) {
                     this.selectGroup = this.$route.query.group
+                    setCurGroup(this.$route.query.group)
                     this.date = this.$route.query.date
                 }
             }

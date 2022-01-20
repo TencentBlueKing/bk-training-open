@@ -44,13 +44,22 @@
             <div class="group-func">
                 <!-- 新增组 & 入组请求 -->
                 <div class="group-func-major">
+                    <bk-badge style="marginRight:5px" theme="danger" :max="99" :val=" newApplyData.length" :visible="newApplyData.length">
+                        <bk-button
+                            v-show="isAdmin"
+                            theme="primary"
+                            :hover-theme="'primary'"
+                            @click="isshowSideslider = true">
+                            处理申请
+                        </bk-button>
+                    </bk-badge>
                     <bk-button title="primary" :text="true" :hover-theme="'primary'"
                         class="group-func-major-item"
                         @click="executeFunc('addGroup', '新增组')">
                         新增小组
                     </bk-button>
                     <bk-button title="primary" :text="true" :hover-theme="'primary'" class="group-func-major-item" @click="executeFunc('applyJoinGroup', '请求入组')">
-                        请求入组
+                        申请入组
                     </bk-button>
                     <bk-button v-show="isAdmin" :text="true" :hover-theme="'primary'"
                         class="group-func-major-item"
@@ -212,11 +221,42 @@
                 </bk-form>
             </div>
         </bk-dialog>
+        <!-- 同意申请入组的地方 -->
+        <bk-sideslider :is-show.sync="isshowSideslider" :quick-close="true">
+            <div slot="content" class="content-box">
+                <h3>处理入组</h3>
+                <bk-table
+                    style="margin-top: 15px;"
+                    :data="newApplyData"
+                >
+                    <bk-table-column prop="username" label="用户名" width="140"></bk-table-column>
+                    <bk-table-column prop="name" label="姓名" width="110"></bk-table-column>
+                    <bk-table-column label="操作" width="50">
+                        <template slot-scope="props">
+                            <bk-button
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="dealNewApply(props.row,1)">
+                                同意
+                            </bk-button>
+                            <bk-button
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="dealNewApply(props.row,2)">
+                                拒绝
+                            </bk-button>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 
 <script>
-    import { isAdmin } from '@/utils/index.js'
+    import { isAdmin, setCurGroup, getCurGroup } from '@/utils/index.js'
     import {
         bkSelect,
         bkOption,
@@ -237,7 +277,8 @@
             addGroupUsers,
             deleteGroupUsers,
             updateGroup,
-            ApplyJoinGroup } = requestApi
+            ApplyJoinGroup,
+            dealJoinGroup } = requestApi
             
     export default {
         components: {
@@ -293,7 +334,11 @@
                     current: 1,
                     count: 100,
                     limit: 10
-                }
+                },
+                // 入组请求
+                newApplyData: [],
+                // 是否展示侧栏(入组申请)
+                isshowSideslider: false
             }
         },
         computed: {
@@ -361,15 +406,23 @@
                 return flat
             }
         },
-        created () {
+        activated () {
+            // 缓解切换时组名抖动问题
+            if (this.curGroupId !== getCurGroup()) {
+                this.curGroupId = null
+            }
             // 获得本人信息
             getUser().then((res) => {
                 this.myMsg = res.data
             })
-            // 获得蓝鲸用户的数据(所有用户)
-            getAllUsers().then((res) => {
-                this.AllUsers = res
-            })
+            // 获得蓝鲸用户的数据(所有用户) 缓存 & 重新获取
+            if (JSON.parse(localStorage.getItem('AllUsers')) !== null) {
+                this.AllUsers = JSON.parse(localStorage.getItem('AllUsers'))
+            } else {
+                getAllUsers().then((res) => {
+                    this.AllUsers = res
+                })
+            }
             // 初始化第一组
             this.initGroup()
             // 获得未加入的组
@@ -378,34 +431,48 @@
             })
         },
         methods: {
-            // 初始化选中第一组
-            initGroup () {
+            // 初始化选中第一组 flat 为true我就不走缓存 强制请求 选中第一组
+            initGroup (flat = false) {
                 getallGroups().then((res) => {
                     if (res.data.length !== 0) {
                         // 有权限管理的所欲组
                         this.AllgGroupsist = res.data
-                        // 首屏是第一组数据
-                        this.curGroupId = res.data[0].id
-                        this.curGroupname = res.data[0].name
-                        this.getGroupInfoData(res.data[0].id)
+                        // 本地有就用本地
+                        if (getCurGroup() !== null && !flat) {
+                            this.curGroupId = getCurGroup()
+                            this.getGroupInfoData(getCurGroup())
+                        } else {
+                            // 没有就是第一组 并且存储本地
+                            this.curGroupId = res.data[0].id
+                            setCurGroup(res.data[0].id)
+                            this.getGroupInfoData(res.data[0].id)
+                        }
                         this.selectCompileadminID = this.adminIDList
                     } else {
                         // 如果没有第一组
                         this.curGroupData = []
                         this.curGroupId = ''
+                        setCurGroup(null)
                         this.groupUsers = []
                         this.AllgGroupsist = []
                     }
+                    this.loadApply()
                 })
             },
             //  跟换组
             changeGroup (curGroupId) {
                 this.curGroupId = curGroupId
+                setCurGroup(curGroupId)
                 this.getGroupInfoData(curGroupId)
+                this.loadApply()
             },
             // 获得组的基本数据 & 调用更新成员列表
             getGroupInfoData (curGroupId) {
                 getGroupInfo(curGroupId).then((res) => {
+                    // 我给被管理员删了但我本地还有就要换组
+                    if (!res.result) {
+                        this.initGroup(true)
+                    }
                     this.curGroupData = res.data
                     this.isAdmin = isAdmin(this.myMsg.username, res.data.admin)
                     // 更新列表数据 & 排序
@@ -619,6 +686,30 @@
                     this.handleBox('success', `成功移除${res.length}个成员`)
                     // 列表视图更新
                     this.changeGroup(this.curGroupId)
+                })
+            },
+            loadApply () {
+                //  获取申请该组的列表
+                this.$http.get(
+                    '/get_apply_for_group_users/' + this.curGroupId + '/'
+                ).then(res => {
+                    this.newApplyData = res.data
+                })
+            },
+            // 处理新的入组申请
+            dealNewApply (row, status) {
+                dealJoinGroup(this.curGroupId, { user_id: row.user_id, status: status }).then(res => {
+                    if (res.result) {
+                        for (const i in this.newApplyData) {
+                            if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
+                                this.newApplyData.splice(i, 1)
+                            }
+                        }
+                        this.getGroupInfoData(this.curGroupId)
+                        this.handleBox('success', res.message)
+                    } else {
+                        this.handleBox('error', res.message)
+                    }
                 })
             }
         }

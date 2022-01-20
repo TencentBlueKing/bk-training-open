@@ -172,7 +172,9 @@
                 bottom: false,
                 time: false,
                 // 当前快捷用户的下标位置
-                forbUserIndex: 0
+                forbUserIndex: 0,
+                // 跳转的渲染只有一次有效
+                taskrenderflat: true
             }
         },
         watch: {
@@ -188,9 +190,21 @@
             },
             curgroupid () {
                 // 如果用户组发生了变化开始
-                this.curType = 'date'
-                this.pagingDevice.curPage = 1
-                this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+                // 如果 链接里面有组 + 用户名 (一次有效)
+                if (this.curgroupid !== null && this.username !== undefined && this.taskrenderflat) {
+                    this.pagingDevice.curPage = 1
+                    this.selectedType('member')
+                    this.taskrenderflat = false
+                } else if (this.curgroupid !== null && this.curdate !== undefined && this.taskrenderflat) {
+                    // 如果是 组 + 日期
+                    this.selectedType('date')
+                    this.changeDate(moment(this.curdate).format('YYYY-MM-DD'))
+                    this.taskrenderflat = false
+                } else {
+                    this.curType = 'date'
+                    this.pagingDevice.curPage = 1
+                    this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+                }
             },
             curdate (oldVal) {
                 this.curDateTime = oldVal
@@ -263,25 +277,27 @@
                 this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 成员的改变
-            changeUser (id) {
-                this.pagingDevice.curPage = 1
+            changeUser (id, keepPage) {
+                this.pagingDevice.curPage = keepPage ? this.pagingDevice.curPage : 1
                 this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 切换 日期或者人名
-            selectedType (type, flat = false) {
-                this.pagingDevice.curPage = 1
+            selectedType (type, flat = false, keepPage = false) {
+                if (!keepPage) {
+                    this.pagingDevice.curPage = 1
+                }
                 // 跟换焦点
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
                 if (type === 'member') {
-                    if (this.groupusers.length !== 0) {
+                    if (this.groupusers && this.groupusers.length !== 0) {
                         if (flat) {
                             // 链接跳进来
                             this.changeUser(this.curSelectUser)
                         } else {
                             // 不是链接跳进来
                             this.curSelectUser = this.groupusers[0].id
-                            this.changeUser(this.curSelectUser)
+                            this.changeUser(this.curSelectUser, keepPage)
                         }
                     } else {
                         // 没成员就空
@@ -314,7 +330,7 @@
             },
             // 当前用户在数组的哪个地方
             selectUserIndex () {
-                this.groupusers.forEach((item, index) => {
+                this.groupusers && this.groupusers.forEach((item, index) => {
                     if (item.id === this.curSelectUser) {
                         this.forbUserIndex = index
                         if (index === 0 && index !== this.groupusers.length - 1) {
@@ -348,7 +364,7 @@
                     if (res.code !== -1) {
                         item.is_perfect = !item.is_perfect
                         if (item.is_perfect === true) {
-                            this.handleSuccess('置为优秀')
+                            this.handleSuccess('设为优秀')
                         } else {
                             this.handleSuccess('取消优秀')
                         }
@@ -371,9 +387,11 @@
             */
             getRenderDaily (curDate, curUserId, limit, curPage) {
                 getDaily(this.curgroupid, curDate, curUserId, limit, curPage).then(res => {
-                    this.renderDaily = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
-                    this.pagingDevice.count = res.data.total_report_num
-                    this.my_today_report = res.data.total_report_num
+                    try {
+                        this.renderDaily = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
+                        this.pagingDevice.count = res.data.total_report_num
+                        this.my_today_report = res.data.total_report_num
+                    } catch (error) {}
                 })
             }
         }

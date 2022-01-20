@@ -220,3 +220,15 @@
   margin-left: 120px !important;
   width: 250px;
 }
+
+/deep/ .bk-sideslider-closer {
+  display: none;
+}
+
+/deep/ .bk-sideslider-header {
+  display: none;
+}
+
+.content-box {
+  padding: 0 20px;
+}

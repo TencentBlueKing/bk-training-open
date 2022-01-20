@@ -1,6 +1,7 @@
 .groupDailys {
   padding: 40px 40px 0 40px;
   margin: auto;
+  height: calc(100% - 62px);
 }
 
 .groupDailys-btn {

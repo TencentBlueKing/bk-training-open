@@ -73,3 +73,12 @@ export function deleteGroup (curGroupId) {
         })
     })
 }
+
+// 入组申请(同意拒绝)
+export function dealJoinGroup (curGroupId, option) {
+    return new Promise((resolve, reject) => {
+        http.post('/deal_join_group/' + curGroupId + '/', option).then(res => {
+            resolve(res)
+        })
+    })
+}
