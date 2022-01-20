@@ -90,7 +90,7 @@ def get_reports_dates(request):
     member_dates = Daily.objects.filter(create_by=request.user.username, send_status=True).values_list(
         "date", flat=True
     )
-    return JsonResponse({"result": True, "code": 0, "message": "获取日报成功", "data": list(member_dates)})
+    return JsonResponse({"result": True, "code": 0, "message": "success", "data": list(member_dates)})
 
 
 @require_GET
@@ -232,7 +232,8 @@ def update_evaluate_daily(request, group_id, daily_id):
         return JsonResponse({"result": False, "code": 0, "message": "无此日报", "data": []})
     evaluate_content = json.loads(request.body).get("evaluate_content")
     username = request.user.username
-    daily.add_evaluate(username, evaluate_content)
+    nickname = request.user.nickname
+    daily.add_evaluate(username, nickname, evaluate_content)
     return JsonResponse({"result": True, "code": 0, "message": "修改成功", "data": []})
 
 
@@ -345,7 +346,7 @@ def report_filter(request, group_id):
         return JsonResponse({"result": True, "code": 0, "message": "查询日报成功", "data": res_data})
 
     # 根据日期获取组内所有成员的日报------------------------------------------------------------------------------
-    report_date = request.GET.get("date")
+    report_date = request.GET.get("date", "")
     try:
         report_date = datetime.strptime(report_date, "%Y-%m-%d").date()
     except ValueError:

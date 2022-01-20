@@ -89,7 +89,7 @@ git pull blueking-train
    # 项目 APP_CODE & APP_SECRET
    BKAPP_APP_CODE=xxxxxxxxxxxxx
    BKAPP_APP_SECRET=xxxxxxxxxxxxx
-   # 权限中心的token
+   # 权限中心的token，不使用权限中心资源反拉的话可以不配置
    BKAPP_IAM_AUTH_TOKEN=xxxxxxxxxxxxx
    # 权限中心的网址
    BKAPP_IAM_HOST=xxxxxxxxxxxxx	# 该域名需要同时配置本地hosts解析

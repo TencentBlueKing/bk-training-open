@@ -33,6 +33,8 @@
                     v-model="curDateTime"></bk-date-picker>
                 <FastBtn :time="time" @topItem="topItem" @bottomItem="bottomItem" />
             </div>
+            <!-- 分割线 -->
+            <div class="halving"></div>
         </div>
         <div class="group-time-box" style="float: right">
             <div class="time-box" style="height: 0px ">
@@ -40,12 +42,12 @@
                     <div class="time-single ">
                     </div>
                 </div>
-                <div style="margin-left: 10px;font-size: 14px">空闲时间</div>
+                <div style="margin-left: 10px;font-size: 14px">开发时间</div>
                 <div class="gray-background-time" style="margin-left: 10px;">
                     <div class="time-single ">
                     </div>
                 </div>
-                <div style="margin-left: 10px;font-size: 14px">忙碌时间</div>
+                <div style="margin-left: 10px;font-size: 14px">其他时间</div>
             </div>
         </div>
         <div class="user-time-content-box" v-bkloading="{ isLoading: loading, zIndex: 10 }">
@@ -76,7 +78,16 @@
                     :data="timeData"
                     :size="size"
                 >
-                    <bk-table-column label="日期" prop="date" width="100px"></bk-table-column>
+                    <bk-table-column label="日期" width="100px">
+                        <template slot-scope="props">
+                            <div class="item-box">
+                                <div :class="props.row.is_day ? 'focusitem' : ''"></div>
+                                <div :style="props.row.is_day ? 'margin-left:-4px' : ''">
+                                    {{ props.row.date}}
+                                </div>
+                            </div>
+                        </template>
+                    </bk-table-column>
                     <bk-table-column label="星期" prop="weekend" width="100px"></bk-table-column>
                     <bk-table-column :render-header="() => {
                         return [1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(item => {
@@ -239,7 +250,7 @@
             selectedType (type, flat = false) {
                 // 跟换焦点
                 this.curType = type
-                // 切换到了用户 找第一个默认用户的空闲时间(七天)
+                // 切换到了用户 找第一个默认用户的开发时间(七天)
                 if (type === 'member') {
                     if (this.groupusers.length !== 0) {
                         if (flat) {
@@ -254,9 +265,10 @@
                     } else {
                         // 没成员就空
                         this.curSelectUser = ''
+                        this.curSelectUsername = ''
                     }
                 } else {
-                    // 找当前时间的日报
+                    // 找当前时间的开发时间
                     this.changeDate(this.curDateTime, false)
                 }
             },

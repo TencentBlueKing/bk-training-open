@@ -17,7 +17,7 @@
                 </bk-option>
             </bk-select></div>
             <bk-button class="top-container-right-btn" :hover-theme="'primary'" @click="clicktimeManage">
-                空闲时间管理
+                开发时间管理
             </bk-button>
         </div>
         <bk-sideslider
@@ -77,7 +77,7 @@
                                 空数据
                             </div>
                             <bk-table-column label="日期" prop="date" min-width="50" margin-top="55px" show-overflow-tooltip="true"></bk-table-column>
-                            <bk-table-column label="空闲时间" prop="free_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
+                            <bk-table-column label="开发时间" prop="free_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
                             <bk-table-column label="操作" width="100">
                                 <template slot-scope="props">
                                     <bk-button theme="warning" text @click="showChangeTime(props.row)">修改</bk-button>
@@ -85,7 +85,7 @@
                                 </template>
                             </bk-table-column>
                         </bk-table></div>
-                    <bk-dialog v-model="changeTimeDialog.visible" render-directive="if" theme="primary" title="修改空闲时间" class="add-time-dialog" @confirm="doChangeTime">
+                    <bk-dialog v-model="changeTimeDialog.visible" render-directive="if" theme="primary" title="修改开发时间" class="add-time-dialog" @confirm="doChangeTime">
                         <bk-form label-width="80">
                             <bk-form-item label="日期">
                                 <bk-date-picker class="mr15" :options="options" v-model="changeTimeDialog.data.date" placeholder="起始日期" />
@@ -144,10 +144,10 @@
                     dateTimeRange: [new Date(), new Date()]
                 },
                 slideTitleList: [
-                    '新增空闲时间',
-                    '查看空闲时间'
+                    '新增开发时间',
+                    '查看开发时间'
                 ],
-                activeTabTitle: '新增空闲时间',
+                activeTabTitle: '新增开发时间',
                 groupList: [],
 
                 selectedGroup: -1,
@@ -179,12 +179,17 @@
                     }
                 },
                 // 新增和删除成功刷新当前页面
-                refreshPage: false
+                refreshPage: false,
+                AdminList: null
             }
         },
         watch: {
-            selectGroup () {
-                this.renderUserList()
+            selectGroup (oldVal) {
+                this.filterAdmin().then(res => {
+                    // res就是管理员
+                    this.AdminList = res
+                    this.renderUserList(res)
+                })
             }
         },
         created () {
@@ -199,7 +204,7 @@
             hiddenSlider () {
                 this.timeFormData.reason = ''
                 this.timeFormData.dateTimeRange = [new Date(), new Date()]
-                this.activeTabTitle = '新增空闲时间'
+                this.activeTabTitle = '新增开发时间'
             },
             // 请假管理按钮点击事件
             clicktimeManage () {
@@ -208,17 +213,28 @@
             // 切换请假页签事件
             changeTab (title) {
                 this.activeTabTitle = title
-                if (title === '查看空闲时间') {
+                if (title === '查看开发时间') {
                     this.loadUserTime()
                 }
             },
             changeGroup (val) {
                 this.selectGroup = val
             },
-            // 获取组所有用户
-            renderUserList () {
+            // 获得管理员
+            filterAdmin () {
+                return new Promise((resolve, reject) => {
+                    this.groupList.forEach(groupItem => {
+                        if (Number(groupItem.id) === Number(this.selectGroup)) {
+                            resolve(groupItem.admin)
+                        }
+                    })
+                })
+            },
+            // 渲染的用户
+            renderUserList (adminList) {
                 getGroupUsers(this.selectGroup).then(res => {
-                    this.renderUser = res.data
+                    // 过滤出不是管理员的数据
+                    this.renderUser = res.data.filter(item => !adminList.includes(item.username))
                 })
             },
             // 跳转到的 组下的人
