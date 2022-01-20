@@ -42,12 +42,12 @@
                     <div class="time-single ">
                     </div>
                 </div>
-                <div style="margin-left: 10px;font-size: 14px">项目研发时间</div>
+                <div style="margin-left: 10px;font-size: 14px">开发时间</div>
                 <div class="gray-background-time" style="margin-left: 10px;">
                     <div class="time-single ">
                     </div>
                 </div>
-                <div style="margin-left: 10px;font-size: 14px">自主学习时间</div>
+                <div style="margin-left: 10px;font-size: 14px">其他时间</div>
             </div>
         </div>
         <div class="user-time-content-box" v-bkloading="{ isLoading: loading, zIndex: 10 }">
@@ -250,7 +250,7 @@
             selectedType (type, flat = false) {
                 // 跟换焦点
                 this.curType = type
-                // 切换到了用户 找第一个默认用户的项目研发时间(七天)
+                // 切换到了用户 找第一个默认用户的开发时间(七天)
                 if (type === 'member') {
                     if (this.groupusers.length !== 0) {
                         if (flat) {
@@ -268,7 +268,7 @@
                         this.curSelectUsername = ''
                     }
                 } else {
-                    // 找当前时间的项目研发时间
+                    // 找当前时间的开发时间
                     this.changeDate(this.curDateTime, false)
                 }
             },

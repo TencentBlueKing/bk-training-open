@@ -17,7 +17,7 @@
                 </bk-option>
             </bk-select></div>
             <bk-button class="top-container-right-btn" :hover-theme="'primary'" @click="clicktimeManage">
-                项目研发时间管理
+                开发时间管理
             </bk-button>
         </div>
         <bk-sideslider
@@ -77,7 +77,7 @@
                                 空数据
                             </div>
                             <bk-table-column label="日期" prop="date" min-width="50" margin-top="55px" show-overflow-tooltip="true"></bk-table-column>
-                            <bk-table-column label="项目研发时间" prop="free_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
+                            <bk-table-column label="开发时间" prop="free_time" min-width="50" show-overflow-tooltip="true"></bk-table-column>
                             <bk-table-column label="操作" width="100">
                                 <template slot-scope="props">
                                     <bk-button theme="warning" text @click="showChangeTime(props.row)">修改</bk-button>
@@ -85,7 +85,7 @@
                                 </template>
                             </bk-table-column>
                         </bk-table></div>
-                    <bk-dialog v-model="changeTimeDialog.visible" render-directive="if" theme="primary" title="修改项目研发时间" class="add-time-dialog" @confirm="doChangeTime">
+                    <bk-dialog v-model="changeTimeDialog.visible" render-directive="if" theme="primary" title="修改开发时间" class="add-time-dialog" @confirm="doChangeTime">
                         <bk-form label-width="80">
                             <bk-form-item label="日期">
                                 <bk-date-picker class="mr15" :options="options" v-model="changeTimeDialog.data.date" placeholder="起始日期" />
@@ -144,10 +144,10 @@
                     dateTimeRange: [new Date(), new Date()]
                 },
                 slideTitleList: [
-                    '新增项目研发时间',
-                    '查看项目研发时间'
+                    '新增开发时间',
+                    '查看开发时间'
                 ],
-                activeTabTitle: '新增项目研发时间',
+                activeTabTitle: '新增开发时间',
                 groupList: [],
 
                 selectedGroup: -1,
@@ -204,7 +204,7 @@
             hiddenSlider () {
                 this.timeFormData.reason = ''
                 this.timeFormData.dateTimeRange = [new Date(), new Date()]
-                this.activeTabTitle = '新增项目研发时间'
+                this.activeTabTitle = '新增开发时间'
             },
             // 请假管理按钮点击事件
             clicktimeManage () {
@@ -213,7 +213,7 @@
             // 切换请假页签事件
             changeTab (title) {
                 this.activeTabTitle = title
-                if (title === '查看项目研发时间') {
+                if (title === '查看开发时间') {
                     this.loadUserTime()
                 }
             },
