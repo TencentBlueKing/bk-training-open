@@ -48,6 +48,7 @@
                         <bk-button
                             v-show="isAdmin"
                             theme="primary"
+                            :hover-theme="'primary'"
                             @click="isshowSideslider = true">
                             处理申请
                         </bk-button>
@@ -58,7 +59,7 @@
                         新增小组
                     </bk-button>
                     <bk-button title="primary" :text="true" :hover-theme="'primary'" class="group-func-major-item" @click="executeFunc('applyJoinGroup', '请求入组')">
-                        请求入组
+                        申请入组
                     </bk-button>
                     <bk-button v-show="isAdmin" :text="true" :hover-theme="'primary'"
                         class="group-func-major-item"
