@@ -96,16 +96,36 @@
                 <bk-exception ext-cls="notrender-box" class="exception-wrap-item exception-part" type="empty" scene="part" :class="{ 'exception-gray': isGray }"> 暂时还没有日报 </bk-exception>
             </div>
         </div>
+        <!-- 弹出 -->
+        <bk-dialog
+            :value="isshowDlog"
+            theme="primary"
+            :mask-close="false"
+            :header-position="left"
+            :auto-close="false"
+            @confirm="dialogConfirm()"
+            @cancel="dialogCancel()"
+            :title="isdiscussdaily ? '评论修改' : '新增评论'"
+            class="group-dialog"
+        >
+            <bk-input
+                placeholder="清空默认为删除该条评论"
+                :type="'textarea'"
+                :rows="3"
+                :maxlength="200"
+                v-model="discussContent">
+            </bk-input>
+        </bk-dialog>
     </div>
 </template>
 
 <script>
     import moment from 'moment'
     import FastBtn from '@/components/GroupDailys/FastBtn'
-    import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton } from 'bk-magic-vue'
+    import { bkSelect, bkOption, bkDatePicker, bkException, bkPagination, bkButton, bkInput } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
     import { isAdmin } from '@/utils/index.js'
-    const { getDaily, setGoodDaily } = requestApi
+    const { getDaily, setGoodDaily, evaluateDaily, deleteDaily, updateEvaluateDaily } = requestApi
     export default {
         components: {
             bkSelect,
@@ -114,7 +134,8 @@
             bkException,
             bkPagination,
             bkButton,
-            FastBtn
+            FastBtn,
+            bkInput
         },
         props: {
             // 当前组id
@@ -172,7 +193,15 @@
                 bottom: false,
                 time: false,
                 // 当前快捷用户的下标位置
-                forbUserIndex: 0
+                forbUserIndex: 0,
+                // 日报评价 弹出框
+                isshowDlog: false,
+                // 日报评价的内容
+                discussContent: '',
+                // 之前是否评价过改日报
+                isdiscussdaily: false,
+                // 跳转的渲染只有一次有效
+                taskrenderflat: true
             }
         },
         watch: {
@@ -188,9 +217,21 @@
             },
             curgroupid () {
                 // 如果用户组发生了变化开始
-                this.curType = 'date'
-                this.pagingDevice.curPage = 1
-                this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+                // 如果 链接里面有组 + 用户名 (一次有效)
+                if (this.curgroupid !== null && this.username !== undefined && this.taskrenderflat) {
+                    this.pagingDevice.curPage = 1
+                    this.selectedType('member')
+                    this.taskrenderflat = false
+                } else if (this.curgroupid !== null && this.curdate !== undefined && this.taskrenderflat) {
+                    // 如果是 组 + 日期
+                    this.selectedType('date')
+                    this.changeDate(moment(this.curdate).format('YYYY-MM-DD'))
+                    this.taskrenderflat = false
+                } else {
+                    this.curType = 'date'
+                    this.pagingDevice.curPage = 1
+                    this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+                }
             },
             curdate (oldVal) {
                 this.curDateTime = oldVal
@@ -263,25 +304,27 @@
                 this.getRenderDaily(moment(date).format('YYYY-MM-DD'), '', this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 成员的改变
-            changeUser (id) {
-                this.pagingDevice.curPage = 1
+            changeUser (id, keepPage) {
+                this.pagingDevice.curPage = keepPage ? this.pagingDevice.curPage : 1
                 this.getRenderDaily('', id, this.pagingDevice.limit, this.pagingDevice.curPage)
             },
             // 切换 日期或者人名
-            selectedType (type, flat = false) {
-                this.pagingDevice.curPage = 1
+            selectedType (type, flat = false, keepPage = false) {
+                if (!keepPage) {
+                    this.pagingDevice.curPage = 1
+                }
                 // 跟换焦点
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
                 if (type === 'member') {
-                    if (this.groupusers.length !== 0) {
+                    if (this.groupusers && this.groupusers.length !== 0) {
                         if (flat) {
                             // 链接跳进来
                             this.changeUser(this.curSelectUser)
                         } else {
                             // 不是链接跳进来
                             this.curSelectUser = this.groupusers[0].id
-                            this.changeUser(this.curSelectUser)
+                            this.changeUser(this.curSelectUser, keepPage)
                         }
                     } else {
                         // 没成员就空
@@ -314,7 +357,7 @@
             },
             // 当前用户在数组的哪个地方
             selectUserIndex () {
-                this.groupusers.forEach((item, index) => {
+                this.groupusers && this.groupusers.forEach((item, index) => {
                     if (item.id === this.curSelectUser) {
                         this.forbUserIndex = index
                         if (index === 0 && index !== this.groupusers.length - 1) {
@@ -348,7 +391,7 @@
                     if (res.code !== -1) {
                         item.is_perfect = !item.is_perfect
                         if (item.is_perfect === true) {
-                            this.handleSuccess('置为优秀')
+                            this.handleSuccess('设为优秀')
                         } else {
                             this.handleSuccess('取消优秀')
                         }
@@ -365,15 +408,88 @@
                 }
                 this.$bkMessage(config)
             },
+            // 点击评价日报信息
+            chooseEvaluate (data) {
+                // 当前选中的日报
+                this.curSelectDaily = data.id
+                // 之前是否评论过这个日报
+                this.isdiscussdaily = this.isDiscussDaily(data)
+                this.isshowDlog = true
+            },
+            // 确定评论按钮
+            dialogConfirm () {
+                // 之前评论过 日报 就是修改
+                if (this.isdiscussdaily && this.discussContent.length !== 0) {
+                    updateEvaluateDaily(this.curgroupid, this.curSelectDaily, { evaluate_content: this.discussContent }).then(res => {
+                        if (res.result) {
+                            // 保持原来的页
+                            this.selectedType(this.curType, false, true)
+                            this.dialogCancel()
+                            this.handleSuccess('评论成功')
+                        } else {
+                            this.handleSuccess(res.message, 'error')
+                        }
+                    })
+                } else {
+                    // 为空之前还评论过 就是删除
+                    if (this.discussContent.length === 0 && this.isdiscussdaily) {
+                        deleteDaily(this.curgroupid, this.curSelectDaily).then(res => {
+                            if (res.result) {
+                                this.selectedType(this.curType, false, true)
+                                this.dialogCancel()
+                                this.handleSuccess('删除成功')
+                            } else {
+                                this.handleSuccess(res.message, 'error')
+                            }
+                        })
+                    }
+                    // 为空 之前还没评论过 提示内容为空
+                    if (this.discussContent.length === 0 && !this.isdiscussdaily) {
+                        this.handleSuccess('评论内容为空', 'warning')
+                    }
+                    // 内容不为空之前还没修改过
+                    if (this.discussContent.length !== 0 && !this.isdiscussdaily) {
+                        evaluateDaily(this.curgroupid, { daily_id: this.curSelectDaily, evaluate: this.discussContent }).then((res) => {
+                            if (res.result) {
+                                this.selectedType(this.curType, false, true)
+                                this.dialogCancel()
+                                this.handleSuccess('评论成功')
+                            } else {
+                                this.handleSuccess(res.message, 'error')
+                            }
+                        })
+                    }
+                }
+            },
+            // 关闭评价日报窗口
+            dialogCancel () {
+                this.isshowDlog = false
+                this.discussContent = ''
+            },
+            // 判断我之前评论过日报吗
+            isDiscussDaily (data) {
+                let flat
+                for (let i = 0; i < data.evaluate.length; i++) {
+                    if (data.evaluate[i].username === this.myMsg.username) {
+                        flat = true
+                        this.discussContent = data.evaluate[i].evaluate
+                    } else {
+                        flat = false
+                    }
+                }
+                return flat
+            },
             /*
                 获得渲染日报数据
                 移除为 组id、当前选中的日期、当前选中的用户、分页限制、当前页
             */
             getRenderDaily (curDate, curUserId, limit, curPage) {
                 getDaily(this.curgroupid, curDate, curUserId, limit, curPage).then(res => {
-                    this.renderDaily = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
-                    this.pagingDevice.count = res.data.total_report_num
-                    this.my_today_report = res.data.total_report_num
+                    try {
+                        this.renderDaily = res.data.reports.filter(item => !this.adminlist.includes(item.create_by))
+                        this.pagingDevice.count = res.data.total_report_num
+                        this.my_today_report = res.data.total_report_num
+                    } catch (error) {}
                 })
             }
         }

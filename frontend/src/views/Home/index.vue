@@ -11,7 +11,6 @@
                             placeholder="选择日期"
                             :options="customOption"
                             @change="changeDate"
-                            :shortcuts="shortcuts"
                             :shortcut-close="true"
                         >
                         </bk-date-picker>
@@ -191,15 +190,6 @@
                 // 我自己的信息
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
                 isAdmin: null,
-                // 快捷选择日期
-                shortcuts: [
-                    {
-                        text: '今天',
-                        value () {
-                            return new Date()
-                        }
-                    }
-                ],
                 // 日期选择器的日期
                 formatDate: moment(new Date()).format(moment.HTML5_FMT.DATE),
                 // 模板弹出框的配置项
