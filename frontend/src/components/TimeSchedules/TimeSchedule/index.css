@@ -190,6 +190,7 @@
   background-color: #f0f1f5;
   position: relative;
   margin-top: 16px;
+  margin-left: 10px;
 }
 
 .groupdaily-member-select {
@@ -346,4 +347,37 @@
 
 .user-time-content-box {
     margin-top: 20px;
+}
+
+ /deep/ .bk-table-1-column-2  .bk-table-header-label{
+   margin-left: -10px;
+ }
+
+/deep/ .bk-table-2-column-3 {
+  width: 100%;
+  height: 100% !important;
+}
+
+.item-box {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.item-box div:nth-child(2){
+  display: flex;
+  align-items: center;
+}
+
+.focusitem {
+  position: relative;
+  left: -15px;
+  z-index: 10;
+  width: 4px;
+  height: 60px;
+  background: #1E90FF;
+}
+
+/deep/ .groupdaily-member-select{
+  margin-right: 0px;
 }
