@@ -4,7 +4,29 @@
 # @Remarks  : 日历处理操作
 import datetime
 
+from django.db.models import Q
+
 from home_application.models import Holiday
+
+
+def get_holidays_in_range(start_date: datetime.date, end_date: datetime.date):
+    """
+    获取[start_date, end_date]之间的法定节假日信息
+    :param start_date:  起始日期（包含）
+    :param end_date:    结束日期（包含）
+    :return:            法定节假日list
+    """
+    holidays = Holiday.objects.filter(
+        (Q(year__gte=start_date.year) & Q(year__lte=end_date.year))  # 两个日期之间所有年份的节假日
+        & ~(  # 排除start_date之前的
+            Q(year=start_date.year)
+            & (Q(month__lt=start_date.month) | (Q(month=start_date.month) & Q(day__lt=start_date.day)))
+        )
+        & ~(  # 排除end_date之后的
+            Q(year=end_date.year) & (Q(month__gt=end_date.month) | (Q(month=end_date.month) & Q(day__gt=end_date.day)))
+        )
+    )
+    return [holiday.to_json() for holiday in holidays]
 
 
 class CalendarHandler:

@@ -24,6 +24,9 @@ class Holiday(TimeBasic):
     def __str__(self):
         return "{}-{}-{} {}".format(self.year, self.month, self.day, self.note)
 
+    def to_json(self):
+        return {"date": f"{self.year}-{self.month}-{self.day}", "is_holiday": self.is_holiday, "note": self.note}
+
 
 # 用户表
 class User(TimeBasic):

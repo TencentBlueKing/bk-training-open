@@ -1,8 +1,4 @@
-import json
-
-from django.db import IntegrityError
 from django.http import JsonResponse
-from django.utils.datetime_safe import datetime
 from django.views.decorators.http import require_http_methods
 
 from home_application.models import User
@@ -14,26 +10,9 @@ from home_application.utils.tools import check_user_is_admin
 
 def get_user(request):
     """获取当前用户信息"""
-    try:
-        user = User.objects.get(id=request.user.id)
-        data = {"id": user.id, "username": user.username, "name": user.name, "phone": user.phone, "email": user.email}
-    except User.DoesNotExist:
-        data = {"id": request.user.id, "username": request.user.username}
+    user = User.objects.get(id=request.user.id)
+    data = {"id": user.id, "username": user.username, "name": user.name, "phone": user.phone, "email": user.email}
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": data})
-
-
-def update_user(request):
-    """更改用户信息"""
-    req = json.loads(request.body)
-    name = req.get("display_name")
-    phone = req.get("phone")
-    email = req.get("email")
-    try:
-        User.objects.filter(id=request.user.id).update(name=name, phone=phone, email=email, update_time=datetime.now())
-    except IntegrityError:
-        return JsonResponse({"result": False, "code": 1, "message": "更新失败，用户名已存在"})
-    else:
-        return JsonResponse({"result": True, "code": 0, "message": "更新成功", "data": []})
 
 
 def auto_sign_users(usernames: list, user_infos: list):
