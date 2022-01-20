@@ -45,14 +45,21 @@ class Daily(TimeBasic):
             "is_perfect": self.is_perfect,
         }
 
-    def add_evaluate(self, username, content):
-        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
-        self.evaluate.append({"name": username, "evaluate": content})
+    def add_evaluate(self, username, name, content):
+        """
+        添加评论，调用时需保证username和nickname为同一个用户
+        :param username: 用户名（账号）
+        :param name: 用户名（姓名）
+        :param content: 评价内容
+        :return:
+        """
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["username"] == username]
+        self.evaluate.append({"username": username, "name": name, "evaluate": content})
         self.save()
 
     def remove_evaluate(self, username):
         sign = self.evaluate
-        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["name"] == username]
+        self.evaluate = [evaluate for evaluate in self.evaluate if not evaluate["username"] == username]
         self.save()
         if self.evaluate == sign:
             return False
