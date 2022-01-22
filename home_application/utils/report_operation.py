@@ -79,17 +79,19 @@ def get_none_reported_user_of_group(group_id: int, date=None):
     return set(member_usernames) - set(write_report_usernames) - set(group.admin_list) - set(off_day_list)
 
 
-def is_daily_admin(now_group_id: int, now_daily_id: int):
+def daily_appertain_group(now_group_id: int, now_daily_id: int):
     """
     判断这个日报是否属于这个组
     :param now_group_id: 组id
     :param now_daily_id: 日报id
     :return True/False
     """
-    username = Daily.objects.get(id=now_daily_id).create_by
-    user_id = User.objects.get(username=username).id
-    group_id_list = GroupUser.objects.filter(user_id=user_id).values_list("group_id", flat=True)
-    for group_id in group_id_list:
-        if now_group_id == group_id:
+    try:
+        username = Daily.objects.get(id=now_daily_id).create_by
+        user_id = User.objects.get(username=username).id
+        if GroupUser.objects.get(user_id=user_id, group_id=now_group_id):
             return True
-    return False
+    except Daily.DoesNotExist:
+        return False
+    except GroupUser.DoesNotExist:
+        return False
