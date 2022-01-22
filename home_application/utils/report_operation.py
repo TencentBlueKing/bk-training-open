@@ -89,9 +89,7 @@ def daily_appertain_group(now_group_id: int, now_daily_id: int):
     try:
         username = Daily.objects.get(id=now_daily_id).create_by
         user_id = User.objects.get(username=username).id
-        if GroupUser.objects.get(user_id=user_id, group_id=now_group_id):
-            return True
-    except Daily.DoesNotExist:
-        return False
-    except GroupUser.DoesNotExist:
+        GroupUser.objects.get(user_id=user_id, group_id=now_group_id)
+        return True
+    except (Daily.DoesNotExist, GroupUser.DoesNotExist):
         return False
