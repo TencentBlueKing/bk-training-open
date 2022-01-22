@@ -77,3 +77,19 @@ def get_none_reported_user_of_group(group_id: int, date=None):
     ).values_list("user", flat=True)
     # 做差集得到没写日报的用户
     return set(member_usernames) - set(write_report_usernames) - set(group.admin_list) - set(off_day_list)
+
+
+def daily_appertain_group(now_group_id: int, now_daily_id: int):
+    """
+    判断这个日报是否属于这个组
+    :param now_group_id: 组id
+    :param now_daily_id: 日报id
+    :return True/False
+    """
+    try:
+        username = Daily.objects.get(id=now_daily_id).create_by
+        user_id = User.objects.get(username=username).id
+        GroupUser.objects.get(user_id=user_id, group_id=now_group_id)
+        return True
+    except (Daily.DoesNotExist, GroupUser.DoesNotExist):
+        return False
