@@ -72,26 +72,30 @@
         methods: {
             initRender () {
                 getallGroups().then(res => {
-                    if (getCurGroup() !== null) {
-                        this.selectGroup = getCurGroup()
-                        getGroupInfo(this.selectGroup).then(res1 => {
-                            // 本地有但是被管理员删了 变为第一组
-                            if (!res1.result) {
-                                this.selectGroup = res.data[0].id
-                                setCurGroup(res.data[0].id)
-                            }
+                    if (res.data.length !== 0) {
+                        if (getCurGroup() !== 'null') {
+                            this.selectGroup = getCurGroup()
+                            getGroupInfo(this.selectGroup).then(res1 => {
+                                // 本地有但是被管理员删了 变为第一组
+                                if (!res1.result) {
+                                    this.selectGroup = res.data[0].id
+                                    setCurGroup(res.data[0].id)
+                                }
+                            })
+                        } else {
+                            this.selectGroup = res.data[0].id
+                            setCurGroup(res.data[0].id)
+                        }
+                        this.groupList = res.data
+                        this.filterAdmin().then(res => {
+                            // res就是管理员
+                            this.AdminList = res
+                            this.renderUserList(res)
                         })
+                        this.takeGroupuser()
                     } else {
-                        this.selectGroup = res.data[0].id
-                        setCurGroup(res.data[0].id)
+                        this.$router.push('/my-group')
                     }
-                    this.groupList = res.data
-                    this.filterAdmin().then(res => {
-                        // res就是管理员
-                        this.AdminList = res
-                        this.renderUserList(res)
-                    })
-                    this.takeGroupuser()
                 })
             },
             changeType (type) {
