@@ -7,7 +7,7 @@
                 <!-- 选择组 -->
                 <bk-select
                     v-model="curGroupId"
-                    style="width: 250px;"
+                    style="width: 250px"
                     behavior="simplicity"
                     @selected="changeGroup"
                     searchable
@@ -24,7 +24,7 @@
                 </bk-select>
             </div>
             <div class="group-msg-admin">
-                <div class="group-msg-admin-title">管理员: </div>
+                <div class="group-msg-admin-title">管理员:</div>
                 <div class="group-msg-admin-list">
                     <div
                         class="group-msg-admin-item"
@@ -33,7 +33,7 @@
                     >
                         {{ item.username }}({{ item.name }})
                         <span
-                            style="backgroundColor: white"
+                            style="backgroundcolor: white"
                             v-if="index !== adminIDList.length - 1"
                         >&nbsp;/&nbsp;</span
                         >
@@ -44,29 +44,56 @@
             <div class="group-func">
                 <!-- 新增组 & 入组请求 -->
                 <div class="group-func-major">
-                    <bk-badge style="marginRight:5px" theme="danger" :max="99" :val=" newApplyData.length" :visible="newApplyData.length">
+                    <bk-badge
+                        style="marginright: 5px"
+                        theme="danger"
+                        :max="99"
+                        :val="newApplyData.length"
+                        :visible="newApplyData.length"
+                    >
                         <bk-button
                             v-show="isAdmin"
                             theme="primary"
                             :hover-theme="'primary'"
-                            @click="isshowSideslider = true">
+                            @click="isshowSideslider = true"
+                        >
                             处理申请
                         </bk-button>
                     </bk-badge>
-                    <bk-button title="primary" :text="true" :hover-theme="'primary'"
+                    <bk-button
+                        title="primary"
+                        :text="true"
+                        :hover-theme="'primary'"
                         class="group-func-major-item"
-                        @click="executeFunc('addGroup', '新增组')">
+                        @click="executeFunc('addGroup', '新增组')"
+                    >
                         新增小组
                     </bk-button>
-                    <bk-button title="primary" :text="true" :hover-theme="'primary'" class="group-func-major-item" @click="executeFunc('applyJoinGroup', '请求入组')">
+                    <bk-button
+                        title="primary"
+                        :text="true"
+                        :hover-theme="'primary'"
+                        class="group-func-major-item"
+                        @click="executeFunc('applyJoinGroup', '申请入组')"
+                    >
                         申请入组
                     </bk-button>
-                    <bk-button v-show="isAdmin" :text="true" :hover-theme="'primary'"
+                    <bk-button
+                        v-show="isAdmin"
+                        :text="true"
+                        :hover-theme="'primary'"
                         class="group-func-major-item"
-                        @click="executeFunc('compileGroup', '编辑组')">
+                        @click="executeFunc('compileGroup', '编辑组')"
+                    >
                         编辑小组
                     </bk-button>
-                    <bk-button v-show="isAdmin" :text="true" :hover-theme="'danger'" class="group-func-major-item" @click="delete_Group()">
+                    <bk-button
+                        v-show="isAdmin"
+                        :text="true"
+                        :hover-theme="'danger'"
+                        class="group-func-major-item"
+                        @click="delete_Group()"
+                    >
                         删除小组
                     </bk-button>
                 </div>
@@ -76,8 +103,10 @@
         <div class="group-member">
             <!-- 新增成员 & 批量删除 -->
             <div class="group-member-func" v-show="isAdmin">
-                <bk-button ext-cls="group-member-func-add"
-                    @click="executeFunc('addGroupUser', '新增成员')">
+                <bk-button
+                    ext-cls="group-member-func-add"
+                    @click="executeFunc('addGroupUser', '新增成员')"
+                >
                     新增成员
                 </bk-button>
                 <bk-button ext-cls="group-member-func-batchdel" @click="alldeleteUsers">
@@ -110,7 +139,9 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!isAdmin || curGroupData.admin.includes(props.row.username)"
+                                :disabled="
+                                    !isAdmin || curGroupData.admin.includes(props.row.username)
+                                "
                                 @click="removeGroupUser(props.row)"
                             >移除</bk-button
                             >
@@ -225,26 +256,33 @@
         <bk-sideslider :is-show.sync="isshowSideslider" :quick-close="true">
             <div slot="content" class="content-box">
                 <h3>处理入组</h3>
-                <bk-table
-                    style="margin-top: 15px;"
-                    :data="newApplyData"
-                >
-                    <bk-table-column prop="username" label="用户名" width="140"></bk-table-column>
-                    <bk-table-column prop="name" label="姓名" width="110"></bk-table-column>
+                <bk-table style="margin-top: 15px" :data="newApplyData">
+                    <bk-table-column
+                        prop="username"
+                        label="用户名"
+                        width="140"
+                    ></bk-table-column>
+                    <bk-table-column
+                        prop="name"
+                        label="姓名"
+                        width="110"
+                    ></bk-table-column>
                     <bk-table-column label="操作" width="50">
                         <template slot-scope="props">
                             <bk-button
                                 class="mr10"
                                 theme="primary"
                                 text
-                                @click="dealNewApply(props.row,1)">
+                                @click="dealNewApply(props.row, 1)"
+                            >
                                 同意
                             </bk-button>
                             <bk-button
                                 class="mr10"
                                 theme="primary"
                                 text
-                                @click="dealNewApply(props.row,2)">
+                                @click="dealNewApply(props.row, 2)"
+                            >
                                 拒绝
                             </bk-button>
                         </template>
@@ -266,20 +304,22 @@
         bkButton
     } from 'bk-magic-vue'
     import requestApi from '@/api/request.js'
-    const { getallGroups,
-            getGroupInfo,
-            getAllUsers,
-            getUser,
-            addGroup,
-            getNotJoinGroup,
-            deleteGroup,
-            getGroupUsers,
-            addGroupUsers,
-            deleteGroupUsers,
-            updateGroup,
-            ApplyJoinGroup,
-            dealJoinGroup } = requestApi
-            
+    const {
+        getallGroups,
+        getGroupInfo,
+        getAllUsers,
+        getUser,
+        addGroup,
+        getNotJoinGroup,
+        deleteGroup,
+        getGroupUsers,
+        addGroupUsers,
+        deleteGroupUsers,
+        updateGroup,
+        ApplyJoinGroup,
+        dealJoinGroup
+    } = requestApi
+
     export default {
         components: {
             bkSelect,
@@ -372,11 +412,16 @@
             renderGroupUsers () {
                 return this.groupUsers.slice(
                     (this.pagination.current - 1) * this.pagination.limit,
-                    this.pagination.current * this.pagination.limit)
+                    this.pagination.current * this.pagination.limit
+                )
             },
             // 管理员List
             adminIDList () {
-                return (this.curGroupData.admin_list !== undefined && this.curGroupData.admin_list.map((item) => item.id)) || []
+                return (
+                    (this.curGroupData.admin_list !== undefined
+                    && this.curGroupData.admin_list.map((item) => item.id))
+                    || []
+                )
             },
             // 过滤出没有在组里面的成员
             notakeUsers () {
@@ -395,14 +440,16 @@
                     this.handleBox('error', '未选中成员')
                     flat = false
                 }
-                this.adminIDList
-                    .forEach((id) => {
-                        if (this.tableSelect && this.tableSelect.map((item) => item.id).includes(id)) {
-                            // 删除人员中有管理员
-                            this.handleBox('error', '不能选择删除管理员')
-                            flat = false
-                        }
-                    })
+                this.adminIDList.forEach((id) => {
+                    if (
+                        this.tableSelect
+                        && this.tableSelect.map((item) => item.id).includes(id)
+                    ) {
+                        // 删除人员中有管理员
+                        this.handleBox('error', '不能选择删除管理员')
+                        flat = false
+                    }
+                })
                 return flat
             }
         },
@@ -438,7 +485,7 @@
                         // 有权限管理的所欲组
                         this.AllgGroupsist = res.data
                         // 本地有就用本地
-                        if (getCurGroup() !== null && !flat) {
+                        if (getCurGroup() !== 'null' && !flat) {
                             this.curGroupId = getCurGroup()
                             this.getGroupInfoData(getCurGroup())
                         } else {
@@ -448,6 +495,7 @@
                             this.getGroupInfoData(res.data[0].id)
                         }
                         this.selectCompileadminID = this.adminIDList
+                        this.loadApply()
                     } else {
                         // 如果没有第一组
                         this.curGroupData = []
@@ -456,7 +504,6 @@
                         this.groupUsers = []
                         this.AllgGroupsist = []
                     }
-                    this.loadApply()
                 })
             },
             //  跟换组
@@ -502,7 +549,10 @@
                 this.selectAdminList.unshift(this.myMsg)
                 // id 转化为需要的admin
                 this.AllUsers.forEach((user) => {
-                    if (this.selectAdminIDList.includes(user.id) && user.id !== this.myMsg.id) {
+                    if (
+                        this.selectAdminIDList.includes(user.id)
+                        && user.id !== this.myMsg.id
+                    ) {
                         this.selectAdminList.push(user)
                     }
                 })
@@ -531,7 +581,10 @@
             },
             // 提示框
             handleBox (type, title) {
-                const config = type === 'success' ? { offsetY: 80, message: title, theme: 'success' } : { offsetY: 80, message: title, theme: 'error' }
+                const config
+                    = type === 'success'
+                        ? { offsetY: 80, message: title, theme: 'success' }
+                        : { offsetY: 80, message: title, theme: 'error' }
                 this.$bkMessage(config)
             },
             // 确定申请入组
@@ -653,14 +706,23 @@
             // 批量删除数据
             alldeleteUsers () {
                 // 判断有没有选中管理员
-                if (this.existAdmin) this.showBkInfo('确认要批量删除数据？', this.confirmAllDelete)
+                if (this.existAdmin) {
+                    this.showBkInfo('确认要批量删除数据？', this.confirmAllDelete)
+                }
             },
             updateRender (curGroupId) {
                 // 获得组成员 放里面等curGroupData 更新了才能排序
                 getGroupUsers(curGroupId).then((res) => {
                     this.pagination.count = res.data.length
                     this.groupUsers = res.data.sort((a, b) => {
-                        if ((this.adminIDList.includes(a.id) && this.adminIDList.includes(b.id)) || (this.adminIDList.includes(a.id) && !this.adminIDList.includes(b.id)) || (this.adminIDList.includes(a.id) && !this.adminIDList.includes(b.id))) {
+                        if (
+                            (this.adminIDList.includes(a.id)
+                            && this.adminIDList.includes(b.id))
+                            || (this.adminIDList.includes(a.id)
+                            && !this.adminIDList.includes(b.id))
+                            || (this.adminIDList.includes(a.id)
+                            && !this.adminIDList.includes(b.id))
+                        ) {
                             return -1
                         }
                         return 1
@@ -690,18 +752,24 @@
             },
             loadApply () {
                 //  获取申请该组的列表
-                this.$http.get(
-                    '/get_apply_for_group_users/' + this.curGroupId + '/'
-                ).then(res => {
-                    this.newApplyData = res.data
-                })
+                this.$http
+                    .get('/get_apply_for_group_users/' + this.curGroupId + '/')
+                    .then((res) => {
+                        this.newApplyData = res.data
+                    })
             },
             // 处理新的入组申请
             dealNewApply (row, status) {
-                dealJoinGroup(this.curGroupId, { user_id: row.user_id, status: status }).then(res => {
+                dealJoinGroup(this.curGroupId, {
+                    user_id: row.user_id,
+                    status: status
+                }).then((res) => {
                     if (res.result) {
                         for (const i in this.newApplyData) {
-                            if (this.newApplyData[i].hasOwnProperty('user_id') && this.newApplyData[i].user_id === row.user_id) {
+                            if (
+                                this.newApplyData[i].hasOwnProperty('user_id')
+                                && this.newApplyData[i].user_id === row.user_id
+                            ) {
                                 this.newApplyData.splice(i, 1)
                             }
                         }
