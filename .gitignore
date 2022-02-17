@@ -4,5 +4,6 @@ venv
 local_settings.py
 node_modules
 env
+.env
 package-lock.json
 webpack_cache
