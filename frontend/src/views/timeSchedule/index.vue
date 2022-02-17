@@ -113,6 +113,7 @@
     import TimeSchedule from '@/components/TimeSchedules/TimeSchedule'
     import requestApi from '@/api/request.js'
     import moment from 'moment'
+    import { setCurGroup, getCurGroup } from '@/utils/index.js'
     const { getallGroups, getGroupUsers } = requestApi
     export default {
         components: {
@@ -192,14 +193,31 @@
                 })
             }
         },
-        created () {
-            getallGroups().then(res => {
-                this.selectGroup = res.data[0].id
-                this.groupList = res.data
-                this.takeGroupuser()
-            })
+        activated () {
+            // 缓解切换时组名抖动问题
+            if (this.curGroupId !== getCurGroup()) {
+                this.curGroupId = null
+            }
+            // 初始化第一组
+            this.initGroup()
         },
         methods: {
+            initGroup () {
+                getallGroups().then(res => {
+                    if (getCurGroup() !== null) {
+                        this.selectGroup = getCurGroup()
+                        this.groupList = res.data
+                        this.takeGroupuser()
+                    } else {
+                        // 没有就是第一组 并且存储本地
+                        this.curGroupId = res.data[0].id
+                        this.groupList = res.data
+                        setCurGroup(res.data[0].id)
+                        this.takeGroupuser()
+                    }
+                }
+                )
+            },
             // 请假滑窗关闭事件
             hiddenSlider () {
                 this.timeFormData.reason = ''
@@ -219,6 +237,7 @@
             },
             changeGroup (val) {
                 this.selectGroup = val
+                setCurGroup(val)
             },
             // 获得管理员
             filterAdmin () {

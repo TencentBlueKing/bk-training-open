@@ -129,11 +129,11 @@ class FreeTimeManage(models.Manager):
             username__in=username_list, start_time__range=(start_date, end_date)
         ).order_by("start_time")
         res = []
-        name = User.objects.filter(username__in=username_list).values_list("name", flat=True)
+        user_list = User.objects.filter(username__in=username_list).values_list("username", "name")
         for i in range(0, len(username_list)):
             res.append(
                 {
-                    "username": username_list[i] + "(" + name[i] + ")",
+                    "username": user_list[i][0] + "(" + user_list[i][1] + ")",
                     "free_time": [
                         {
                             "id": f_time.id,
@@ -141,7 +141,7 @@ class FreeTimeManage(models.Manager):
                             "start_time": f_time.start_time.strftime("%Y-%m-%d %H:%M"),
                             "end_time": f_time.end_time.strftime("%Y-%m-%d %H:%M"),
                         }
-                        for f_time in free_times.filter(username=username_list[i])
+                        for f_time in free_times.filter(username=user_list[i][0])
                     ],
                 }
             )
