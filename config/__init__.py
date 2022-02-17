@@ -21,6 +21,18 @@ from blueapps.core.celery import celery_app
 
 __all__ = ["celery_app", "RUN_VER", "APP_CODE", "SECRET_KEY", "BK_URL", "BASE_DIR"]
 
+# 从项目根目录下的 .env 文件读取配置
+try:
+    with open(os.path.join(".env"), "r", encoding="utf-8") as env_setting_file:
+        while True:
+            env_settings = env_setting_file.readline()
+            if env_settings:
+                env_key, env_val = env_settings.strip("\n").split("=")
+                os.environ[env_key] = env_val
+            else:
+                break
+except FileNotFoundError:
+    raise RuntimeError("未在项目根目录下找到 .env 配置文件，请检查")
 
 # app 基本信息
 

@@ -506,7 +506,7 @@
                     }
                 })
             },
-            //  跟换组
+            //  切换组
             changeGroup (curGroupId) {
                 this.curGroupId = curGroupId
                 setCurGroup(curGroupId)

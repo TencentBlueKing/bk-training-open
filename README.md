@@ -75,47 +75,19 @@ git pull blueking-train
 
    PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
 
-4. 配置环境变量
+4. 将项目根目录下的`.env_tpl`文件修改为`.env`，然后找管理员获取相应信息：
 
    ```
-   # 自己的用户名（蓝鲸开发者账号）
-   BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
-   # 网站完整网址
-   BKAPP_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
-   # 蓝鲸SaaS平台url
+   BKAPP_APP_CODE=bk-daily-open
+   BKAPP_APP_SECRET=xxx找管理员获取xxx
+   BKAPP_FULL_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
    BKAPP_PAAS_URL=https://paas-edu.bktencent.com
-   
-   # 以下环境变量需找负责人获取
-   # 项目 APP_CODE & APP_SECRET
-   BKAPP_APP_CODE=xxxxxxxxxxxxx
-   BKAPP_APP_SECRET=xxxxxxxxxxxxx
-   # 权限中心的token，不使用权限中心资源反拉的话可以不配置
-   BKAPP_IAM_AUTH_TOKEN=xxxxxxxxxxxxx
-   # 权限中心的网址
-   BKAPP_IAM_HOST=xxxxxxxxxxxxx	# 该域名需要同时配置本地hosts解析
-   # 权限中心拉取资源的系统id
-   BKAPP_IAM_SYSTEM_ID=xxxxxxxxxxxxx
+   BKAPP_API_INVOKE_USER=xxx自己的账号xxx
+   BKAPP_IAM_AUTH_TOKEN=xxx找管理员获取xxx
+   BKAPP_IAM_HOST=xxx找管理员获取xxx
+   BKAPP_IAM_SYSTEM_ID=xxx找管理员获取xxx
    ```
-
-   + 在PyCharm中配置环境变量以及主机名
-
-   ![PyCharm配置环境变量](static/images/image-202111229321321908.png)
-
-   + 配置Terminal和Python Console的环境变量
-
-     只配置Django Server的环境变量的话，无法直接在Terminal中执行migrate命令，需要在执行前手动设置相关的环境变量
-
-     ```shell
-     CMD:
-     set BKAPP_APP_CODE=xxxx
-     
-     PowerShell:
-     $env:BKAPP_APP_CODE="xxx"
-     
-     macOS:
-     export BKAPP_APP_CODE=xxxx
-     ```
-
+   
 5. 运行
 
    ```shell
