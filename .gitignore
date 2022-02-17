@@ -1,0 +1,8 @@
+venv
+.idea
+*.pyc
+local_settings.py
+node_modules
+env
+package-lock.json
+webpack_cache

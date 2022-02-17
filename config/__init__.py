@@ -21,9 +21,12 @@ from blueapps.core.celery import celery_app
 
 __all__ = ["celery_app", "RUN_VER", "APP_CODE", "SECRET_KEY", "BK_URL", "BASE_DIR"]
 
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # 从项目根目录下的 .env 文件读取配置
 try:
-    with open(os.path.join(".env"), "r", encoding="utf-8") as env_setting_file:
+    with open(os.path.join(BASE_DIR, "env"), "r", encoding="utf-8") as env_setting_file:
         while True:
             env_settings = env_setting_file.readline()
             if env_settings:
@@ -32,7 +35,7 @@ try:
             else:
                 break
 except FileNotFoundError:
-    raise RuntimeError("未在项目根目录下找到 .env 配置文件，请检查")
+    pass
 
 # app 基本信息
 
@@ -58,6 +61,3 @@ RUN_VER = "open"
 # 不要直接拿来用，测试环境和正式环境会在后边拼接'/console/'    见blueapps/patch/settings_open_saas.py 79行
 # 如需蓝鲸SaaS平台URL，可以使用settings.BKAPP_PAAS_URL     见config.default.py 140行
 BK_URL = "https://paas-edu.bktencent.com:443"
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

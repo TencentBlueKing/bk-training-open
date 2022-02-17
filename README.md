@@ -56,39 +56,9 @@ git pull blueking-train
    CREATE DATABASE `bk-training-open` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
    ```
 
-3. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
-
-   ```python
-   from config import APP_CODE
+3. 将项目根目录下的`env_tpl`文件复制，并重命名为`env`，然后找管理员获取相应信息
    
-   DATABASES = {
-       "default": {
-           "ENGINE": "django.db.backends.mysql",
-           "NAME": APP_CODE,
-           "USER": "", #数据库用户名
-           "PASSWORD": "", #数据库密码
-           "HOST": "localhost",
-           "PORT": "3306",
-       },
-   }
-   ```
-
-   PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
-
-4. 将项目根目录下的`.env_tpl`文件修改为`.env`，然后找管理员获取相应信息：
-
-   ```
-   BKAPP_APP_CODE=bk-daily-open
-   BKAPP_APP_SECRET=xxx找管理员获取xxx
-   BKAPP_FULL_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
-   BKAPP_PAAS_URL=https://paas-edu.bktencent.com
-   BKAPP_API_INVOKE_USER=xxx自己的账号xxx
-   BKAPP_IAM_AUTH_TOKEN=xxx找管理员获取xxx
-   BKAPP_IAM_HOST=xxx找管理员获取xxx
-   BKAPP_IAM_SYSTEM_ID=xxx找管理员获取xxx
-   ```
-   
-5. 运行
+4. 运行
 
    ```shell
    pip install -r requirements.txt
@@ -96,10 +66,10 @@ git pull blueking-train
    python manage.py runserver dev.paas-edu.bktencent.com:8000
    ```
 
-6. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
+5. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
    ![image-20210905115040095](static/images/image-20210905115040095.png)
 
-7. 本地运行bkui，检测跨域配置
+6. 本地运行bkui，检测跨域配置
 
    ```
    # 进入前端工作目录
