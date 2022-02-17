@@ -56,67 +56,9 @@ git pull blueking-train
    CREATE DATABASE `bk-training-open` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
    ```
 
-3. 在项目根目录下创建`local_settings.py`，然后在`local_settings.py`添加数据库配置
-
-   ```python
-   from config import APP_CODE
+3. 将项目根目录下的`env_tpl`文件复制，并重命名为`env`，然后找管理员获取相应信息
    
-   DATABASES = {
-       "default": {
-           "ENGINE": "django.db.backends.mysql",
-           "NAME": APP_CODE,
-           "USER": "", #数据库用户名
-           "PASSWORD": "", #数据库密码
-           "HOST": "localhost",
-           "PORT": "3306",
-       },
-   }
-   ```
-
-   PS：`local_settings.py`是自己的本地开发环境配置，不需要提交到git上
-
-4. 配置环境变量
-
-   ```
-   # 自己的用户名（蓝鲸开发者账号）
-   BKAPP_API_INVOKE_USER=xxxxxxxxxxxxx
-   # 网站完整网址
-   BKAPP_SITE_URL=http://dev.paas-edu.bktencent.com:8080/
-   # 蓝鲸SaaS平台url
-   BKAPP_PAAS_URL=https://paas-edu.bktencent.com
-   
-   # 以下环境变量需找负责人获取
-   # 项目 APP_CODE & APP_SECRET
-   BKAPP_APP_CODE=xxxxxxxxxxxxx
-   BKAPP_APP_SECRET=xxxxxxxxxxxxx
-   # 权限中心的token，不使用权限中心资源反拉的话可以不配置
-   BKAPP_IAM_AUTH_TOKEN=xxxxxxxxxxxxx
-   # 权限中心的网址
-   BKAPP_IAM_HOST=xxxxxxxxxxxxx	# 该域名需要同时配置本地hosts解析
-   # 权限中心拉取资源的系统id
-   BKAPP_IAM_SYSTEM_ID=xxxxxxxxxxxxx
-   ```
-
-   + 在PyCharm中配置环境变量以及主机名
-
-   ![PyCharm配置环境变量](static/images/image-202111229321321908.png)
-
-   + 配置Terminal和Python Console的环境变量
-
-     只配置Django Server的环境变量的话，无法直接在Terminal中执行migrate命令，需要在执行前手动设置相关的环境变量
-
-     ```shell
-     CMD:
-     set BKAPP_APP_CODE=xxxx
-     
-     PowerShell:
-     $env:BKAPP_APP_CODE="xxx"
-     
-     macOS:
-     export BKAPP_APP_CODE=xxxx
-     ```
-
-5. 运行
+4. 运行
 
    ```shell
    pip install -r requirements.txt
@@ -124,10 +66,10 @@ git pull blueking-train
    python manage.py runserver dev.paas-edu.bktencent.com:8000
    ```
 
-6. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
+5. 浏览器打开http://dev.paas-edu.bktencent.com:8000 测试get请求和post请求是否发送成功
    ![image-20210905115040095](static/images/image-20210905115040095.png)
 
-7. 本地运行bkui，检测跨域配置
+6. 本地运行bkui，检测跨域配置
 
    ```
    # 进入前端工作目录

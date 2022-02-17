@@ -145,9 +145,20 @@ TIME_ZONE = "Asia/Shanghai"
 LANGUAGE_CODE = "zh-hans"
 
 LANGUAGES = (
-    ("en", u"English"),
-    ("zh-hans", u"简体中文"),
+    ("en", "English"),
+    ("zh-hans", "简体中文"),
 )
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("BKAPP_MYSQL_DBNAME"),  # 数据库名
+        "USER": os.getenv("BKAPP_MYSQL_USER"),  # 数据库用户
+        "PASSWORD": os.getenv("BKAPP_MYSQL_PASSWORD"),  # 数据库密码
+        "HOST": os.getenv("BKAPP_MYSQL_HOST"),  # 数据库主机
+        "PORT": int(os.getenv("BKAPP_MYSQL_PORT", "3306")),  # 数据库端口
+    },
+}
 
 """
 以下为框架代码 请勿修改
