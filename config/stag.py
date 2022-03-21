@@ -41,5 +41,5 @@ if FRONTEND_BACKEND_SEPARATION:
 
 AJAX_REFERER_WHITE_LIST = [
     "dev.paas-edu.bktencent.com:8080",
-    "paas-edu.bktencent.com",
+    "apps.paas-edu.bktencent.com",
 ]

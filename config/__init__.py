@@ -51,9 +51,9 @@ def get_env_or_raise(key):
 
 
 # 应用 ID
-APP_CODE = get_env_or_raise("BKAPP_APP_CODE")
+APP_CODE = get_env_or_raise("BKPAAS_APP_ID")
 # 应用用于调用云 API 的 Secret
-SECRET_KEY = get_env_or_raise("BKAPP_APP_SECRET")
+SECRET_KEY = get_env_or_raise("BKPAAS_APP_SECRET")
 
 # SaaS运行版本，如非必要请勿修改
 RUN_VER = "open"
