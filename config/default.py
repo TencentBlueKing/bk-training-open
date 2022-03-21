@@ -152,13 +152,18 @@ LANGUAGES = (
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("BKAPP_MYSQL_DBNAME"),  # 数据库名
-        "USER": os.getenv("BKAPP_MYSQL_USER"),  # 数据库用户
-        "PASSWORD": os.getenv("BKAPP_MYSQL_PASSWORD"),  # 数据库密码
-        "HOST": os.getenv("BKAPP_MYSQL_HOST"),  # 数据库主机
-        "PORT": int(os.getenv("BKAPP_MYSQL_PORT", "3306")),  # 数据库端口
+        "NAME": os.getenv("MYSQL_NAME"),  # 数据库名
+        "USER": os.getenv("MYSQL_USER"),  # 数据库用户
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),  # 数据库密码
+        "HOST": os.getenv("MYSQL_HOST"),  # 数据库主机
+        "PORT": int(os.getenv("MYSQL_PORT", "3306")),  # 数据库端口
     },
 }
+
+REDIS_HOST = os.environ.get("REDIS_HOST")
+REDIS_PORT = int(os.environ.get("REDIS_PORT"))
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+BROKER_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
 
 """
 以下为框架代码 请勿修改
