@@ -104,7 +104,7 @@ DEFAULT_BK_API_VER = locals().get("DEFAULT_BK_API_VER", "v2")
 
 # STATIC_ROOT,静态文件收集文件夹,由于企业版需要用户手动收集,此处设为空,
 # 同时需要设置STATICFILES_DIRS不改变
-STATIC_ROOT = None
+# STATIC_ROOT = None
 
 # open环境使用cookie中的blueking_language来控制语言
 LANGUAGE_SESSION_KEY = "blueking_language"
