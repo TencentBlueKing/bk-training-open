@@ -346,6 +346,10 @@
                 this.loading = true
                 const startDate = moment(this.curDateTime).format(moment.HTML5_FMT.DATE)
                 const endDate = moment(this.curDateTime).format(moment.HTML5_FMT.DATE)
+                if (this.curgroupid != null) {
+                    this.loading = false
+                    return
+                }
                 this.$http.get(
                     '/group_free_time/' + this.curgroupid + '/?start_date=' + startDate + '&end_date=' + endDate
                 ).then(res => {

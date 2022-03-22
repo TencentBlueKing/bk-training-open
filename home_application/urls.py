@@ -55,8 +55,6 @@ urlpatterns = (
     path("check_user_in_group/<int:group_id>/", views.check_user_in_group),
     path("check_user_admin/", views.check_user_admin),
     path("user_free_time/", views.user_free_time),
-    # 权限中心的资源反拉
-    path("resources/group/", views.get_instance_info),
     # 节假日信息接口
     path("workday_info/", views.get_workday_info),
     path("get_holidays/", views.get_holidays),

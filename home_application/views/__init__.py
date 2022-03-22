@@ -41,7 +41,6 @@ from home_application.views.group import (  # noqa
     list_group_admin,
     update_group,
 )
-from home_application.views.iam_view import get_instance_info  # noqa
 from home_application.views.off_day import (  # noqa
     add_off_info,
     display_personnel_information,

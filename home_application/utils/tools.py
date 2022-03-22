@@ -1,7 +1,6 @@
 from django.core.paginator import Paginator
 
-from home_application.models import GroupUser
-from home_application.utils.iam_util import IAMClient
+from home_application.models import Group, GroupUser
 
 
 def check_param(params, kwargs: dict):
@@ -42,12 +41,12 @@ def check_user_is_admin(request, check_type):
     check_type为1时，判断用户是否在其所加入的所有组中，至少是其中一个组的管理员，若是返回True，反之返回False
     """
     user_name = request.user.username
+    # 所有加入的组id
+    group_ids = set(GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True))
     # 所有管理的组
-    manage_groups = IAMClient().get_manage_group_list(user_name)
-    manage_group_ids = {g["id"] for g in manage_groups}
+    groups = Group.objects.filter(id__in=group_ids)
+    manage_group_ids = {g.id for g in groups if user_name in g.admin_list}
     if check_type == 0:
-        # 加入的所有组
-        group_ids = set(GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True))
         return group_ids == manage_group_ids
     else:
         return len(manage_group_ids) > 0
