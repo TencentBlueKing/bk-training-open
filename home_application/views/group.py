@@ -14,8 +14,6 @@ from home_application.celery_task import (
 )
 from home_application.models import ApplyForGroup, Group, GroupUser, User
 from home_application.utils.decorator import is_group_member
-from home_application.utils.group_util import update_group_admins
-from home_application.utils.iam_util import IAMClient
 from home_application.utils.tools import (
     apply_info_to_json,
     apply_is_available_to_json,
@@ -65,32 +63,14 @@ def add_group(request):
         )
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
-
-    bk_token = request.COOKIES.get("bk_token")
-    # 已授权管理员list
-    added_admins = update_group_admins([], admin_names, group.id, group.name, bk_token)
-
-    if len(added_admins) == 0:  # 没有管理员授权成功就直接删除组
-        group.delete()
-        return JsonResponse({"result": False, "code": 1, "message": "创建失败，访问权限中心时出现问题，请稍后再试"})
-    elif len(added_admins) != len(added_admins):  # 部分授权成功则将本地数据库的管理员与权限中心的管理员同步
-        group.admin = ",".join(added_admins)
-        group.save()
-
     # 添加未注册的用户信息
     auto_sign_users(admin_names, admins)
-
     # 添加组-用户信息
     group_user_list = []
     for admin in admins:
         group_user_list.append(GroupUser(group_id=group.id, user_id=admin.get("id")))
     GroupUser.objects.bulk_create(group_user_list)
-    # 判断是否所有管理员均添加成功
-    if len(added_admins) != len(admin_names):
-        msg = "创建组成功"
-    else:
-        msg = "创建组成功，但是部分管理员添加失败，请稍后在'编辑小组'中手动添加"
-    return JsonResponse({"result": True, "code": 0, "message": msg, "data": {"group_id": group.id}})
+    return JsonResponse({"result": True, "code": 0, "message": "success", "data": {"group_id": group.id}})
 
 
 @is_group_member(admin_needed=["POST"])
@@ -99,22 +79,11 @@ def delete_group(request, group_id):
         group = Group.objects.get(id=group_id)
     except Group.DoesNotExist:
         return JsonResponse({"result": False, "code": -1, "message": "组不存在", "data": []})
-
-    # 回收管理员权限，未能全部删除时与权限中心保持一致
-    bk_token = request.COOKIES.get("bk_token")
-    new_admins = update_group_admins(group.admin_list, [], group_id, group.name, bk_token)
-
-    if len(new_admins) == 0:  # 成功回收所有管理员权限则直接返回
-        group.delete()
-        GroupUser.objects.filter(group_id=group_id).delete()
-        return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})
-
-    if len(new_admins) != len(group.admin_list):
-        group.admin = ",".join(new_admins)
-        msg = "在回收管理员权限时出错，请稍后再试"
-    else:
-        msg = "回收管理员权限失败，请稍后再试"
-    return JsonResponse({"result": False, "code": 1, "message": msg, "data": []})
+    if group.create_by != request.user.username:
+        return JsonResponse({"result": False, "code": 1, "message": "无权限", "data": []})
+    group.delete()
+    GroupUser.objects.filter(group_id=group_id).delete()
+    return JsonResponse({"result": True, "code": 0, "message": "删除组成功", "data": []})
 
 
 @is_group_member(admin_needed=["POST", "PUT", "DELETE"])
@@ -139,10 +108,6 @@ def update_group(request, group_id):
 
     # 更新管理员，并保持数据库与权限中心一致
     group = Group.objects.get(id=group_id)
-    bk_token = request.COOKIES.get("bk_token")
-    new_admins = update_group_admins(group.admin_list, admin_names, group_id, group.name, bk_token)
-    if set(new_admins) != set(admin_names):
-        return JsonResponse({"result": False, "code": 1, "message": "在权限中心更新管理员权限时出错，请稍后再试", "data": []})
     group.admin = ",".join(admin_names)
     group.name = name
 
@@ -371,8 +336,16 @@ def list_admin_group(request):
     """
     获取有权限管理的所有组
     """
-    # 从权限中心查询所有管理的组
-    admin_groups = IAMClient().get_manage_group_list(request.user.username)
+    # 所有加入的组
+    groups = Group.objects.filter(
+        id__in=GroupUser.objects.filter(user_id=request.user.id).values_list("group_id", flat=True)
+    )
+
+    # 所有管理的组
+    admin_groups = []
+    for g in groups:
+        if request.user.username in g.admin_list:
+            admin_groups.append(g.to_json())
     return JsonResponse({"result": True, "code": 0, "manage": "", "data": admin_groups})
 
 

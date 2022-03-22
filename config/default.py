@@ -131,12 +131,6 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)  # noqa
 API_INVOKE_USER = get_env_or_raise("BKAPP_API_INVOKE_USER")
 # 日报网站url
 BKAPP_FULL_SITE_URL = get_env_or_raise("BKAPP_FULL_SITE_URL")
-# 权限中心会给注册的系统生成token https://bk.tencent.com/docs/document/6.0/160/8438?r=1
-BKAPP_IAM_AUTH_TOKEN = os.environ.get("BKAPP_IAM_AUTH_TOKEN")
-# 权限中心的网址
-BKAPP_IAM_HOST = get_env_or_raise("BKAPP_IAM_HOST")
-# 权限中心拉取资源时目标系统的system id
-BKAPP_IAM_SYSTEM_ID = get_env_or_raise("BKAPP_IAM_SYSTEM_ID")
 # 蓝鲸SaaS平台url
 BKAPP_PAAS_URL = get_env_or_raise("BKAPP_PAAS_URL")
 
