@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -50,7 +50,7 @@ class ResponseHandler(object):
                 context = {"has_plain": False}
                 return JsonResponse(context, status=401)
             else:
-                return self._build_page_401_response_to_platform(request)
+                return self._build_page_401_response_platform(request)
 
     def _build_ajax_401_response(self, request):
         """
@@ -72,6 +72,7 @@ class ResponseHandler(object):
             "height": self._conf.IFRAME_HEIGHT,
             "has_plain": True,
         }
+
         return JsonResponse(context, status=401)
 
     def _build_page_401_response(self, request):
@@ -85,7 +86,7 @@ class ResponseHandler(object):
         _redirect = build_redirect_url(_next, _login_url, "refer_url")
         return HttpResponseRedirect(_redirect)
 
-    def _build_page_401_response_to_platform(self, request):
+    def _build_page_401_response_platform(self, request):
         """
         Directly redirect to PAAS-LOGIN-PLATFORM
         """
@@ -104,7 +105,9 @@ class ResponseHandler(object):
     def _build_extra_args(self):
         extra_args = None
         if self._conf.ADD_APP_CODE:
-            extra_args = {self._conf.APP_KEY: getattr(self._settings, self._conf.SETTINGS_APP_KEY)}
+            extra_args = {
+                self._conf.APP_KEY: getattr(self._settings, self._conf.SETTINGS_APP_KEY)
+            }
         return extra_args
 
     def build_weixin_401_response(self, request):
@@ -120,7 +123,9 @@ class ResponseHandler(object):
             "scope": "snsapi_base",
             "state": request.session["WEIXIN_OAUTH_STATE"],
         }
-        _redirect = build_redirect_url(_next, _login_url, "redirect_uri", extra_args=extra_args)
+        _redirect = build_redirect_url(
+            _next, _login_url, "redirect_uri", extra_args=extra_args
+        )
         return HttpResponseRedirect(_redirect)
 
     def build_rio_401_response(self, request):

@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -17,6 +17,7 @@ import importlib
 import os
 
 import config
+
 from blueapps.conf import get_settings_from_module
 
 locals().update(get_settings_from_module(config))
@@ -68,11 +69,13 @@ if not IS_LOCAL:
     STATIC_ROOT = "staticfiles"
     FORCE_SCRIPT_NAME = SITE_URL
 
-    # 开启子域名时静态文件统一使用子域名访问
-    app_subdomains = os.getenv("BKPAAS_ENGINE_APP_DEFAULT_SUBDOMAINS", None)
+    # 开启子域名时静态文件统一使用子域名访问，同时可以由用户通过环境变量修改入口URL
+    app_subdomains = os.getenv("BKAPP_ENGINE_APP_DEFAULT_SUBDOMAINS", None)
+    if not app_subdomains:
+        app_subdomains = os.getenv("BKPAAS_ENGINE_APP_DEFAULT_SUBDOMAINS", None)
     # 存在该变量，而且不是空字符串
     if app_subdomains is not None and app_subdomains != "":
-        STATIC_URL = "http://%s/static/" % app_subdomains.split(";")[0]
+        STATIC_URL = "//%s/static/" % app_subdomains.split(";")[0]
     else:
         STATIC_URL = "%sstatic/" % FORCE_SCRIPT_NAME
 else:
@@ -116,4 +119,6 @@ WEIXIN_BK_URL = os.getenv("BKPAAS_WEIXIN_URL", "https://mt.bk.tencent.com")
 WEIXIN_STATIC_URL = os.getenv("BKPAAS_WEIXIN_STATIC_URL", "%sstatic/weixin/" % SITE_URL)
 
 # APP 微信远程静态资源目录
-WEIXIN_REMOTE_STATIC_URL = os.getenv("BKPAAS_WEIXIN_REMOTE_STATIC_URL", "%s/static_api/" % WEIXIN_BK_URL)
+WEIXIN_REMOTE_STATIC_URL = os.getenv(
+    "BKPAAS_WEIXIN_REMOTE_STATIC_URL", "%s/static_api/" % WEIXIN_BK_URL
+)

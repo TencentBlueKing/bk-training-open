@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -12,6 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 
 import collections
+import logging
 
 from django.contrib.auth import get_user_model
 from django.utils.module_loading import import_string
@@ -87,7 +88,7 @@ class SDKClient(object):
             try:
                 cls.sdk_package = __import__(ESB_SDK_NAME, fromlist=["shortcuts"])
             except ImportError as err:
-                raise ImportError("{} is not installed: {}".format(ESB_SDK_NAME, err))
+                raise ImportError("%s is not installed: %s" % (ESB_SDK_NAME, err))
         return super(SDKClient, cls).__new__(cls)
 
     def __init__(self, **kwargs):
@@ -135,7 +136,9 @@ class SDKClient(object):
                         common_args=self.common_args,
                     )
                 else:
-                    raise AccessForbidden("sdk can only be called through the Web request")
+                    raise AccessForbidden(
+                        "sdk can only be called through the Web request"
+                    )
             else:
                 # develop mode
                 # 根据RUN_VER获得get_component_client_common_args函数
@@ -175,7 +178,9 @@ class ComponentAPICollection(object):
 
     def __new__(cls, sdk_client, *args, **kwargs):
         if sdk_client.mod_name not in cls.mod_map:
-            cls.mod_map[sdk_client.mod_name] = super(ComponentAPICollection, cls).__new__(cls)
+            cls.mod_map[sdk_client.mod_name] = super(
+                ComponentAPICollection, cls
+            ).__new__(cls)
         return cls.mod_map[sdk_client.mod_name]
 
     def __init__(self, sdk_client):
@@ -215,12 +220,19 @@ class CustomComponentAPI(object):
         )
 
     def __call__(self, *args, **kwargs):
-        raise NotImplementedError("custom api `%s` must specify the request method" % self.action)
+        raise NotImplementedError(
+            "custom api `%s` must specify the request method" % self.action
+        )
 
 
-client = SDKClient()
-backend_client = SDKClient  # pylint: disable=invalid-name
-client.patch_sdk_component_api_class()
+try:
+    client = SDKClient()
+    backend_client = SDKClient  # pylint: disable=invalid-name
+    client.patch_sdk_component_api_class()
+except ImportError as err:
+    from blueapps.dummy.dummy_client import DummyClient
+    client = DummyClient(err)
+    backend_client = DummyClient
 
 
 def get_client_by_user(user_or_username):
@@ -229,7 +241,9 @@ def get_client_by_user(user_or_username):
         username = user_or_username.username
     else:
         username = user_or_username
-    get_client_by_user = import_string(".".join([ESB_SDK_NAME, "shortcuts", "get_client_by_user"]))
+    get_client_by_user = import_string(
+        ".".join([ESB_SDK_NAME, "shortcuts", "get_client_by_user"])
+    )
     return get_client_by_user(username)
 
 

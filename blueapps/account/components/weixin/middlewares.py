@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -56,7 +56,11 @@ class WeixinLoginRequiredMiddleware(MiddlewareMixin):
                         # 登录成功，确认登陆正常后退出
                         return None
             else:
-                logger.debug(u"微信请求链接，未检测到微信验证码，url：{}，params：{}".format(request.path_info, request.GET))
+                logger.debug(
+                    u"微信请求链接，未检测到微信验证码，url：{}，params：{}".format(
+                        request.path_info, request.GET
+                    )
+                )
 
             self.set_state(request)
             handler = ResponseHandler(ConfFixture, settings)
@@ -72,7 +76,9 @@ class WeixinLoginRequiredMiddleware(MiddlewareMixin):
         附带上的参数，认证服务器的回应必须一模一样包含这个参数，此处将 state 设置在
         session
         """
-        allowed_chars = "abcdefghijkmnpqrstuvwxyz" "ABCDEFGHIJKLMNPQRSTUVWXYZ" "0123456789"
+        allowed_chars = (
+            "abcdefghijkmnpqrstuvwxyz" "ABCDEFGHIJKLMNPQRSTUVWXYZ" "0123456789"
+        )
         state = "".join(random.choice(allowed_chars) for _ in range(length))
         request.session["WEIXIN_OAUTH_STATE"] = state
         request.session["WEIXIN_OAUTH_STATE_TIMESTAMP"] = time.time()
@@ -87,13 +93,16 @@ class WeixinLoginRequiredMiddleware(MiddlewareMixin):
 
         if not raw_state or raw_state != state:
             logger.warning(
-                u"验证 WEIXIN 服务器返回信息，state 不一致，" u"WEIXIN_OAUTH_STATE=%s，state=%s" % raw_state,
-                state,
+                u"验证 WEIXIN 服务器返回信息，state 不一致，"
+                u"WEIXIN_OAUTH_STATE=%s，state=%s" % (raw_state, state),
             )
             return False
 
         if not raw_timestamp or time.time() - raw_timestamp > expires_in:
-            logger.warning(u"验证 WEIXIN 服务器返回信息，state 过期，" u"WEIXIN_OAUTH_STATE_TIMESTAMP=%s" % raw_timestamp)
+            logger.warning(
+                u"验证 WEIXIN 服务器返回信息，state 过期，"
+                u"WEIXIN_OAUTH_STATE_TIMESTAMP=%s" % raw_timestamp
+            )
             return False
 
         request.session["WEIXIN_OAUTH_STATE"] = None

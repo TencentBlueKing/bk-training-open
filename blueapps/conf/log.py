@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -22,11 +22,11 @@ APP_CODE = os.environ.get("APP_ID", APP_CODE)
 
 
 def set_log_level(settings_module):
-    run_ver = settings_module.get("RUN_VER")
     log_level = settings_module.get("LOG_LEVEL", "INFO")
     is_local = settings_module.get("IS_LOCAL", False)
+    is_open_saas_v2 = settings_module.get("is_open_saas_v2", lambda: False)
 
-    if run_ver == "open":
+    if is_open_saas_v2():
         bk_log_dir = settings_module.get("BK_LOG_DIR", "/data/apps/logs/")
         logging = get_paas_v2_logging_config_dict(is_local, bk_log_dir, log_level)
     else:
@@ -58,7 +58,8 @@ def get_logging_config_dict(settings_module):
         logging_format = {
             "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
             "fmt": (
-                "%(levelname)s %(asctime)s %(pathname)s %(lineno)d " "%(funcName)s %(process)d %(thread)d %(message)s"
+                "%(levelname)s %(asctime)s %(pathname)s %(lineno)d "
+                "%(funcName)s %(process)d %(thread)d %(message)s"
             ),
         }
     if not os.path.exists(log_dir):

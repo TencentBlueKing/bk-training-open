@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -19,7 +19,9 @@ from blueapps.conf import settings
 
 class UserAgentMiddleware(object):
     def process_request(self, request):
-        request.is_mobile = lambda: bool(settings.RE_MOBILE.search(request.META.get("HTTP_USER_AGENT", "")))
+        request.is_mobile = lambda: bool(
+            settings.RE_MOBILE.search(request.META.get("HTTP_USER_AGENT", ""))
+        )
 
         request.is_rio = lambda: bool(
             request.META.get("HTTP_STAFFNAME", "")
@@ -28,7 +30,8 @@ class UserAgentMiddleware(object):
         )
 
         request.is_wechat = lambda: bool(
-            settings.RE_WECHAT.search(request.META.get("HTTP_USER_AGENT", "")) and not request.is_rio()
+            settings.RE_WECHAT.search(request.META.get("HTTP_USER_AGENT", ""))
+            and not request.is_rio()
         )
 
         request.is_bk_jwt = lambda: bool(request.META.get("HTTP_X_BKAPI_JWT", ""))
@@ -86,7 +89,9 @@ class SiteSettingsMiddleware(object):
             site = site.copy()
             try:
                 if validate_host(domain, site["HOSTS"]):
-                    site_settings = ".".join([self.top_module, site["NAME"], "settings"])
+                    site_settings = ".".join(
+                        [self.top_module, site["NAME"], "settings"]
+                    )
                     self._enter(import_module(site_settings))
                     break
             except ImportError:

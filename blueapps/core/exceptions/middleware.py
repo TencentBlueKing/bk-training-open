@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -44,7 +44,10 @@ class AppExceptionMiddleware(MiddlewareMixin):
         if isinstance(exception, BlueException):
             logger.log(
                 exception.LOG_LEVEL,
-                (u"""捕获主动抛出异常, 具体异常堆栈->[%s] status_code->[%s] & """ u"""client_message->[%s] & args->[%s] """)
+                (
+                    u"""捕获主动抛出异常, 具体异常堆栈->[%s] status_code->[%s] & """
+                    u"""client_message->[%s] & args->[%s] """
+                )
                 % (
                     traceback.format_exc(),
                     exception.ERROR_CODE,
@@ -94,7 +97,11 @@ class AppExceptionMiddleware(MiddlewareMixin):
 
     def get_check_functions(self):
         """获取需要判断的函数列表"""
-        return [getattr(self, func) for func in dir(self) if func.startswith("check") and callable(getattr(self, func))]
+        return [
+            getattr(self, func)
+            for func in dir(self)
+            if func.startswith("check") and callable(getattr(self, func))
+        ]
 
     def check_is_debug(self):
         """判断是否是开发模式"""

@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -12,7 +12,6 @@ specific language governing permissions and limitations under the License.
 """
 
 import logging
-import os
 import traceback
 
 from django.conf import settings
@@ -23,7 +22,6 @@ from blueapps.account import get_user_model
 from blueapps.account.conf import ConfFixture
 from blueapps.account.utils.http import send
 from blueapps.utils import client
-from blueking.component.shortcuts import get_client_by_user
 from home_application.models import User as GUser
 
 logger = logging.getLogger("component")
@@ -45,17 +43,11 @@ class TokenBackend(ModelBackend):
 
         user_model = get_user_model()
         try:
-            user = os.environ.get("BKAPP_API_INVOKE_USER")
-            bk_client = get_client_by_user(user=user)
-            kwargs = {"id": username}
-            user_info = bk_client.usermanage.retrieve_user(kwargs)
-            print(user_info)
-            user, _ = user_model.objects.get_or_create(id=user_info["data"]["id"], username=username)
+            user, _ = user_model.objects.get_or_create(username=username)
             get_user_info_result, user_info = self.get_user_info(bk_token)
             # 判断是否获取到用户信息,获取不到则返回None
             if not get_user_info_result:
                 return None
-
             user.nickname = user_info.get("chname", "")
             user.save()
             user.set_property(key="qq", value=user_info.get("qq", ""))
@@ -85,7 +77,9 @@ class TokenBackend(ModelBackend):
 
         except IntegrityError:
             logger.exception(traceback.format_exc())
-            logger.exception(u"get_or_create UserModel fail or update_or_create UserProperty")
+            logger.exception(
+                u"get_or_create UserModel fail or update_or_create UserProperty"
+            )
             return None
         except Exception:  # pylint: disable=broad-except
             logger.exception(traceback.format_exc())
@@ -149,7 +143,10 @@ class TokenBackend(ModelBackend):
         else:
             error_msg = response.get("message", "")
             error_data = response.get("data", "")
-            logger.error(u"Failed to Get User Info: error={err}, ret={ret}".format(err=error_msg, ret=error_data))
+            logger.error(
+                u"Failed to Get User Info: error=%(err)s, ret=%(ret)s"
+                % {u"err": error_msg, u"ret": error_data}
+            )
             return False, {}
 
     @staticmethod
@@ -176,5 +173,9 @@ class TokenBackend(ModelBackend):
         else:
             error_msg = response.get("message", "")
             error_data = response.get("data", "")
-            logger.error(u"Fail to verify bk_token, error={}, ret={}".format(error_msg, error_data))
+            logger.error(
+                u"Fail to verify bk_token, error={}, ret={}".format(
+                    error_msg, error_data
+                )
+            )
             return False, None

@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -68,7 +68,9 @@ class LoginRequiredMiddleware(MiddlewareMixin):
 
             if user is not None and request.user.is_authenticated:
                 # 登录成功，重新调用自身函数，即可退出
-                cache.set(session_key, {"bk_token": bk_token}, settings.LOGIN_CACHE_EXPIRED)
+                cache.set(
+                    session_key, {"bk_token": bk_token}, settings.LOGIN_CACHE_EXPIRED
+                )
                 return self.process_view(request, view, args, kwargs)
 
         handler = ResponseHandler(ConfFixture, settings)

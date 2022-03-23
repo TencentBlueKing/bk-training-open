@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -21,7 +21,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -44,7 +43,9 @@ class Migration(migrations.Migration):
                 ("password", models.CharField(max_length=128, verbose_name="password")),
                 (
                     "last_login",
-                    models.DateTimeField(blank=True, null=True, verbose_name="last login"),
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="last login"
+                    ),
                 ),
                 (
                     "is_superuser",
@@ -57,7 +58,9 @@ class Migration(migrations.Migration):
                 (
                     "username",
                     models.CharField(
-                        error_messages={"unique": "A user with that openid already exists."},
+                        error_messages={
+                            "unique": "A user with that openid already exists."
+                        },
                         help_text="Required. 64 characters or fewer. Letters, digits and underlined only.",
                         max_length=64,
                         unique=True,
@@ -94,20 +97,22 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Designates whether this user should be treated as active. "
-                        "Unselect this instead of deleting accounts.",
+                                  "Unselect this instead of deleting accounts.",
                         verbose_name="active",
                     ),
                 ),
                 (
                     "date_joined",
-                    models.DateTimeField(default=django.utils.timezone.now, verbose_name="date joined"),
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, verbose_name="date joined"
+                    ),
                 ),
                 (
                     "groups",
                     models.ManyToManyField(
                         blank=True,
                         help_text="The groups this user belongs to. "
-                        "A user will get all permissions granted to each of their groups.",
+                                  "A user will get all permissions granted to each of their groups.",
                         related_name="user_set",
                         related_query_name="user",
                         to="auth.Group",
@@ -126,10 +131,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={
-                "verbose_name": "user",
-                "verbose_name_plural": "users",
-            },
+            options={"verbose_name": "user", "verbose_name_plural": "users"},
         ),
         migrations.CreateModel(
             name="UserProperty",
@@ -177,14 +179,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="UserProxy",
             fields=[],
-            options={
-                "proxy": True,
-                "indexes": [],
-            },
+            options={"proxy": True, "indexes": [], },
             bases=("account.user",),
         ),
-        migrations.AlterUniqueTogether(
-            name="userproperty",
-            unique_together={("user", "key")},
-        ),
+        migrations.AlterUniqueTogether(name="userproperty", unique_together={("user", "key")}),
     ]

@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -21,16 +21,16 @@ class ConfFixture(object):
     USER_MODEL = "bk_token.models.UserProxy"
 
     CONSOLE_LOGIN_URL = settings.BK_PAAS_HOST
-    LOGIN_URL = settings.BK_PAAS_HOST + "/login/"
-    LOGIN_PLAIN_URL = settings.BK_PAAS_HOST + "/login/plain/"
-    VERIFY_URL = settings.BK_PAAS_INNER_HOST + "/login/accounts/is_login/"
-    USER_INFO_URL = settings.BK_PAAS_INNER_HOST + "/login/accounts/get_user/"
+    LOGIN_URL = settings.BK_LOGIN_URL + "/"
+    LOGIN_PLAIN_URL = settings.BK_LOGIN_URL + "/plain/"
+    VERIFY_URL = settings.BK_LOGIN_INNER_URL + "/accounts/is_login/"
+    USER_INFO_URL = settings.BK_LOGIN_INNER_URL + "/accounts/get_user/"
     HAS_PLAIN = False
     ADD_CROSS_PREFIX = False
     ADD_APP_CODE = True
 
-    IFRAME_HEIGHT = 490
-    IFRAME_WIDTH = 460
+    IFRAME_HEIGHT = getattr(settings, "IFRAME_HEIGHT", 490)
+    IFRAME_WIDTH = getattr(settings, "IFRAME_WIDTH", 460)
 
     WEIXIN_BACKEND_TYPE = "null"
     WEIXIN_MIDDLEWARE = "null.NullMiddleware"

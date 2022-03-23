@@ -1,33 +1,40 @@
 # -*- coding: utf-8 -*-
+"""
+Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
+Edition) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
+
 import logging
 
 from django.core.management import BaseCommand
 from django.db import transaction
 from django_celery_beat.models import (
-    CrontabSchedule,
     IntervalSchedule,
-    PeriodicTask,
+    CrontabSchedule,
     PeriodicTasks,
+    PeriodicTask,
 )
 
 from blueapps.contrib.bk_commands.management.handlers.migrate_from_djcelery_handler import (
-    DjCrontabSchedule,
+    execute,
     DjIntervalSchedule,
+    DjCrontabSchedule,
     DjPeriodicTask,
     DjPeriodicTasks,
-    execute,
 )
 
 logger = logging.getLogger("blueapps")
 
 
 class Command(BaseCommand):
-    ALL_MIGRATED_DB_TABLE = (
-        IntervalSchedule,
-        CrontabSchedule,
-        PeriodicTasks,
-        PeriodicTask,
-    )
+    ALL_MIGRATED_DB_TABLE = (IntervalSchedule, CrontabSchedule, PeriodicTasks, PeriodicTask)
     NEW_NO_TIMEZONE_DB_TABLE = (IntervalSchedule, PeriodicTasks, PeriodicTask)
     OLD_DB_TABLE = (DjIntervalSchedule, DjPeriodicTasks, DjPeriodicTask)
 
@@ -51,8 +58,7 @@ class Command(BaseCommand):
     def check_db_has_data(self):
         for db in self.ALL_MIGRATED_DB_TABLE:
             if db.objects.exists():
-                logger.warning(
-                    "The target database {} already has data and cannot be migrated".format(db._meta.model_name)
-                )
+                logger.warning("The target database {} already has data and cannot be migrated"
+                               .format(db._meta.model_name))
                 return False
         return True

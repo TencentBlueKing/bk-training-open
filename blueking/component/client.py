@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Component API Client
 """
-import json
-import logging
-import random
-import time
-
 import requests
+import json
+import time
+import random
+import logging
 
-from . import collections, conf
 from .compat import urlparse
+from . import conf
+from . import collections
 from .utils import get_signature
 
 # shutdown urllib3's warning
@@ -102,14 +102,7 @@ class BaseComponentClient(object):
             headers["blueking-language"] = self.language
 
         params, data = self.merge_params_data_with_common_args(method, params, data, enable_app_secret=True)
-        logger.debug(
-            "Calling %s %s with params=%s, data=%s, headers=%s",
-            method,
-            url,
-            params,
-            data,
-            headers,
-        )
+        logger.debug("Calling %s %s with params=%s, data=%s, headers=%s", method, url, params, data, headers)
         return requests.request(method, url, params=params, data=data, verify=False, headers=headers, **kwargs)
 
     def __getattr__(self, key):

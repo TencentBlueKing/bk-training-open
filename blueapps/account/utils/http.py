@@ -2,7 +2,7 @@
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
 Edition) available.
-Copyright (C) 2017-2020 THL A29 Limited, a Tencent company. All rights reserved.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -44,10 +44,18 @@ def send(url, method, params, timeout=None, **kwargs):
 
     try:
         if method.upper() == "GET":
-            response = session.request(method="GET", url=url, params=params, timeout=timeout, **kwargs)
+            response = session.request(
+                method="GET", url=url, params=params, timeout=timeout, **kwargs
+            )
         elif method.upper() == "POST":
             session.headers.update({"Content-Type": "application/json; chartset=utf-8"})
-            response = session.request(method="POST", url=url, data=json.dumps(params), timeout=timeout, **kwargs)
+            response = session.request(
+                method="POST",
+                url=url,
+                data=json.dumps(params),
+                timeout=timeout,
+                **kwargs
+            )
         else:
             raise Exception(_(u"异常请求方式，%s") % method)
     except requests.exceptions.Timeout:
@@ -59,7 +67,11 @@ def send(url, method, params, timeout=None, **kwargs):
         )
         raise ApiNetworkError(err_msg)
 
-    logger.debug("请求记录, url={}, method={}, params={}, response={}".format(url, method, params, response))
+    logger.debug(
+        "请求记录, url={}, method={}, params={}, response={}".format(
+            url, method, params, response
+        )
+    )
 
     if response.status_code != requests.codes.ok:
         err_msg = _(u"返回异常状态码，status_code=%s，url=%s，method=%s，" u"params=%s") % (
@@ -73,7 +85,9 @@ def send(url, method, params, timeout=None, **kwargs):
     try:
         return response.json()
     except Exception:  # pylint: disable=broad-except
-        err_msg = _(u"返回内容不符合 JSON 格式，url=%s，method=%s，params=%s，error=%s，" u"response=%s") % (
+        err_msg = _(
+            u"返回内容不符合 JSON 格式，url=%s，method=%s，params=%s，error=%s，" u"response=%s"
+        ) % (
             url,
             method,
             json.dumps(params),

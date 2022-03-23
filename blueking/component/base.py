@@ -2,8 +2,9 @@
 import json
 import logging
 
-from .conf import COMPONENT_SYSTEM_HOST
 from .exceptions import ComponentAPIException
+from .conf import COMPONENT_SYSTEM_HOST
+
 
 logger = logging.getLogger("component")
 
@@ -37,7 +38,7 @@ class ComponentAPI(object):
             log_message = [
                 e.error_message,
             ]
-            log_message.append("url={url}".format(url=e.api_obj.url))
+            log_message.append("url=%(url)s" % {"url": e.api_obj.url})
             if e.resp:
                 log_message.append("content: %s" % e.resp.text)
 
@@ -64,10 +65,7 @@ class ComponentAPI(object):
             try:
                 json.dumps(data)
             except Exception:
-                raise ComponentAPIException(
-                    self,
-                    "Request parameter error (please pass in a dict or json string)",
-                )
+                raise ComponentAPIException(self, "Request parameter error (please pass in a dict or json string)")
 
         # Request remote server
         try:
@@ -104,7 +102,5 @@ class ComponentAPI(object):
             return json_resp
         except Exception:
             raise ComponentAPIException(
-                self,
-                "Return data format is incorrect, which shall be unified as json",
-                resp=resp,
+                self, "Return data format is incorrect, which shall be unified as json", resp=resp
             )
