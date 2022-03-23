@@ -49,6 +49,7 @@ class TokenBackend(ModelBackend):
             bk_client = get_client_by_user(user=user)
             kwargs = {"id": username}
             user_info = bk_client.usermanage.retrieve_user(kwargs)
+            logger.info(user_info)
             user, _ = user_model.objects.get_or_create(id=user_info["data"]["id"], username=username)
             get_user_info_result, user_info = self.get_user_info(bk_token)
             # 判断是否获取到用户信息,获取不到则返回None
