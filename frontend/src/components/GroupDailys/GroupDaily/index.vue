@@ -139,8 +139,8 @@
                 isfirstEnter: true,
                 isadmin: false,
                 myMsg: JSON.parse(window.localStorage.getItem('userMsg')),
-                // 当前选中的类比
-                curType: 'date',
+                // 当前选中的类别
+                curType: 'member',
                 curSelectUser: null,
                 // 当前选中的日期
                 curDateTime: moment(new Date((new Date().getTime() - 24 * 60 * 60 * 1000))).format('YYYY-MM-DD'),
@@ -183,6 +183,7 @@
                     this.top = true
                     this.bottom = true
                 }
+                this.username = oldVal[0].username
                 this.filterUserId(this.username).then(res => {
                     this.curSelectUser = res
                     this.selectedType('member', true)
@@ -191,19 +192,15 @@
             curgroupid () {
                 // 如果用户组发生了变化开始
                 // 如果 链接里面有组 + 用户名 (一次有效)
-                if (this.curgroupid !== null && this.username !== undefined && this.taskrenderflat) {
-                    this.pagingDevice.curPage = 1
-                    this.selectedType('member')
-                    this.taskrenderflat = false
-                } else if (this.curgroupid !== null && this.curdate !== undefined && this.taskrenderflat) {
+                if (this.curgroupid !== null && this.curdate !== undefined && this.taskrenderflat) {
                     // 如果是 组 + 日期
                     this.selectedType('date')
                     this.changeDate(moment(this.curdate).format('YYYY-MM-DD'))
                     this.taskrenderflat = false
                 } else {
-                    this.curType = 'date'
                     this.pagingDevice.curPage = 1
-                    this.changeDate(moment(this.curDateTime).format('YYYY-MM-DD'))
+                    this.selectedType('member')
+                    this.taskrenderflat = false
                 }
             },
             curdate (oldVal) {
@@ -286,7 +283,7 @@
                 if (!keepPage) {
                     this.pagingDevice.curPage = 1
                 }
-                // 跟换焦点
+                // 切换焦点
                 this.curType = type
                 // 切换到了用户 找第一个默认用户的日报(全部)
                 if (type === 'member') {

@@ -73,8 +73,8 @@
             initRender () {
                 getallGroups().then(res => {
                     if (res.data.length !== 0) {
-                        if (getCurGroup() !== 'null') {
-                            this.selectGroup = getCurGroup()
+                        this.selectGroup = getCurGroup()
+                        if (this.selectGroup !== null) {
                             getGroupInfo(this.selectGroup).then(res1 => {
                                 // 本地有但是被管理员删了 变为第一组
                                 if (!res1.result) {
