@@ -174,6 +174,7 @@
     import Onoff from '@/components/Home/Onoff/index.vue'
     import requestApi from '@/api/request.js'
     import { isAdmin } from '@/utils/index.js'
+    import { setCurGroup } from '../../utils'
     const { getallGroups, getReportsDates, getYesterday, getAppointDaily, selectPerMsg, applyRest, removeOff, setUpdateDaily } = requestApi
     export default {
         components: {
@@ -282,6 +283,8 @@
                     // 没有加入任何组就跳转到我的小组页面
                     if (res.data.length === 0) {
                         this.$router.push({ name: 'MyGroup' })
+                    } else {
+                        setCurGroup(res.data[0].id)
                     }
                 } else {
                     this.showBkMessage(res.message)
