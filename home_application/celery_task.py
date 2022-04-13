@@ -21,7 +21,7 @@ from home_application.utils.mail_operation import (
 logger = logging.getLogger("celery")
 
 
-@periodic_task(run_every=crontab(minute=0, hour=20))
+# @periodic_task(run_every=crontab(minute=0, hour=20))
 def evening_task():
     """
     每天晚上8点发送提醒邮件
@@ -31,7 +31,7 @@ def evening_task():
         notify_none_reported_user()
 
 
-@periodic_task(run_every=crontab(minute=0, hour=10))
+# @periodic_task(run_every=crontab(minute=0, hour=10))
 def morning_task():
     """
     每天早上10点发送前一天日报
