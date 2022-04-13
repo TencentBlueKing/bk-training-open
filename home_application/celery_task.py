@@ -5,8 +5,7 @@
 import datetime
 import logging
 
-from celery.schedules import crontab
-from celery.task import periodic_task, task
+from celery.task import task
 from django.template.loader import get_template
 
 from blueapps.conf import settings
