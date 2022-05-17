@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
+from blueapps.utils import get_client_by_request
 from home_application.models import User
 from home_application.utils.tools import check_user_is_admin
 
@@ -15,27 +16,37 @@ def get_user(request):
     return JsonResponse({"result": True, "code": 0, "message": "查询成功", "data": data})
 
 
-def auto_sign_users(usernames: list, user_infos: list):
+def auto_sign_users(request, usernames: list, user_infos: list):
     """
     注册不存在的用户信息
+    :param request: 请求
     :param usernames: 用户名数组
     :param user_infos: 用户信息数组
     """
     exist_users = User.objects.filter(username__in=usernames).values_list("username", flat=True)
-    user_list = []
-    for user in user_infos:
-        username = user.get("username")
-        if username not in exist_users:
-            user_list.append(
-                User(
-                    id=user.get("id"),
-                    username=user.get("username"),
-                    name=user.get("display_name"),
-                    phone=user.get("phone"),
-                    email=user.get("email"),
-                )
+    sign_users = [user for user in user_infos if user.get("username") not in exist_users]
+    client = get_client_by_request(request)
+    result = client.usermanage.list_users(
+        fields="id,username,display_name,email",
+        page=1,
+        pageSize=100,
+        exact_lookups=",".join([user["username"] for user in sign_users if user.get("username")]),
+    )
+    if not result.get("result"):
+        return
+    User.objects.bulk_create(
+        [
+            User(
+                id=user.get("id"),
+                username=user.get("username"),
+                name=user.get("display_name"),
+                phone=user.get("phone"),
+                email=user.get("email"),
             )
-    User.objects.bulk_create(user_list, ignore_conflicts=True)
+            for user in result["data"]["results"]
+        ],
+        ignore_conflicts=True,
+    )
 
 
 @require_http_methods(["GET"])

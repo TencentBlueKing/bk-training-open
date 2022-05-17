@@ -1,5 +1,8 @@
+import math
+
 from django.core.paginator import Paginator
 
+from blueapps.utils import get_client_by_request
 from home_application.models import Group, GroupUser
 
 
@@ -50,3 +53,22 @@ def check_user_is_admin(request, check_type):
         return group_ids == manage_group_ids
     else:
         return len(manage_group_ids) > 0
+
+
+def bulk_load_bk_users(request):
+    client = get_client_by_request(request=request)
+    response = client.usermanage.list_users(fields="id,username,display_name", page=1, pageSize=1)
+    result = response.get("result")
+    if not result:
+        return False, response, 0
+    count = response.get("data").get("count")
+    total_page = math.ceil(count / 50)
+    data = response.get("data").get("results")
+    for page in range(2, total_page + 1):
+        response = client.usermanage.list_users(fields="id,username,display_name", page=page, pageSize=100)
+        result = response.get("result")
+        if result:
+            data.extend(response.get("data").get("results"))
+        else:
+            return False, response, 0
+    return True, data, count

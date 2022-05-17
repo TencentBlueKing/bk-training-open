@@ -64,7 +64,7 @@ def add_group(request):
     except IntegrityError:
         return JsonResponse({"result": False, "code": 1, "message": "添加失败，组名重复"})
     # 添加未注册的用户信息
-    auto_sign_users(admin_names, admins)
+    auto_sign_users(request, admin_names, admins)
     # 添加组-用户信息
     group_user_list = []
     for admin in admins:
@@ -112,7 +112,7 @@ def update_group(request, group_id):
     group.name = name
 
     # 添加未注册的用户信息
-    auto_sign_users(admin_names, admins)
+    auto_sign_users(request, admin_names, admins)
 
     # 批量添加用户-组信息
     exist_user_ids = GroupUser.objects.filter(group_id=group_id, user_id__in=admin_ids).values_list(
